@@ -17,7 +17,7 @@ datasource db {
 model User {
   id            Int         @id @default(autoincrement())
   createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  updatedAt     DateTime    @default(now())
   email         String      @unique @db.VarChar(255)
   name          String?     @db.VarChar(100)
   lists         ToDoList[]
@@ -29,7 +29,7 @@ model User {
 model ToDoList {
   id            Int         @id @default(autoincrement())
   createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt // Activity tracking
+  updatedAt     DateTime    @default(now())
   name          String      @db.VarChar(255)
   ownerId       Int 
   owner         User        @relation(fields: [ownerId], references: [id])
@@ -52,19 +52,20 @@ model ListShare {
 model Task {
   id            Int          @id @default(autoincrement())
   createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt         // Activity tracking
-  description   String       @db.VarChar(255)   // Max length enforced
+  updatedAt     DateTime     @default(now())        
+  description   String       @db.VarChar(255)  
   completed     Boolean      @default(false)
   todoListId    Int   
   todoList      ToDoList     @relation(fields: [todoListId], references: [id])
   steps         Step[]    
   order         Int          @default(autoincrement())
-  deletedAt     DateTime?
+  deletedAt     DateTime?    
 }
 
 model Step {
   id            Int          @id @default(autoincrement())
   createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @default(now())
   description   String
   completed     Boolean      @default(false)
   taskId        Int
