@@ -7,6 +7,7 @@ export interface ReminderNotification {
   taskDescription: string;
   dueDate: Date | null;
   reminderDate: Date;
+  reminderDaysBefore: number; // Which reminder this is (7 days, 1 day, etc.)
   message: string;
   title: string;
   listName: string;
@@ -31,22 +32,44 @@ export class RemindersService {
     const tasksWithReminders =
       await this.tasksService.getTasksWithReminders(ownerId, date);
 
-    return tasksWithReminders.map((task) => {
-      const reminderDays = task.reminderDaysBefore || 1;
-      const dueDate = this.calculateTaskDueDate(task, date);
-      const reminderDate = new Date(date);
+    const notifications: ReminderNotification[] = [];
 
-      return {
-        taskId: task.id,
-        taskDescription: task.description,
-        dueDate,
-        reminderDate,
-        message: this.formatReminderMessage(task, dueDate, reminderDays),
-        title: this.formatReminderTitle(task),
-        listName: task.todoList.name,
-        listType: task.todoList.type,
-      };
+    tasksWithReminders.forEach((task) => {
+      // Support both old single value and new array format
+      const reminderDaysArray = Array.isArray(task.reminderDaysBefore)
+        ? task.reminderDaysBefore
+        : task.reminderDaysBefore
+          ? [task.reminderDaysBefore]
+          : [1];
+
+      const dueDate = this.calculateTaskDueDate(task, date);
+
+      // Create a notification for each reminder day that matches today
+      reminderDaysArray.forEach((reminderDays) => {
+        const reminderTargetDate = new Date(dueDate!);
+        reminderTargetDate.setDate(reminderTargetDate.getDate() - reminderDays);
+        reminderTargetDate.setHours(0, 0, 0, 0);
+
+        const targetDate = new Date(date);
+        targetDate.setHours(0, 0, 0, 0);
+
+        if (reminderTargetDate.getTime() === targetDate.getTime()) {
+          notifications.push({
+            taskId: task.id,
+            taskDescription: task.description,
+            dueDate,
+            reminderDate: new Date(date),
+            reminderDaysBefore: reminderDays,
+            message: this.formatReminderMessage(task, dueDate, reminderDays),
+            title: this.formatReminderTitle(task),
+            listName: task.todoList.name,
+            listType: task.todoList.type,
+          });
+        }
+      });
     });
+
+    return notifications;
   }
 
   /**

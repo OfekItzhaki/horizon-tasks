@@ -60,7 +60,8 @@ export class TasksService {
         description: createTaskDto.description,
         dueDate: createTaskDto.dueDate,
         specificDayOfWeek: createTaskDto.specificDayOfWeek,
-        reminderDaysBefore: createTaskDto.reminderDaysBefore ?? 1,
+        reminderDaysBefore:
+          createTaskDto.reminderDaysBefore ?? [1],
         completed: createTaskDto.completed ?? false,
         todoListId,
       },
@@ -250,9 +251,12 @@ export class TasksService {
     });
 
     const tasksWithReminders = allTasks.filter((task) => {
-      const reminderDays = task.reminderDaysBefore || 1;
-      const reminderDate = new Date(targetDate);
-      reminderDate.setDate(reminderDate.getDate() + reminderDays);
+      // Support both old single value and new array format for backward compatibility
+      const reminderDaysArray = Array.isArray(task.reminderDaysBefore)
+        ? task.reminderDaysBefore
+        : task.reminderDaysBefore
+          ? [task.reminderDaysBefore]
+          : [1];
 
       // Calculate when the task is due
       let taskDueDate: Date | null = null;
@@ -301,12 +305,15 @@ export class TasksService {
         return false;
       }
 
-      // Check if reminder date matches target date
-      const reminderTargetDate = new Date(taskDueDate);
-      reminderTargetDate.setDate(reminderTargetDate.getDate() - reminderDays);
-      reminderTargetDate.setHours(0, 0, 0, 0);
-
-      return reminderTargetDate.getTime() === targetDate.getTime();
+      // Check if any reminder date matches target date
+      return reminderDaysArray.some((reminderDays) => {
+        const reminderTargetDate = new Date(taskDueDate!);
+        reminderTargetDate.setDate(
+          reminderTargetDate.getDate() - reminderDays,
+        );
+        reminderTargetDate.setHours(0, 0, 0, 0);
+        return reminderTargetDate.getTime() === targetDate.getTime();
+      });
     });
 
     return tasksWithReminders;

@@ -8,19 +8,19 @@ datasource db {
 }
 
 model User {
-  id                     Int         @id @default(autoincrement())
-  createdAt              DateTime    @default(now())
-  updatedAt              DateTime    @updatedAt
-  email                  String      @unique @db.VarChar(255)
-  name                   String?     @db.VarChar(100)
-  passwordHash           String?     @db.VarChar(255)
-  deletedAt              DateTime?
-  profilePicture         String?     @db.VarChar(500)
-  emailVerified          Boolean     @default(false)
-  emailVerificationToken String?     @db.VarChar(255)
+  id                      Int         @id @default(autoincrement())
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+  email                   String      @unique @db.VarChar(255)
+  name                    String?     @db.VarChar(100)
+  passwordHash            String?     @db.VarChar(255)
+  deletedAt               DateTime?
+  profilePicture          String?     @db.VarChar(500)
+  emailVerified           Boolean     @default(false)
+  emailVerificationToken  String?     @db.VarChar(255)
   emailVerificationSentAt DateTime?
-  shares                 ListShare[]
-  lists                  ToDoList[]
+  shares                  ListShare[]
+  lists                   ToDoList[]
 
   @@index([email])
   @@index([emailVerificationToken])
@@ -36,7 +36,7 @@ model ToDoList {
   deletedAt DateTime?
   type      ListType    @default(CUSTOM)
   shares    ListShare[]
-  tasks     Task[]  
+  tasks     Task[]
   owner     User        @relation(fields: [ownerId], references: [id])
 }
 
@@ -60,7 +60,7 @@ model Task {
   order              Int       @default(autoincrement())
   deletedAt          DateTime?
   dueDate            DateTime?
-  reminderDaysBefore Int       @default(1)
+  reminderDaysBefore Int[]     @default([1])
   specificDayOfWeek  Int?
   steps              Step[]
   todoList           ToDoList  @relation(fields: [todoListId], references: [id])

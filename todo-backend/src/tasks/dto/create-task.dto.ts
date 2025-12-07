@@ -42,15 +42,16 @@ export class CreateTaskDto {
   specificDayOfWeek?: number;
 
   @ApiPropertyOptional({
-    description: 'Number of days before due date to send reminder',
-    example: 1,
-    minimum: 0,
-    default: 1,
+    description:
+      'Array of days before due date to send reminders. Can specify multiple reminders (e.g., [7, 1] for 7 days and 1 day before)',
+    example: [7, 1],
+    type: [Number],
+    default: [1],
   })
   @IsOptional()
-  @IsInt()
-  @Min(0)
-  reminderDaysBefore?: number;
+  @IsInt({ each: true })
+  @Min(0, { each: true })
+  reminderDaysBefore?: number[];
 
   @ApiPropertyOptional({
     description: 'Whether the task is completed',
