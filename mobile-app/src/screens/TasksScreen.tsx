@@ -21,7 +21,7 @@ import { Task, CreateTaskDto, ReminderConfig, ReminderTimeframe, ReminderSpecifi
 import ReminderConfigComponent from '../components/ReminderConfig';
 import DatePicker from '../components/DatePicker';
 import { scheduleTaskReminders, cancelAllTaskNotifications } from '../services/notifications.service';
-import { EveryDayRemindersStorage, ReminderTimesStorage } from '../utils/storage';
+import { EveryDayRemindersStorage, ReminderTimesStorage, ReminderAlarmsStorage } from '../utils/storage';
 
 type TasksScreenRouteProp = RouteProp<RootStackParamList, 'Tasks'>;
 
@@ -43,11 +43,6 @@ export default function TasksScreen() {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-
-  useEffect(() => {
-    loadTasks();
-  }, [listId]);
-
   const [allTasks, setAllTasks] = useState<Task[]>([]);
 
   const loadTasks = async () => {
@@ -307,6 +302,10 @@ export default function TasksScreen() {
             try {
               // Cancel all notifications for this task
               await cancelAllTaskNotifications(task.id);
+              // Clean up client-side storage for this task
+              await EveryDayRemindersStorage.removeRemindersForTask(task.id);
+              await ReminderTimesStorage.removeTimesForTask(task.id);
+              await ReminderAlarmsStorage.removeAlarmsForTask(task.id);
               await tasksService.delete(task.id);
               loadTasks();
             } catch (error: any) {

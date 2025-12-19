@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { normalizeBooleans } from './normalize';
-import { ReminderConfig } from '../types';
+import { ReminderConfig, User } from '../types';
 
 const TOKEN_KEY = '@tasks_management:token';
 const USER_KEY = '@tasks_management:user';
@@ -44,7 +44,7 @@ export const TokenStorage = {
  * User storage utilities
  */
 export const UserStorage = {
-  async getUser(): Promise<any | null> {
+  async getUser(): Promise<User | null> {
     try {
       const userJson = await AsyncStorage.getItem(USER_KEY);
       if (!userJson) {
@@ -52,14 +52,14 @@ export const UserStorage = {
       }
       const user = JSON.parse(userJson);
       // Normalize boolean fields to ensure they're actual booleans
-      return normalizeBooleans(user);
+      return normalizeBooleans(user) as User;
     } catch (error) {
       console.error('Error getting user:', error);
       return null;
     }
   },
 
-  async setUser(user: any): Promise<void> {
+  async setUser(user: User): Promise<void> {
     try {
       // Ensure we're storing proper types - normalize before storing
       const normalizedUser = normalizeBooleans(user);
