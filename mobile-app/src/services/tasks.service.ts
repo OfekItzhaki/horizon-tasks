@@ -1,5 +1,4 @@
 import { apiClient, ApiError } from '../utils/api-client';
-import { normalizeBooleans } from '../utils/normalize';
 import {
   Task,
   CreateTaskDto,
@@ -14,8 +13,7 @@ export class TasksService {
     try {
       const params = todoListId ? { todoListId } : {};
       const response = await apiClient.get<Task[]>('/tasks', { params });
-      // Ensure all boolean fields are properly normalized
-      return normalizeBooleans(response.data);
+      return response.data;
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
@@ -32,7 +30,7 @@ export class TasksService {
       const response = await apiClient.get<Task[]>('/tasks/by-date', {
         params: { date },
       });
-      return normalizeBooleans(response.data);
+      return response.data;
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
@@ -47,7 +45,7 @@ export class TasksService {
   async getById(id: number): Promise<Task> {
     try {
       const response = await apiClient.get<Task>(`/tasks/${id}`);
-      return normalizeBooleans(response.data);
+      return response.data;
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
@@ -65,7 +63,7 @@ export class TasksService {
         `/tasks/todo-list/${todoListId}`,
         data,
       );
-      return normalizeBooleans(response.data);
+      return response.data;
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
@@ -80,7 +78,7 @@ export class TasksService {
   async update(id: number, data: UpdateTaskDto): Promise<Task> {
     try {
       const response = await apiClient.patch<Task>(`/tasks/${id}`, data);
-      return normalizeBooleans(response.data);
+      return response.data;
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;

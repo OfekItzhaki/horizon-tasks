@@ -1,6 +1,5 @@
 import { apiClient, ApiError } from '../utils/api-client';
 import { TokenStorage, UserStorage } from '../utils/storage';
-import { normalizeBooleans } from '../utils/normalize';
 import {
   LoginDto,
   LoginResponse,
@@ -18,11 +17,10 @@ export class AuthService {
         '/auth/login',
         credentials,
       );
-      // Normalize the response data
-      const normalizedData = normalizeBooleans(response.data);
-      await TokenStorage.setToken(normalizedData.accessToken);
-      await UserStorage.setUser(normalizedData.user);
-      return normalizedData;
+      // response.data is already normalized by api-client interceptor
+      await TokenStorage.setToken(response.data.accessToken);
+      await UserStorage.setUser(response.data.user);
+      return response.data;
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
