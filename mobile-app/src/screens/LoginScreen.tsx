@@ -31,15 +31,12 @@ export default function LoginScreen() {
       // Navigation will be handled by AppNavigator via AuthContext
     } catch (error: any) {
       const errorMessage = error.message || 'Invalid credentials';
+      // Use different title based on error type (network vs auth)
+      const isNetworkError = error.statusCode === 0 || errorMessage.toLowerCase().includes('connect');
       Alert.alert(
-        'Login Failed',
+        isNetworkError ? 'Connection Error' : 'Login Failed',
         errorMessage,
-        [
-          {
-            text: 'OK',
-            style: 'default',
-          },
-        ],
+        [{ text: 'OK', style: 'default' }],
         { cancelable: true },
       );
     } finally {
@@ -61,15 +58,12 @@ export default function LoginScreen() {
       setPassword('');
     } catch (error: any) {
       const errorMessage = error.message || 'Could not create account';
+      // Use different title based on error type (network vs other)
+      const isNetworkError = error.statusCode === 0 || errorMessage.toLowerCase().includes('connect');
       Alert.alert(
-        'Registration Failed',
+        isNetworkError ? 'Connection Error' : 'Registration Failed',
         errorMessage,
-        [
-          {
-            text: 'OK',
-            style: 'default',
-          },
-        ],
+        [{ text: 'OK', style: 'default' }],
         { cancelable: true },
       );
     } finally {
