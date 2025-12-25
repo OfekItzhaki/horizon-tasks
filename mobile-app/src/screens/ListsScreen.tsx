@@ -55,7 +55,7 @@ export default function ListsScreen() {
       console.error('Error loading lists:', error);
       // Silently ignore auth errors - the navigation will handle redirect to login
       const isAuthError = error?.response?.status === 401 || 
-                          error?.message?.toLowerCase().includes('unauthorized');
+                          error?.message?.toLowerCase()?.includes('unauthorized');
       if (!isAuthError) {
         const errorMessage = error?.response?.data?.message || error?.message || 'Unable to load lists. Please try again.';
         Alert.alert('Error Loading Lists', errorMessage);
@@ -75,6 +75,7 @@ export default function ListsScreen() {
     navigation.navigate('Tasks', {
       listId: list.id,
       listName: list.name,
+      listType: list.type,
     });
   };
 
@@ -177,6 +178,8 @@ export default function ListsScreen() {
         return '#FF9800';
       case ListType.YEARLY:
         return '#9C27B0';
+      case ListType.FINISHED:
+        return '#607D8B'; // Gray-blue for finished tasks
       default:
         return '#757575';
     }
@@ -216,6 +219,15 @@ export default function ListsScreen() {
             style={styles.listItem}
             onPress={() => handleListPress(item)}
             onLongPress={() => {
+              // System lists (like Finished Tasks) cannot be edited or deleted
+              if (item.isSystem) {
+                Alert.alert(
+                  item.name,
+                  'This is a system list and cannot be modified.',
+                  [{ text: 'OK' }],
+                );
+                return;
+              }
               Alert.alert(
                 item.name,
                 'Choose an action',

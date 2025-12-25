@@ -17,7 +17,7 @@ import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { tasksService } from '../services/tasks.service';
-import { Task, CreateTaskDto, ReminderConfig, ReminderTimeframe } from '../types';
+import { Task, CreateTaskDto, ReminderConfig, ReminderTimeframe, ListType } from '../types';
 import ReminderConfigComponent from '../components/ReminderConfig';
 import DatePicker from '../components/DatePicker';
 import { scheduleTaskReminders, cancelAllTaskNotifications } from '../services/notifications.service';
@@ -31,7 +31,12 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function TasksScreen() {
   const route = useRoute<TasksScreenRouteProp>();
   const navigation = useNavigation<NavigationProp>();
-  const { listId, listName } = route.params;
+  const { listId, listName, listType } = route.params;
+  
+  // Check if this is a repeating list (shows completion count)
+  const isRepeatingList = [ListType.DAILY, ListType.WEEKLY, ListType.MONTHLY, ListType.YEARLY].includes(listType as ListType);
+  // Check if this is the archived list
+  const isArchivedList = listType === ListType.FINISHED;
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -58,7 +63,7 @@ export default function TasksScreen() {
     } catch (error: any) {
       // Silently ignore auth errors - the navigation will handle redirect to login
       const isAuthError = error?.response?.status === 401 || 
-                          error?.message?.toLowerCase().includes('unauthorized');
+                          error?.message?.toLowerCase()?.includes('unauthorized');
       if (!isAuthError) {
         const errorMessage = error?.response?.data?.message || error?.message || 'Unable to load tasks. Please try again.';
         Alert.alert('Error Loading Tasks', errorMessage);
@@ -175,12 +180,12 @@ export default function TasksScreen() {
           taskData.specificDayOfWeek = reminderData.specificDayOfWeek;
         } else {
           // Clear specificDayOfWeek if not in result
-          taskData.specificDayOfWeek = null;
+          taskData.specificDayOfWeek = undefined;
         }
       } else {
         // Explicitly set empty arrays to prevent backend defaults
         taskData.reminderDaysBefore = [];
-        taskData.specificDayOfWeek = null;
+        taskData.specificDayOfWeek = undefined;
       }
 
       const createdTask = await tasksService.create(listId, taskData);
@@ -261,29 +266,59 @@ export default function TasksScreen() {
     );
   };
 
-  const handleToggleTask = async (task: Task) => {
-    const newCompletedState = !task.completed;
-    
-    // Optimistic update - update UI immediately for instant feedback
-    setAllTasks(prevTasks => 
-      prevTasks.map(t => 
-        t.id === task.id ? { ...t, completed: newCompletedState } : t
-      )
+  const handleArchivedTaskOptions = (task: Task) => {
+    Alert.alert(
+      'Archived Task',
+      `What would you like to do with "${task.description}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Restore',
+          onPress: async () => {
+            try {
+              await tasksService.restore(task.id);
+              Alert.alert('Success', 'Task restored to original list');
+              loadTasks();
+            } catch (error: any) {
+              const errorMessage = error?.response?.data?.message || error?.message || 'Unable to restore task. Please try again.';
+              Alert.alert('Restore Failed', errorMessage);
+            }
+          },
+        },
+        {
+          text: 'Delete Forever',
+          style: 'destructive',
+          onPress: async () => {
+            Alert.alert(
+              'Permanently Delete?',
+              'This action cannot be undone. The task will be deleted forever.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete Forever',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      // Cancel all notifications for this task
+                      await cancelAllTaskNotifications(task.id);
+                      // Clean up client-side storage
+                      await EveryDayRemindersStorage.removeRemindersForTask(task.id);
+                      await ReminderTimesStorage.removeTimesForTask(task.id);
+                      await ReminderAlarmsStorage.removeAlarmsForTask(task.id);
+                      await tasksService.permanentDelete(task.id);
+                      loadTasks();
+                    } catch (error: any) {
+                      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to delete task. Please try again.';
+                      Alert.alert('Delete Failed', errorMessage);
+                    }
+                  },
+                },
+              ],
+            );
+          },
+        },
+      ],
     );
-
-    try {
-      await tasksService.update(task.id, { completed: newCompletedState });
-      // No need to reload - we already updated the state
-    } catch (error: any) {
-      // Revert on error
-      setAllTasks(prevTasks => 
-        prevTasks.map(t => 
-          t.id === task.id ? { ...t, completed: task.completed } : t
-        )
-      );
-      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to update task. Please try again.';
-      Alert.alert('Update Failed', errorMessage);
-    }
   };
 
   if (loading) {
@@ -341,33 +376,25 @@ export default function TasksScreen() {
             !isCompleted &&
             new Date(item.dueDate) < new Date() &&
             new Date(item.dueDate).toDateString() !== new Date().toDateString();
+          const completionCount = item.completionCount || 0;
 
           return (
-            <View
+            <TouchableOpacity
               style={[
                 styles.taskItem,
                 isCompleted && styles.taskItemCompleted,
                 isOverdue && styles.taskItemOverdue,
               ]}
+              onPress={() => {
+                // Navigate to task details on tap
+                navigation.navigate('TaskDetails', { taskId: item.id });
+              }}
+              onLongPress={() => isArchivedList ? handleArchivedTaskOptions(item) : handleDeleteTask(item)}
             >
-              {/* Tappable checkbox for quick completion toggle */}
-              <TouchableOpacity
-                style={[
-                  styles.taskCheckbox,
-                  isCompleted && styles.taskCheckboxCompleted,
-                ]}
-                onPress={() => handleToggleTask(item)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                {isCompleted && <Text style={styles.checkmark}>✓</Text>}
-              </TouchableOpacity>
-              
-              {/* Tappable content area for navigation to details */}
-              <TouchableOpacity
-                style={styles.taskContent}
-                onPress={() => navigation.navigate('TaskDetails', { taskId: item.id })}
-                onLongPress={() => handleDeleteTask(item)}
-              >
+              <View style={styles.taskContent}>
+                <View style={styles.taskCheckbox}>
+                  {isCompleted && <Text style={styles.checkmark}>✓</Text>}
+                </View>
                 <View style={styles.taskTextContainer}>
                   <Text
                     style={[
@@ -377,19 +404,26 @@ export default function TasksScreen() {
                   >
                     {item.description}
                   </Text>
-                  {item.dueDate && (
-                    <Text
-                      style={[
-                        styles.dueDate,
-                        isOverdue && styles.dueDateOverdue,
-                      ]}
-                    >
-                      Due: {formatDate(item.dueDate)}
-                    </Text>
-                  )}
+                  <View style={styles.taskMetaRow}>
+                    {item.dueDate && (
+                      <Text
+                        style={[
+                          styles.dueDate,
+                          isOverdue && styles.dueDateOverdue,
+                        ]}
+                      >
+                        Due: {formatDate(item.dueDate)}
+                      </Text>
+                    )}
+                    {isRepeatingList && completionCount > 0 && (
+                      <Text style={styles.completionCount}>
+                        🔄 {completionCount}x completed
+                      </Text>
+                    )}
+                  </View>
                 </View>
-              </TouchableOpacity>
-            </View>
+              </View>
+            </TouchableOpacity>
           );
         }}
         ListEmptyComponent={
@@ -637,8 +671,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   taskItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#fff',
     padding: 15,
     marginHorizontal: 10,
@@ -659,26 +691,23 @@ const styles = StyleSheet.create({
     borderLeftColor: '#f44336',
   },
   taskContent: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
   taskCheckbox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: '#007AFF',
     marginRight: 12,
+    marginTop: 2,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  taskCheckboxCompleted: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: '#fff',
   },
   checkmark: {
-    color: '#fff',
+    color: '#007AFF',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -697,11 +726,26 @@ const styles = StyleSheet.create({
   dueDate: {
     fontSize: 13,
     color: '#666',
-    marginTop: 6,
   },
   dueDateOverdue: {
     color: '#f44336',
     fontWeight: '600',
+  },
+  taskMetaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  completionCount: {
+    fontSize: 12,
+    color: '#4CAF50',
+    fontWeight: '500',
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
   },
   emptyContainer: {
     flexGrow: 1,
@@ -729,7 +773,7 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 20,
-    bottom: 100, // Increased to clear bottom nav bar + safe area
+    bottom: 20,
     width: 56,
     height: 56,
     borderRadius: 28,

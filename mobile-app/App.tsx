@@ -22,7 +22,7 @@ export default function App() {
           } catch (error: any) {
             // Silently ignore auth errors - background task shouldn't show alerts
             const isAuthError = error?.response?.status === 401 || 
-                                error?.message?.toLowerCase().includes('unauthorized');
+                                error?.message?.toLowerCase()?.includes('unauthorized');
             if (!isAuthError) {
               throw error; // Re-throw non-auth errors
             }
@@ -34,7 +34,7 @@ export default function App() {
     initializeNotifications().catch((error) => {
       // Silently ignore auth errors during startup - user will login if needed
       const isAuthError = error?.response?.status === 401 || 
-                          error?.message?.toLowerCase().includes('unauthorized');
+                          error?.message?.toLowerCase()?.includes('unauthorized');
       if (!isAuthError) {
         console.error('Error initializing notifications:', error);
       }

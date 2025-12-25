@@ -206,7 +206,7 @@ export default function TaskDetailsScreen() {
     } catch (error: any) {
       // Silently ignore auth errors - the navigation will handle redirect to login
       const isAuthError = error?.response?.status === 401 || 
-                          error?.message?.toLowerCase().includes('unauthorized');
+                          error?.message?.toLowerCase()?.includes('unauthorized');
       if (!isAuthError) {
         const errorMessage = error?.response?.data?.message || error?.message || 'Unable to load task. Please try again.';
         Alert.alert('Error Loading Task', errorMessage);
@@ -364,17 +364,10 @@ export default function TaskDetailsScreen() {
   const handleToggleTask = async () => {
     if (!task) return;
 
-    const newCompletedState = !task.completed;
-    
-    // Optimistic update - update UI immediately
-    setTask(prevTask => prevTask ? { ...prevTask, completed: newCompletedState } : null);
-
     try {
-      await tasksService.update(taskId, { completed: newCompletedState });
-      // No need to reload - already updated
+      await tasksService.update(taskId, { completed: !task.completed });
+      loadTaskData();
     } catch (error: any) {
-      // Revert on error
-      setTask(prevTask => prevTask ? { ...prevTask, completed: task.completed } : null);
       const errorMessage = error?.response?.data?.message || error?.message || 'Unable to toggle task completion. Please try again.';
       Alert.alert('Update Failed', errorMessage);
     }
@@ -386,62 +379,22 @@ export default function TaskDetailsScreen() {
       return;
     }
 
-    // Store description before clearing
-    const description = newStepDescription.trim();
-    
-    // Create optimistic step with temporary ID
-    const tempId = Date.now();
-    const optimisticStep: Step = {
-      id: tempId,
-      description,
-      completed: false,
-      taskId,
-      order: steps.length,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    // Close modal, clear input, and add step immediately
-    setShowAddStepModal(false);
-    setNewStepDescription('');
-    setSteps(prevSteps => [...prevSteps, optimisticStep]);
-
     try {
-      const createdStep = await stepsService.create(taskId, { description });
-      // Replace optimistic step with real one from server
-      setSteps(prevSteps => 
-        prevSteps.map(s => s.id === tempId ? createdStep : s)
-      );
+      await stepsService.create(taskId, { description: newStepDescription.trim() });
+      setNewStepDescription('');
+      setShowAddStepModal(false);
+      loadTaskData();
     } catch (error: any) {
-      // Remove optimistic step on error
-      setSteps(prevSteps => prevSteps.filter(s => s.id !== tempId));
       const errorMessage = error?.response?.data?.message || error?.message || 'Unable to add step. Please try again.';
       Alert.alert('Add Step Failed', errorMessage);
-      // Reload to ensure UI is in sync
-      loadTaskData();
     }
   };
 
   const handleToggleStep = async (step: Step) => {
-    const newCompletedState = !step.completed;
-    
-    // Optimistic update - update UI immediately
-    setSteps(prevSteps => 
-      prevSteps.map(s => 
-        s.id === step.id ? { ...s, completed: newCompletedState } : s
-      )
-    );
-
     try {
-      await stepsService.update(step.id, { completed: newCompletedState });
-      // No need to reload - already updated
+      await stepsService.update(step.id, { completed: !step.completed });
+      loadTaskData();
     } catch (error: any) {
-      // Revert on error
-      setSteps(prevSteps => 
-        prevSteps.map(s => 
-          s.id === step.id ? { ...s, completed: step.completed } : s
-        )
-      );
       const errorMessage = error?.response?.data?.message || error?.message || 'Unable to update step. Please try again.';
       Alert.alert('Update Failed', errorMessage);
     }
@@ -465,11 +418,6 @@ export default function TaskDetailsScreen() {
         ...prev,
         [reminderId]: newAlarmState,
       }));
-
-      // Also update editReminders to keep it in sync for when user enters edit mode
-      setEditReminders(prev => prev.map(r => 
-        r.id === reminderId ? { ...r, hasAlarm: newAlarmState } : r
-      ));
 
       // Get all reminders to update notifications
       const backendReminders = convertBackendToReminders(
@@ -515,31 +463,12 @@ export default function TaskDetailsScreen() {
       return;
     }
 
-    const stepId = editingStepId;
-    const newDescription = editingStepDescription.trim();
-    const oldStep = steps.find(s => s.id === stepId);
-    
-    // Optimistic update - update UI immediately
-    setSteps(prevSteps => 
-      prevSteps.map(s => 
-        s.id === stepId ? { ...s, description: newDescription } : s
-      )
-    );
-    setEditingStepId(null);
-    setEditingStepDescription('');
-
     try {
-      await stepsService.update(stepId, { description: newDescription });
-      // No need to reload - already updated
+      await stepsService.update(editingStepId, { description: editingStepDescription.trim() });
+      setEditingStepId(null);
+      setEditingStepDescription('');
+      loadTaskData();
     } catch (error: any) {
-      // Revert on error
-      if (oldStep) {
-        setSteps(prevSteps => 
-          prevSteps.map(s => 
-            s.id === stepId ? { ...s, description: oldStep.description } : s
-          )
-        );
-      }
       const errorMessage = error?.response?.data?.message || error?.message || 'Unable to update step. Please try again.';
       Alert.alert('Update Failed', errorMessage);
     }
@@ -548,17 +477,6 @@ export default function TaskDetailsScreen() {
   const handleCancelStepEdit = () => {
     setEditingStepId(null);
     setEditingStepDescription('');
-  };
-
-  const handleStartEditing = () => {
-    // Update editReminders with the current alarm states before entering edit mode
-    // This ensures the edit modal shows the correct alarm toggle state
-    const updatedReminders = editReminders.map(r => ({
-      ...r,
-      hasAlarm: reminderAlarmStates[r.id] !== undefined ? reminderAlarmStates[r.id] : (r.hasAlarm || false),
-    }));
-    setEditReminders(updatedReminders);
-    setIsEditing(true);
   };
 
   const handleDeleteStep = (step: Step) => {
@@ -571,15 +489,10 @@ export default function TaskDetailsScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            // Optimistic update - remove immediately
-            setSteps(prevSteps => prevSteps.filter(s => s.id !== step.id));
-            
             try {
               await stepsService.delete(step.id);
-              // No need to reload - already removed
+              loadTaskData();
             } catch (error: any) {
-              // Revert on error - add step back
-              setSteps(prevSteps => [...prevSteps, step].sort((a, b) => a.order - b.order));
               const errorMessage = error?.response?.data?.message || error?.message || 'Unable to delete step. Please try again.';
               Alert.alert('Delete Failed', errorMessage);
             }
@@ -652,13 +565,19 @@ export default function TaskDetailsScreen() {
                   {task.description}
                 </Text>
               )}
+              {/* Show completion count for repeating tasks */}
+              {!isEditing && task.completionCount > 0 && (
+                <Text style={styles.completionCountBadge}>
+                  🔄 Completed {task.completionCount} time{task.completionCount !== 1 ? 's' : ''}
+                </Text>
+              )}
             </View>
           </View>
 
           {!isEditing && (
             <TouchableOpacity
               style={styles.editButton}
-              onPress={handleStartEditing}
+              onPress={() => setIsEditing(true)}
             >
               <Text style={styles.editButtonText}>Edit</Text>
             </TouchableOpacity>
@@ -746,28 +665,6 @@ export default function TaskDetailsScreen() {
             return null;
           })()}
         </View>
-
-        {/* Quick Complete Toggle Button - only show when NOT editing */}
-        {!isEditing && (
-          <TouchableOpacity
-            style={[
-              styles.completeButton,
-              isCompleted && styles.completeButtonDone
-            ]}
-            onPress={handleToggleTask}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.completeButtonIcon, { color: isCompleted ? '#fff' : '#007AFF' }]}>
-              {isCompleted ? '✓' : '○'}
-            </Text>
-            <Text style={[
-              styles.completeButtonText,
-              isCompleted && styles.completeButtonTextDone
-            ]}>
-              {isCompleted ? 'Completed' : 'Mark as Complete'}
-            </Text>
-          </TouchableOpacity>
-        )}
 
         {/* Reminders Section (when editing) */}
         {isEditing && (
@@ -1041,6 +938,17 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
     color: '#999',
   },
+  completionCountBadge: {
+    fontSize: 13,
+    color: '#4CAF50',
+    fontWeight: '500',
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
   editButton: {
     marginTop: 12,
     paddingVertical: 8,
@@ -1052,40 +960,6 @@ const styles = StyleSheet.create({
   editButtonText: {
     color: '#fff',
     fontSize: 14,
-    fontWeight: '600',
-  },
-  completeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    marginHorizontal: 15,
-    marginVertical: 10,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#007AFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  completeButtonDone: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
-  },
-  completeButtonIcon: {
-    fontSize: 24,
-    marginRight: 10,
-  },
-  completeButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#007AFF',
-  },
-  completeButtonTextDone: {
-    color: '#fff',
     fontWeight: '600',
   },
   editInput: {
