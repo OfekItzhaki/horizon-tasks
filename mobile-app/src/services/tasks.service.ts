@@ -1,8 +1,4 @@
 import { apiClient, ApiError } from '../utils/api-client';
-<<<<<<< HEAD
-=======
-import { normalizeBooleans } from '../utils/normalize';
->>>>>>> main
 import {
   Task,
   CreateTaskDto,
@@ -17,12 +13,7 @@ export class TasksService {
     try {
       const params = todoListId ? { todoListId } : {};
       const response = await apiClient.get<Task[]>('/tasks', { params });
-<<<<<<< HEAD
       return response.data;
-=======
-      // Ensure all boolean fields are properly normalized
-      return normalizeBooleans(response.data);
->>>>>>> main
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
@@ -39,11 +30,7 @@ export class TasksService {
       const response = await apiClient.get<Task[]>('/tasks/by-date', {
         params: { date },
       });
-<<<<<<< HEAD
       return response.data;
-=======
-      return normalizeBooleans(response.data);
->>>>>>> main
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
@@ -58,11 +45,7 @@ export class TasksService {
   async getById(id: number): Promise<Task> {
     try {
       const response = await apiClient.get<Task>(`/tasks/${id}`);
-<<<<<<< HEAD
       return response.data;
-=======
-      return normalizeBooleans(response.data);
->>>>>>> main
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
@@ -80,11 +63,7 @@ export class TasksService {
         `/tasks/todo-list/${todoListId}`,
         data,
       );
-<<<<<<< HEAD
       return response.data;
-=======
-      return normalizeBooleans(response.data);
->>>>>>> main
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
@@ -99,11 +78,7 @@ export class TasksService {
   async update(id: number, data: UpdateTaskDto): Promise<Task> {
     try {
       const response = await apiClient.patch<Task>(`/tasks/${id}`, data);
-<<<<<<< HEAD
       return response.data;
-=======
-      return normalizeBooleans(response.data);
->>>>>>> main
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
@@ -125,7 +100,6 @@ export class TasksService {
       throw new ApiError(0, 'Failed to delete task');
     }
   }
-<<<<<<< HEAD
 
   /**
    * Restore an archived task to its original list
@@ -155,10 +129,37 @@ export class TasksService {
       throw new ApiError(0, 'Failed to permanently delete task');
     }
   }
-=======
+}
 >>>>>>> main
+
+  /**
+   * Restore a soft-deleted task
+   */
+  async restore(id: number): Promise<Task> {
+    try {
+      const response = await apiClient.patch<Task>(`/tasks/${id}/restore`);
+      return response.data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError(0, 'Failed to restore task');
+    }
+  }
+
+  /**
+   * Permanently delete a task
+   */
+  async permanentDelete(id: number): Promise<void> {
+    try {
+      await apiClient.delete(`/tasks/${id}/permanent`);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError(0, 'Failed to permanently delete task');
+    }
+  }
 }
 
 export const tasksService = new TasksService();
-
-

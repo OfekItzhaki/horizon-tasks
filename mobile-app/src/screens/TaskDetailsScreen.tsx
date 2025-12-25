@@ -10,10 +10,7 @@ import {
   TextInput,
   Modal,
   RefreshControl,
-<<<<<<< HEAD
   Platform,
-=======
->>>>>>> main
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -25,10 +22,7 @@ import ReminderConfigComponent from '../components/ReminderConfig';
 import DatePicker from '../components/DatePicker';
 import { scheduleTaskReminders, cancelAllTaskNotifications } from '../services/notifications.service';
 import { EveryDayRemindersStorage, ReminderAlarmsStorage, ReminderTimesStorage } from '../utils/storage';
-<<<<<<< HEAD
 import { convertRemindersToBackend, formatDate } from '../utils/helpers';
-=======
->>>>>>> main
 
 type TaskDetailsRouteProp = RouteProp<RootStackParamList, 'TaskDetails'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -145,100 +139,6 @@ export default function TaskDetailsScreen() {
     return reminders;
   };
 
-<<<<<<< HEAD
-=======
-  // Convert ReminderConfig format to backend format (reused from TasksScreen)
-  const convertRemindersToBackend = (
-    reminders: ReminderConfig[],
-    dueDate?: string,
-  ): { dueDate?: string; reminderDaysBefore?: number[]; specificDayOfWeek?: number } => {
-    const result: { dueDate?: string; reminderDaysBefore?: number[]; specificDayOfWeek?: number } = {};
-
-    if (dueDate) {
-      result.dueDate = new Date(dueDate).toISOString();
-    }
-
-    const daysBefore: number[] = [];
-    let dayOfWeek: number | undefined;
-
-    reminders.forEach((reminder) => {
-      // Note: EVERY_DAY reminders are NOT saved to backend (backend only supports 0-6 for weekly)
-      // They're handled client-side via notifications only
-      // Skip EVERY_DAY reminders for backend storage
-      if (reminder.timeframe === ReminderTimeframe.EVERY_DAY) {
-        console.log(`Skipping EVERY_DAY reminder: ${reminder.id}`);
-        return; // Skip - handled by notification system only
-      }
-      
-      // For reminders with daysBefore (relative to due date) - this is the primary use case
-      // This handles ALL reminder types that have daysBefore set (SPECIFIC_DATE, etc.)
-      // Only save if we have a due date (either existing or being set in this update)
-      if (reminder.daysBefore !== undefined && reminder.daysBefore > 0) {
-        if (dueDate) {
-          daysBefore.push(reminder.daysBefore);
-          console.log(`Added daysBefore reminder: ${reminder.daysBefore} days (ID: ${reminder.id}, timeframe: ${reminder.timeframe})`);
-        } else {
-          console.log(`Skipping daysBefore reminder ${reminder.id}: no due date (daysBefore: ${reminder.daysBefore})`);
-        }
-      } else {
-        console.log(`Reminder ${reminder.id} has no daysBefore (timeframe: ${reminder.timeframe}, daysBefore: ${reminder.daysBefore})`);
-      }
-
-      // For weekly reminders (only one can be saved due to backend limitation)
-      if (reminder.timeframe === ReminderTimeframe.EVERY_WEEK) {
-        if (reminder.dayOfWeek !== undefined && reminder.dayOfWeek >= 0 && reminder.dayOfWeek <= 6) {
-          // If multiple weekly reminders exist, the last one will overwrite (backend limitation)
-          dayOfWeek = reminder.dayOfWeek;
-          console.log(`Set weekly reminder: day ${reminder.dayOfWeek} (reminder ID: ${reminder.id})`);
-        } else {
-          console.log(`WARNING: EVERY_WEEK reminder ${reminder.id} has invalid dayOfWeek: ${reminder.dayOfWeek}`);
-        }
-      }
-
-      // For SPECIFIC_DATE reminders with customDate (not daysBefore) that are relative to due date
-      // Convert the custom date to daysBefore if it's before the due date
-      // NOTE: This should only run if daysBefore is NOT already set (to avoid double-counting)
-      if (
-        reminder.timeframe === ReminderTimeframe.SPECIFIC_DATE && 
-        dueDate && 
-        reminder.customDate &&
-        (reminder.daysBefore === undefined || reminder.daysBefore === 0) // Only process if daysBefore wasn't already set
-      ) {
-        const reminderDate = new Date(reminder.customDate);
-        const due = new Date(dueDate);
-        const diffDays = Math.ceil((due.getTime() - reminderDate.getTime()) / (1000 * 60 * 60 * 24));
-        if (diffDays > 0 && diffDays <= 365) { // Reasonable range
-          daysBefore.push(diffDays);
-        }
-      }
-    });
-
-    // Always set reminderDaysBefore if we have valid daysBefore values
-    if (daysBefore.length > 0) {
-      // Remove duplicates and sort descending
-      result.reminderDaysBefore = [...new Set(daysBefore)].sort((a, b) => b - a);
-      console.log(`Final reminderDaysBefore array: [${result.reminderDaysBefore.join(', ')}]`);
-    } else {
-      // Set empty array if no daysBefore reminders
-      result.reminderDaysBefore = [];
-      console.log('No daysBefore reminders to save (empty array)');
-    }
-
-    // Set specificDayOfWeek (0-6 for weekly reminders only, backend doesn't support "every day")
-    // Always set it explicitly (even if null) so we can distinguish between "no weekly reminder" and "clear existing"
-    if (dayOfWeek !== undefined && dayOfWeek >= 0 && dayOfWeek <= 6) {
-      result.specificDayOfWeek = dayOfWeek;
-      console.log(`Final specificDayOfWeek: ${dayOfWeek}`);
-    } else {
-      // Explicitly set to undefined (will be converted to null in update)
-      result.specificDayOfWeek = undefined;
-      console.log('No weekly reminder to save (specificDayOfWeek will be null)');
-    }
-
-    return result;
-  };
-
->>>>>>> main
   const loadTaskData = async () => {
     try {
       const [taskData, stepsData] = await Promise.all([
@@ -304,18 +204,13 @@ export default function TaskDetailsScreen() {
       
       setEditReminders(convertedReminders);
     } catch (error: any) {
-<<<<<<< HEAD
       // Silently ignore auth errors - the navigation will handle redirect to login
       const isAuthError = error?.response?.status === 401 || 
-                          error?.message?.toLowerCase().includes('unauthorized');
+                          error?.message?.toLowerCase()?.includes('unauthorized');
       if (!isAuthError) {
         const errorMessage = error?.response?.data?.message || error?.message || 'Unable to load task. Please try again.';
         Alert.alert('Error Loading Task', errorMessage);
       }
-=======
-      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to load task. Please try again.';
-      Alert.alert('Error Loading Task', errorMessage);
->>>>>>> main
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -402,7 +297,6 @@ export default function TaskDetailsScreen() {
       }
       
       // Store reminder times for all reminders (backend doesn't store times)
-<<<<<<< HEAD
       // Use normalized IDs that will match after reload from backend
       const reminderTimes: Record<string, string> = {};
       editReminders.forEach(reminder => {
@@ -418,13 +312,6 @@ export default function TaskDetailsScreen() {
           }
           // Store the time with normalized ID
           reminderTimes[normalizedId] = reminder.time;
-=======
-      const reminderTimes: Record<string, string> = {};
-      editReminders.forEach(reminder => {
-        if (reminder.time && reminder.time !== '09:00') {
-          // Only store if time is different from default
-          reminderTimes[reminder.id] = reminder.time;
->>>>>>> main
         }
       });
       
@@ -615,33 +502,6 @@ export default function TaskDetailsScreen() {
     );
   };
 
-<<<<<<< HEAD
-=======
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    // Reset time for comparison
-    today.setHours(0, 0, 0, 0);
-    tomorrow.setHours(0, 0, 0, 0);
-    date.setHours(0, 0, 0, 0);
-
-    if (date.getTime() === today.getTime()) {
-      return 'Today';
-    } else if (date.getTime() === tomorrow.getTime()) {
-      return 'Tomorrow';
-    } else {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
-      });
-    }
-  };
-
->>>>>>> main
   if (loading) {
     return (
       <View style={styles.center}>
@@ -665,7 +525,6 @@ export default function TaskDetailsScreen() {
 
   return (
     <View style={styles.container}>
-<<<<<<< HEAD
       {/* Screen Header */}
       <View style={styles.screenHeader}>
         <TouchableOpacity
@@ -678,8 +537,6 @@ export default function TaskDetailsScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-=======
->>>>>>> main
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -708,15 +565,12 @@ export default function TaskDetailsScreen() {
                   {task.description}
                 </Text>
               )}
-<<<<<<< HEAD
               {/* Show completion count for repeating tasks */}
               {!isEditing && task.completionCount > 0 && (
                 <Text style={styles.completionCountBadge}>
                   🔄 Completed {task.completionCount} time{task.completionCount !== 1 ? 's' : ''}
                 </Text>
               )}
-=======
->>>>>>> main
             </View>
           </View>
 
@@ -749,13 +603,8 @@ export default function TaskDetailsScreen() {
               )}
             </View>
 
-<<<<<<< HEAD
           {/* Display Reminders - only show when NOT editing (editing uses ReminderConfigComponent) */}
           {!isEditing && (() => {
-=======
-          {/* Display Reminders */}
-          {(() => {
->>>>>>> main
             const displayReminders = convertBackendToReminders(
               task.reminderDaysBefore,
               task.specificDayOfWeek,
@@ -765,7 +614,6 @@ export default function TaskDetailsScreen() {
             // Add client-side stored EVERY_DAY reminders for display
             let allDisplayReminders = [...displayReminders, ...displayEveryDayReminders];
             
-<<<<<<< HEAD
             // Apply alarm states and saved times from state
             allDisplayReminders = allDisplayReminders.map(r => {
               // Find matching reminder in editReminders to get the correct time
@@ -776,13 +624,6 @@ export default function TaskDetailsScreen() {
                 time: matchingReminder?.time || r.time || '09:00',
               };
             });
-=======
-            // Apply alarm states from state
-            allDisplayReminders = allDisplayReminders.map(r => ({
-              ...r,
-              hasAlarm: reminderAlarmStates[r.id] !== undefined ? reminderAlarmStates[r.id] : (r.hasAlarm || false),
-            }));
->>>>>>> main
             
             if (allDisplayReminders.length > 0) {
               return (
@@ -865,7 +706,7 @@ export default function TaskDetailsScreen() {
           ) : (
             steps.map((step) => {
               const stepCompleted = Boolean(step.completed);
-              const isEditing = editingStepId === step.id;
+              const isEditingStep = editingStepId === step.id;
               
               return (
                 <View
@@ -882,7 +723,7 @@ export default function TaskDetailsScreen() {
                     {stepCompleted && <Text style={styles.checkmark}>✓</Text>}
                   </TouchableOpacity>
                   
-                  {isEditing ? (
+                  {isEditingStep ? (
                     <View style={styles.stepEditContainer}>
                       <TextInput
                         style={styles.stepEditInput}
@@ -1020,7 +861,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-<<<<<<< HEAD
   screenHeader: {
     backgroundColor: '#fff',
     flexDirection: 'row',
@@ -1047,8 +887,6 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 60, // Balance the back button width
   },
-=======
->>>>>>> main
   center: {
     flex: 1,
     justifyContent: 'center',
@@ -1100,7 +938,6 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
     color: '#999',
   },
-<<<<<<< HEAD
   completionCountBadge: {
     fontSize: 13,
     color: '#4CAF50',
@@ -1112,8 +949,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     alignSelf: 'flex-start',
   },
-=======
->>>>>>> main
   editButton: {
     marginTop: 12,
     paddingVertical: 8,
@@ -1446,4 +1281,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-

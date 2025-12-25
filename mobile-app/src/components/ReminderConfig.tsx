@@ -186,7 +186,12 @@ export default function ReminderConfigComponent({
           {reminders.map((reminder) => (
             <View key={reminder.id} style={styles.reminderItem}>
               <View style={styles.reminderContent}>
-                <Text style={styles.reminderText}>{formatReminder(reminder)}</Text>
+                <View style={styles.reminderTextRow}>
+                  <Text style={styles.reminderText}>{formatReminder(reminder)}</Text>
+                  <Text style={styles.alarmIndicator}>
+                    {reminder.hasAlarm ? '🔔' : '🔕'}
+                  </Text>
+                </View>
               </View>
               <View style={styles.reminderActions}>
                 <TouchableOpacity
@@ -627,9 +632,18 @@ const styles = StyleSheet.create({
   reminderContent: {
     flex: 1,
   },
+  reminderTextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   reminderText: {
     fontSize: 14,
     color: '#333',
+    flex: 1,
+  },
+  alarmIndicator: {
+    fontSize: 16,
   },
   reminderActions: {
     flexDirection: 'row',
@@ -849,4 +863,3 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
-

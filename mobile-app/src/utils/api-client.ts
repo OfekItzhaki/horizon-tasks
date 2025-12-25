@@ -54,22 +54,46 @@ const createApiClient = (): AxiosInstance => {
     (error: AxiosError) => {
       if (error.response) {
         const statusCode = error.response.status;
-        const message =
-          (error.response.data as any)?.message ||
-          error.message ||
-          'An error occurred';
+        const serverMessage = (error.response.data as any)?.message;
+        
+        // Provide user-friendly messages for common HTTP errors
+        let message: string;
+        switch (statusCode) {
+          case 400:
+            message = serverMessage || 'Invalid request. Please check your input.';
+            break;
+          case 401:
+            message = serverMessage || 'Invalid credentials. Please try again.';
+            break;
+          case 403:
+            message = 'You do not have permission to perform this action.';
+            break;
+          case 404:
+            message = serverMessage || 'The requested resource was not found.';
+            break;
+          case 409:
+            message = serverMessage || 'This resource already exists.';
+            break;
+          case 500:
+            message = 'Server error. Please try again later.';
+            break;
+          case 502:
+          case 503:
+          case 504:
+            message = 'Server is temporarily unavailable. Please try again later.';
+            break;
+          default:
+            message = serverMessage || error.message || 'An error occurred';
+        }
         throw new ApiError(statusCode, message, error.response.data);
       } else if (error.request) {
-        // Enhanced error message for network issues
-        const baseURL = getApiUrl('');
-        const errorMessage = `Network error: Cannot reach server at ${baseURL}. ` +
-          `Make sure:\n` +
-          `1. Backend is running\n` +
-          `2. Using your computer's IP (not localhost) on physical devices\n` +
-          `3. Phone and computer are on the same network`;
-        throw new ApiError(0, errorMessage);
+        // Network error - server not reachable
+        throw new ApiError(
+          0, 
+          'Unable to connect to server. Please check your internet connection and try again.',
+        );
       } else {
-        throw new ApiError(0, error.message || 'An error occurred');
+        throw new ApiError(0, 'Something went wrong. Please try again.');
       }
     },
   );
@@ -78,5 +102,3 @@ const createApiClient = (): AxiosInstance => {
 };
 
 export const apiClient = createApiClient();
-
-

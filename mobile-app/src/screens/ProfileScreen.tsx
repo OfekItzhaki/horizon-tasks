@@ -6,10 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-<<<<<<< HEAD
   Platform,
-=======
->>>>>>> main
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 
@@ -48,15 +45,11 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-<<<<<<< HEAD
       <View style={styles.header}>
         <Text style={styles.title}>Profile</Text>
       </View>
       <View style={styles.content}>
         <View style={styles.profileCard}>
-=======
-      <View style={styles.profileCard}>
->>>>>>> main
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
             {user.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
@@ -69,17 +62,10 @@ export default function ProfileScreen() {
         </Text>
       </View>
 
-<<<<<<< HEAD
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
-=======
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Logout</Text>
-      </TouchableOpacity>
->>>>>>> main
-    </View>
   );
 }
 
@@ -87,7 +73,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-<<<<<<< HEAD
   },
   header: {
     backgroundColor: '#fff',
@@ -103,8 +88,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-=======
->>>>>>> main
     padding: 20,
   },
   center: {
@@ -164,4 +147,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-

@@ -12,14 +12,12 @@ import TasksScreen from '../screens/TasksScreen';
 import TaskDetailsScreen from '../screens/TaskDetailsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
+import { ListType } from '../types';
+
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
-<<<<<<< HEAD
-  Tasks: { listId: number; listName: string; listType: string };
-=======
-  Tasks: { listId: number; listName: string };
->>>>>>> main
+  Tasks: { listId: number; listName: string; listType?: ListType };
   TaskDetails: { taskId: number };
 };
 
@@ -33,15 +31,11 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function MainTabs() {
   return (
-<<<<<<< HEAD
     <Tab.Navigator
       screenOptions={{
         headerShown: false, // Screens have their own custom headers
       }}
     >
-=======
-    <Tab.Navigator>
->>>>>>> main
       <Tab.Screen
         name="Lists"
         component={ListsScreen}
@@ -76,20 +70,12 @@ export default function AppNavigator() {
             <Stack.Screen
               name="Tasks"
               component={TasksScreen}
-<<<<<<< HEAD
               options={{ headerShown: false }}
-=======
-              options={{ headerShown: true }}
->>>>>>> main
             />
             <Stack.Screen
               name="TaskDetails"
               component={TaskDetailsScreen}
-<<<<<<< HEAD
               options={{ headerShown: false }}
-=======
-              options={{ headerShown: true, title: 'Task Details' }}
->>>>>>> main
             />
           </>
         ) : (
@@ -108,4 +94,3 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
 });
-

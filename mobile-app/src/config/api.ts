@@ -12,11 +12,7 @@
 export const API_CONFIG = {
   // For physical devices, use your computer's IP address
   // Change this to match your network (check with: ipconfig)
-<<<<<<< HEAD
   baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.198:3000',
-=======
-  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.68.55:3000',
->>>>>>> main
 };
 
 export const getApiUrl = (endpoint: string): string => {
