@@ -11,19 +11,18 @@ import { UpdateStepDto } from './dto/update-step.dto';
 export class StepsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async ensureTaskAccess(taskId: number, ownerId: number) {
+  private async ensureTaskAccess(taskId: number, userId: number) {
+    // Check if user owns the list OR has shared access
     const task = await this.prisma.task.findFirst({
       where: {
         id: taskId,
         deletedAt: null,
         todoList: {
-          ownerId,
           deletedAt: null,
-        },
-      },
-      include: {
-        steps: {
-          where: { deletedAt: null },
+          OR: [
+            { ownerId: userId },
+            { shares: { some: { sharedWithId: userId } } },
+          ],
         },
       },
     });
@@ -35,7 +34,8 @@ export class StepsService {
     return task;
   }
 
-  private async ensureStepAccess(stepId: number, ownerId: number) {
+  private async ensureStepAccess(stepId: number, userId: number) {
+    // Check if user owns the list OR has shared access
     const step = await this.prisma.step.findFirst({
       where: {
         id: stepId,
@@ -43,8 +43,11 @@ export class StepsService {
         task: {
           deletedAt: null,
           todoList: {
-            ownerId,
             deletedAt: null,
+            OR: [
+              { ownerId: userId },
+              { shares: { some: { sharedWithId: userId } } },
+            ],
           },
         },
       },

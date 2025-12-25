@@ -17,20 +17,11 @@ import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { tasksService } from '../services/tasks.service';
-<<<<<<< HEAD
-import { Task, CreateTaskDto, ReminderConfig, ReminderTimeframe, ListType } from '../types';
-import ReminderConfigComponent from '../components/ReminderConfig';
-import DatePicker from '../components/DatePicker';
-import { scheduleTaskReminders, cancelAllTaskNotifications } from '../services/notifications.service';
-import { EveryDayRemindersStorage, ReminderTimesStorage, ReminderAlarmsStorage } from '../utils/storage';
-import { convertRemindersToBackend, formatDate } from '../utils/helpers';
-=======
 import { Task, CreateTaskDto, ReminderConfig, ReminderTimeframe, ReminderSpecificDate } from '../types';
 import ReminderConfigComponent from '../components/ReminderConfig';
 import DatePicker from '../components/DatePicker';
 import { scheduleTaskReminders, cancelAllTaskNotifications } from '../services/notifications.service';
 import { EveryDayRemindersStorage, ReminderTimesStorage } from '../utils/storage';
->>>>>>> main
 
 type TasksScreenRouteProp = RouteProp<RootStackParamList, 'Tasks'>;
 
@@ -39,16 +30,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function TasksScreen() {
   const route = useRoute<TasksScreenRouteProp>();
   const navigation = useNavigation<NavigationProp>();
-<<<<<<< HEAD
-  const { listId, listName, listType } = route.params;
-  
-  // Check if this is a repeating list (shows completion count)
-  const isRepeatingList = [ListType.DAILY, ListType.WEEKLY, ListType.MONTHLY, ListType.YEARLY].includes(listType as ListType);
-  // Check if this is the archived list
-  const isArchivedList = listType === ListType.FINISHED;
-=======
   const { listId, listName } = route.params;
->>>>>>> main
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -61,14 +43,11 @@ export default function TasksScreen() {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-<<<<<<< HEAD
-=======
 
   useEffect(() => {
     loadTasks();
   }, [listId]);
 
->>>>>>> main
   const [allTasks, setAllTasks] = useState<Task[]>([]);
 
   const loadTasks = async () => {
@@ -81,18 +60,8 @@ export default function TasksScreen() {
       }));
       setAllTasks(normalizedTasks);
     } catch (error: any) {
-<<<<<<< HEAD
-      // Silently ignore auth errors - the navigation will handle redirect to login
-      const isAuthError = error?.response?.status === 401 || 
-                          error?.message?.toLowerCase().includes('unauthorized');
-      if (!isAuthError) {
-        const errorMessage = error?.response?.data?.message || error?.message || 'Unable to load tasks. Please try again.';
-        Alert.alert('Error Loading Tasks', errorMessage);
-      }
-=======
       const errorMessage = error?.response?.data?.message || error?.message || 'Unable to load tasks. Please try again.';
       Alert.alert('Error Loading Tasks', errorMessage);
->>>>>>> main
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -166,8 +135,6 @@ export default function TasksScreen() {
   };
 
   // Convert reminder configs to backend format
-<<<<<<< HEAD
-=======
   const convertRemindersToBackend = (
     reminders: ReminderConfig[],
     dueDate?: string,
@@ -231,7 +198,6 @@ export default function TasksScreen() {
     return result;
   };
 
->>>>>>> main
   const handleAddTask = async () => {
     if (!newTaskDescription.trim()) {
       Alert.alert('Validation Error', 'Please enter a task description before adding.');
@@ -271,20 +237,12 @@ export default function TasksScreen() {
           taskData.specificDayOfWeek = reminderData.specificDayOfWeek;
         } else {
           // Clear specificDayOfWeek if not in result
-<<<<<<< HEAD
-          taskData.specificDayOfWeek = undefined;
-=======
           taskData.specificDayOfWeek = null;
->>>>>>> main
         }
       } else {
         // Explicitly set empty arrays to prevent backend defaults
         taskData.reminderDaysBefore = [];
-<<<<<<< HEAD
-        taskData.specificDayOfWeek = undefined;
-=======
         taskData.specificDayOfWeek = null;
->>>>>>> main
       }
 
       const createdTask = await tasksService.create(listId, taskData);
@@ -349,13 +307,6 @@ export default function TasksScreen() {
             try {
               // Cancel all notifications for this task
               await cancelAllTaskNotifications(task.id);
-<<<<<<< HEAD
-              // Clean up client-side storage for this task
-              await EveryDayRemindersStorage.removeRemindersForTask(task.id);
-              await ReminderTimesStorage.removeTimesForTask(task.id);
-              await ReminderAlarmsStorage.removeAlarmsForTask(task.id);
-=======
->>>>>>> main
               await tasksService.delete(task.id);
               loadTasks();
             } catch (error: any) {
@@ -368,61 +319,6 @@ export default function TasksScreen() {
     );
   };
 
-<<<<<<< HEAD
-  const handleArchivedTaskOptions = (task: Task) => {
-    Alert.alert(
-      'Archived Task',
-      `What would you like to do with "${task.description}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Restore',
-          onPress: async () => {
-            try {
-              await tasksService.restore(task.id);
-              Alert.alert('Success', 'Task restored to original list');
-              loadTasks();
-            } catch (error: any) {
-              const errorMessage = error?.response?.data?.message || error?.message || 'Unable to restore task. Please try again.';
-              Alert.alert('Restore Failed', errorMessage);
-            }
-          },
-        },
-        {
-          text: 'Delete Forever',
-          style: 'destructive',
-          onPress: async () => {
-            Alert.alert(
-              'Permanently Delete?',
-              'This action cannot be undone. The task will be deleted forever.',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Delete Forever',
-                  style: 'destructive',
-                  onPress: async () => {
-                    try {
-                      // Cancel all notifications for this task
-                      await cancelAllTaskNotifications(task.id);
-                      // Clean up client-side storage
-                      await EveryDayRemindersStorage.removeRemindersForTask(task.id);
-                      await ReminderTimesStorage.removeTimesForTask(task.id);
-                      await ReminderAlarmsStorage.removeAlarmsForTask(task.id);
-                      await tasksService.permanentDelete(task.id);
-                      loadTasks();
-                    } catch (error: any) {
-                      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to delete task. Please try again.';
-                      Alert.alert('Delete Failed', errorMessage);
-                    }
-                  },
-                },
-              ],
-            );
-          },
-        },
-      ],
-    );
-=======
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const today = new Date();
@@ -445,7 +341,6 @@ export default function TasksScreen() {
         year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
       });
     }
->>>>>>> main
   };
 
   if (loading) {
@@ -503,10 +398,6 @@ export default function TasksScreen() {
             !isCompleted &&
             new Date(item.dueDate) < new Date() &&
             new Date(item.dueDate).toDateString() !== new Date().toDateString();
-<<<<<<< HEAD
-          const completionCount = item.completionCount || 0;
-=======
->>>>>>> main
 
           return (
             <TouchableOpacity
@@ -519,11 +410,7 @@ export default function TasksScreen() {
                 // Navigate to task details on tap
                 navigation.navigate('TaskDetails', { taskId: item.id });
               }}
-<<<<<<< HEAD
-              onLongPress={() => isArchivedList ? handleArchivedTaskOptions(item) : handleDeleteTask(item)}
-=======
               onLongPress={() => handleDeleteTask(item)}
->>>>>>> main
             >
               <View style={styles.taskContent}>
                 <View style={styles.taskCheckbox}>
@@ -538,25 +425,6 @@ export default function TasksScreen() {
                   >
                     {item.description}
                   </Text>
-<<<<<<< HEAD
-                  <View style={styles.taskMetaRow}>
-                    {item.dueDate && (
-                      <Text
-                        style={[
-                          styles.dueDate,
-                          isOverdue && styles.dueDateOverdue,
-                        ]}
-                      >
-                        Due: {formatDate(item.dueDate)}
-                      </Text>
-                    )}
-                    {isRepeatingList && completionCount > 0 && (
-                      <Text style={styles.completionCount}>
-                        🔄 {completionCount}x completed
-                      </Text>
-                    )}
-                  </View>
-=======
                   {item.dueDate && (
                     <Text
                       style={[
@@ -567,7 +435,6 @@ export default function TasksScreen() {
                       Due: {formatDate(item.dueDate)}
                     </Text>
                   )}
->>>>>>> main
                 </View>
               </View>
             </TouchableOpacity>
@@ -725,11 +592,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#fff',
     padding: 20,
-<<<<<<< HEAD
-    paddingTop: Platform.OS === 'ios' ? 60 : 45, // Account for status bar
-=======
     paddingTop: Platform.OS === 'ios' ? 60 : 20,
->>>>>>> main
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
@@ -877,34 +740,12 @@ const styles = StyleSheet.create({
   dueDate: {
     fontSize: 13,
     color: '#666',
-<<<<<<< HEAD
-=======
     marginTop: 6,
->>>>>>> main
   },
   dueDateOverdue: {
     color: '#f44336',
     fontWeight: '600',
   },
-<<<<<<< HEAD
-  taskMetaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 4,
-  },
-  completionCount: {
-    fontSize: 12,
-    color: '#4CAF50',
-    fontWeight: '500',
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-=======
->>>>>>> main
   emptyContainer: {
     flexGrow: 1,
     justifyContent: 'center',
