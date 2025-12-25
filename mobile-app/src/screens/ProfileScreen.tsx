@@ -50,17 +50,17 @@ export default function ProfileScreen() {
       </View>
       <View style={styles.content}>
         <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {user.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-          <Text style={styles.name}>{user.name || 'No name'}</Text>
-          <Text style={styles.email}>{user.email}</Text>
-          <Text style={styles.verified}>
-            {Boolean(user.emailVerified) ? '✓ Verified' : '✗ Not verified'}
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>
+            {user.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
           </Text>
         </View>
+        <Text style={styles.name}>{user.name || 'No name'}</Text>
+        <Text style={styles.email}>{user.email}</Text>
+        <Text style={styles.verified}>
+          {Boolean(user.emailVerified) ? '✓ Verified' : '✗ Not verified'}
+        </Text>
+      </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>

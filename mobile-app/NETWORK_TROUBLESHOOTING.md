@@ -108,9 +108,3 @@ http://192.168.68.55:3000/api
 
 If this works, the network is fine and it's an app configuration issue.
 If this doesn't work, it's a network/firewall issue.
-<<<<<<< HEAD
-
-
-
-=======
->>>>>>> main
