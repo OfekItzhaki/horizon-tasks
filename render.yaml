@@ -1,0 +1,22 @@
+# Render Blueprint - Infrastructure as Code
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: tasks-api
+    runtime: node
+    region: oregon  # or your preferred region
+    plan: free  # or starter, standard, etc.
+    rootDir: todo-backend
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false  # Set manually in Render dashboard (contains secrets)
+      - key: JWT_SECRET
+        generateValue: true  # Auto-generate a secure value
+      - key: PORT
+        value: 3000
