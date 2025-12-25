@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -8,24 +8,38 @@ import { ListType } from '../todo-lists/dto/create-todo-list.dto';
 export class TasksService {
   constructor(private prisma: PrismaService) {}
 
-  private async ensureListAccess(todoListId: number, ownerId: number) {
-    await this.prisma.toDoList.findFirstOrThrow({
+  private async ensureListAccess(todoListId: number, userId: number) {
+    // Check if user owns the list OR has shared access to it
+    const list = await this.prisma.toDoList.findFirst({
       where: {
         id: todoListId,
-        ownerId,
         deletedAt: null,
+        OR: [
+          { ownerId: userId },
+          { shares: { some: { sharedWithId: userId } } },
+        ],
       },
     });
+
+    if (!list) {
+      throw new NotFoundException(`ToDoList with ID ${todoListId} not found`);
+    }
+
+    return list;
   }
 
-  private async findTaskForUser(id: number, ownerId: number) {
+  private async findTaskForUser(id: number, userId: number) {
+    // Check if user owns the list OR has shared access
     const task = await this.prisma.task.findFirst({
       where: {
         id,
         deletedAt: null,
         todoList: {
-          ownerId,
           deletedAt: null,
+          OR: [
+            { ownerId: userId },
+            { shares: { some: { sharedWithId: userId } } },
+          ],
         },
       },
       include: {
@@ -68,12 +82,15 @@ export class TasksService {
     });
   }
 
-  async findAll(ownerId: number, todoListId?: number) {
+  async findAll(userId: number, todoListId?: number) {
     const where: any = {
       deletedAt: null,
       todoList: {
-        ownerId,
         deletedAt: null,
+        OR: [
+          { ownerId: userId },
+          { shares: { some: { sharedWithId: userId } } },
+        ],
       },
     };
 
@@ -105,7 +122,19 @@ export class TasksService {
   }
 
   async update(id: number, updateTaskDto: UpdateTaskDto, ownerId: number) {
-    await this.findTaskForUser(id, ownerId);
+    const existingTask = await this.findTaskForUser(id, ownerId);
+
+    // Track completedAt timestamp
+    let completedAt: Date | null | undefined = undefined;
+    if (updateTaskDto.completed !== undefined) {
+      if (updateTaskDto.completed && !existingTask.completed) {
+        // Task is being marked as completed
+        completedAt = new Date();
+      } else if (!updateTaskDto.completed && existingTask.completed) {
+        // Task is being unmarked as completed
+        completedAt = null;
+      }
+    }
 
     return this.prisma.task.update({
       where: { id },
@@ -115,6 +144,7 @@ export class TasksService {
         specificDayOfWeek: updateTaskDto.specificDayOfWeek,
         reminderDaysBefore: updateTaskDto.reminderDaysBefore,
         completed: updateTaskDto.completed,
+        ...(completedAt !== undefined && { completedAt }),
       },
     });
   }
@@ -130,19 +160,22 @@ export class TasksService {
     });
   }
 
-  async getTasksByDate(ownerId: number, date: Date = new Date()) {
+  async getTasksByDate(userId: number, date: Date = new Date()) {
     // Normalize date to start of day
     const targetDate = new Date(date);
     targetDate.setHours(0, 0, 0, 0);
 
-    // Get all tasks from all lists
+    // Get all tasks from owned and shared lists
     const allTasks = await this.prisma.task.findMany({
       where: {
         deletedAt: null,
         completed: false,
         todoList: {
-          ownerId,
           deletedAt: null,
+          OR: [
+            { ownerId: userId },
+            { shares: { some: { sharedWithId: userId } } },
+          ],
         },
       },
       include: {
@@ -226,7 +259,7 @@ export class TasksService {
     return tasksForDate;
   }
 
-  async getTasksWithReminders(ownerId: number, date: Date = new Date()) {
+  async getTasksWithReminders(userId: number, date: Date = new Date()) {
     // Get all tasks that have reminders set for this date
     const targetDate = new Date(date);
     targetDate.setHours(0, 0, 0, 0);
@@ -236,8 +269,11 @@ export class TasksService {
         deletedAt: null,
         completed: false,
         todoList: {
-          ownerId,
           deletedAt: null,
+          OR: [
+            { ownerId: userId },
+            { shares: { some: { sharedWithId: userId } } },
+          ],
         },
       },
       include: {
@@ -317,5 +353,76 @@ export class TasksService {
     });
 
     return tasksWithReminders;
+  }
+
+  /**
+   * Restore an archived task back to its original list
+   */
+  async restore(id: number, ownerId: number) {
+    const task = await this.findTaskForUser(id, ownerId);
+    
+    // Check if task is in a FINISHED list
+    if (task.todoList.type !== ListType.FINISHED) {
+      throw new BadRequestException('Only archived tasks can be restored');
+    }
+
+    // Check if original list still exists
+    if (!task.originalListId) {
+      throw new BadRequestException('Original list information not available');
+    }
+
+    const originalList = await this.prisma.toDoList.findFirst({
+      where: {
+        id: task.originalListId,
+        ownerId,
+        deletedAt: null,
+      },
+    });
+
+    if (!originalList) {
+      throw new BadRequestException('Original list no longer exists');
+    }
+
+    // Restore task to original list
+    return this.prisma.task.update({
+      where: { id },
+      data: {
+        todoListId: task.originalListId,
+        originalListId: null,
+        completed: false,
+        completedAt: null,
+      },
+      include: {
+        steps: {
+          where: { deletedAt: null },
+          orderBy: { order: 'asc' },
+        },
+        todoList: true,
+      },
+    });
+  }
+
+  /**
+   * Permanently delete an archived task (hard delete)
+   */
+  async permanentDelete(id: number, ownerId: number) {
+    const task = await this.findTaskForUser(id, ownerId);
+    
+    // Only allow permanent deletion of archived tasks
+    if (task.todoList.type !== ListType.FINISHED) {
+      throw new BadRequestException('Only archived tasks can be permanently deleted. Use regular delete for active tasks.');
+    }
+
+    // Delete all steps first
+    await this.prisma.step.deleteMany({
+      where: { taskId: id },
+    });
+
+    // Then delete the task
+    await this.prisma.task.delete({
+      where: { id },
+    });
+
+    return { message: 'Task permanently deleted' };
   }
 }

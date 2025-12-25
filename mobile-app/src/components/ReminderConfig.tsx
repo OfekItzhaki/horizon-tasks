@@ -340,19 +340,17 @@ function ReminderEditor({
       timeToUse = `${validHours.toString().padStart(2, '0')}:${validMinutes.toString().padStart(2, '0')}`;
     }
     
-    // Validate EVERY_WEEK reminders have dayOfWeek set
-    if (config.timeframe === ReminderTimeframe.EVERY_WEEK && config.dayOfWeek === undefined) {
-      // Default to Monday (1) if not set
-      config.dayOfWeek = 1;
-    }
-    
     // For SPECIFIC_DATE with CUSTOM_DATE, customDate is optional (user might use daysBefore instead)
     // For SPECIFIC_DATE with other options (START_OF_WEEK, etc.), no customDate needed
     
     // Save with the properly formatted time
+    // Default dayOfWeek to Monday (1) for EVERY_WEEK reminders if not set
     const reminderToSave = {
       ...config,
       time: timeToUse,
+      ...(config.timeframe === ReminderTimeframe.EVERY_WEEK && config.dayOfWeek === undefined
+        ? { dayOfWeek: 1 }
+        : {}),
     };
     
     console.log('Saving reminder with time:', {

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import AppService from './app.service';
 import AppController from './app.controller';
 import { UsersModule } from './users/users.module';
@@ -10,9 +11,11 @@ import { StepsModule } from './steps/steps.module';
 import { ListSharesModule } from './list-shares/list-shares.module';
 import { MeModule } from './me/me.module';
 import { RemindersModule } from './reminders/reminders.module';
+import { TaskSchedulerModule } from './task-scheduler/task-scheduler.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     PrismaModule,
     UsersModule,
     AuthModule,
@@ -22,6 +25,10 @@ import { RemindersModule } from './reminders/reminders.module';
     ListSharesModule,
     MeModule,
     RemindersModule,
+<<<<<<< HEAD
+    TaskSchedulerModule,
+=======
+>>>>>>> main
   ],
   controllers: [AppController],
   providers: [AppService],

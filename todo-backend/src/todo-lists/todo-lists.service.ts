@@ -93,7 +93,12 @@ export class TodoListsService {
   }
 
   async remove(id: number, ownerId: number) {
-    await this.findOne(id, ownerId);
+    const list = await this.findOne(id, ownerId);
+
+    // Prevent deletion of system lists (like "Finished Tasks")
+    if (list.isSystem) {
+      throw new Error('System lists cannot be deleted');
+    }
 
     return this.prisma.toDoList.update({
       where: { id },

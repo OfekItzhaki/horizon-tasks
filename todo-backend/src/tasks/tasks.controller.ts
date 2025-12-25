@@ -121,4 +121,28 @@ export class TasksController {
   ) {
     return this.tasksService.remove(id, user.userId);
   }
+
+  @Post(':id/restore')
+  @ApiOperation({ summary: 'Restore archived task to original list' })
+  @ApiResponse({ status: 200, description: 'Task restored successfully' })
+  @ApiResponse({ status: 400, description: 'Task cannot be restored' })
+  @ApiResponse({ status: 404, description: 'Task not found' })
+  restore(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: CurrentUserPayload,
+  ) {
+    return this.tasksService.restore(id, user.userId);
+  }
+
+  @Delete(':id/permanent')
+  @ApiOperation({ summary: 'Permanently delete archived task' })
+  @ApiResponse({ status: 200, description: 'Task permanently deleted' })
+  @ApiResponse({ status: 400, description: 'Task cannot be permanently deleted' })
+  @ApiResponse({ status: 404, description: 'Task not found' })
+  permanentDelete(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: CurrentUserPayload,
+  ) {
+    return this.tasksService.permanentDelete(id, user.userId);
+  }
 }

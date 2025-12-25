@@ -3,6 +3,31 @@ import { Platform } from 'react-native';
 import { ReminderConfig, ReminderTimeframe, ReminderSpecificDate } from '../types';
 import Constants from 'expo-constants';
 
+<<<<<<< HEAD
+// Track if notification handler has been configured
+let notificationHandlerConfigured = false;
+
+/**
+ * Check if we're running in Expo Go (where notifications don't work)
+ * Made extra safe to never throw
+ */
+function isExpoGo(): boolean {
+  try {
+    // Check multiple ways to detect Expo Go
+    const appOwnership = Constants?.appOwnership;
+    if (appOwnership === 'expo' || appOwnership === 'guest') {
+      return true;
+    }
+    // Also check executionEnvironment for newer Expo versions
+    const exEnv = (Constants as any)?.executionEnvironment;
+    if (exEnv === 'storeClient' || exEnv === 'standalone') {
+      return false; // Production build
+    }
+    // Default to true (Expo Go) to be safe
+    return appOwnership !== 'standalone';
+  } catch {
+    // If anything fails, assume Expo Go to be safe
+=======
 /**
  * Check if we're running in Expo Go (where notifications don't work)
  */
@@ -13,17 +38,38 @@ function isExpoGo(): boolean {
     return Constants.appOwnership === 'expo' || Constants.appOwnership === 'guest';
   } catch {
     // If Constants isn't available, assume Expo Go to be safe
+>>>>>>> main
     return true;
   }
 }
 
+<<<<<<< HEAD
+/**
+ * Configure notification channel for Android (required for scheduled notifications)
+ * Deferred to be called explicitly, not at module load
+ */
+async function setupNotificationChannel(): Promise<void> {
+=======
 // Configure notification channel for Android (required for scheduled notifications)
 async function setupNotificationChannel() {
+>>>>>>> main
   if (isExpoGo()) {
     return;
   }
 
   try {
+<<<<<<< HEAD
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'Task Reminders',
+        description: 'Notifications for task reminders',
+        importance: Notifications.AndroidImportance.HIGH,
+        sound: 'default', // Use string instead of boolean for Android compatibility
+        vibrationPattern: [0, 250, 250, 250],
+        enableVibrate: true,
+      });
+    }
+=======
     await Notifications.setNotificationChannelAsync('default', {
       name: 'Task Reminders',
       description: 'Notifications for task reminders',
@@ -32,14 +78,27 @@ async function setupNotificationChannel() {
       vibrationPattern: [0, 250, 250, 250],
       enableVibrate: true,
     });
+>>>>>>> main
   } catch (error) {
     console.error('Error setting up notification channel:', error);
   }
 }
 
+<<<<<<< HEAD
+/**
+ * Configure notification handler - called lazily, not at module load
+ * This prevents issues with module-level code execution in Expo Go
+ */
+async function ensureNotificationHandlerConfigured(): Promise<void> {
+  if (notificationHandlerConfigured || isExpoGo()) {
+    return;
+  }
+
+=======
 // Configure how notifications are handled when app is in foreground
 // Only configure if not in Expo Go (where notifications don't work)
 if (!isExpoGo()) {
+>>>>>>> main
   try {
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
@@ -49,6 +108,18 @@ if (!isExpoGo()) {
       }),
     });
     
+<<<<<<< HEAD
+    await setupNotificationChannel();
+    notificationHandlerConfigured = true;
+  } catch (error) {
+    console.error('Error configuring notification handler:', error);
+  }
+}
+
+// NOTE: We no longer run notification setup at module load time
+// It will be initialized lazily when requestNotificationPermissions is called
+
+=======
     // Setup notification channel for Android
     setupNotificationChannel();
   } catch (error) {
@@ -56,6 +127,7 @@ if (!isExpoGo()) {
   }
 }
 
+>>>>>>> main
 export interface ScheduledNotification {
   identifier: string;
   taskId: number;
@@ -74,8 +146,13 @@ export async function requestNotificationPermissions(): Promise<boolean> {
   }
 
   try {
+<<<<<<< HEAD
+    // Initialize notification handler and channel (deferred from module load)
+    await ensureNotificationHandlerConfigured();
+=======
     // Setup notification channel first (Android requirement)
     await setupNotificationChannel();
+>>>>>>> main
     
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
@@ -176,7 +253,11 @@ export async function scheduleReminderNotification(
       content: {
         title: `Reminder: ${taskDescription}`,
         body: formatNotificationBody(reminder, dueDate),
+<<<<<<< HEAD
+        sound: reminder.hasAlarm === true ? 'default' : undefined, // Use string for Android compatibility
+=======
         sound: reminder.hasAlarm === true, // Play sound only if alarm is enabled
+>>>>>>> main
         data: {
           taskId,
           reminderId: reminder.id,

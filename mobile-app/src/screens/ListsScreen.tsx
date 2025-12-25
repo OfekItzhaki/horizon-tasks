@@ -47,6 +47,7 @@ export default function ListsScreen() {
   const loadLists = async () => {
     try {
       console.log('Loading lists...');
+      console.log('Loading lists...');
       const data = await listsService.getAll();
       console.log('Lists loaded:', data);
       console.log('Lists count:', data?.length ?? 'undefined');
@@ -55,11 +56,10 @@ export default function ListsScreen() {
       console.error('Error loading lists:', error);
       // Silently ignore auth errors - the navigation will handle redirect to login
       const isAuthError = error?.response?.status === 401 || 
-                          error?.message?.toLowerCase()?.includes('unauthorized');
+                          error?.message?.toLowerCase().includes('unauthorized');
       if (!isAuthError) {
         const errorMessage = error?.response?.data?.message || error?.message || 'Unable to load lists. Please try again.';
         Alert.alert('Error Loading Lists', errorMessage);
-      }
     } finally {
       setLoading(false);
       setRefreshing(false);

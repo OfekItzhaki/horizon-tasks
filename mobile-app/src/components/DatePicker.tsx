@@ -131,10 +131,18 @@ export default function DatePicker({
     };
 
     const changeMonth = (delta: number) => {
-      const newDate = new Date(currentYear, currentMonth + delta, 1);
-      if (minimumDate && newDate < minimumDate) return;
-      if (maximumDate && newDate > maximumDate) return;
-      setSelectedDate(newDate);
+      const targetMonth = currentMonth + delta;
+      const firstDayOfTarget = new Date(currentYear, targetMonth, 1);
+      const lastDayOfTarget = new Date(currentYear, targetMonth + 1, 0);
+
+      // Block if target month has no valid dates
+      // For minimumDate: last day of target month must be >= minimumDate
+      // For maximumDate: first day of target month must be <= maximumDate
+      if (minimumDate && lastDayOfTarget < minimumDate) return;
+      if (maximumDate && firstDayOfTarget > maximumDate) return;
+
+      // Update selectedDate to navigate to the new month
+      setSelectedDate(firstDayOfTarget);
     };
 
     return (
@@ -145,7 +153,7 @@ export default function DatePicker({
             onPress={() => changeMonth(-1)}
             disabled={
               minimumDate &&
-              new Date(currentYear, currentMonth - 1, 1) < minimumDate
+              new Date(currentYear, currentMonth, 0) < minimumDate
             }
           >
             <Text style={styles.monthNavText}>‹</Text>

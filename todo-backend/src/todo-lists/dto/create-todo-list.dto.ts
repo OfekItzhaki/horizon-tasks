@@ -7,6 +7,7 @@ export enum ListType {
   MONTHLY = 'MONTHLY',
   YEARLY = 'YEARLY',
   CUSTOM = 'CUSTOM',
+  FINISHED = 'FINISHED', // System list for archived completed tasks
 }
 
 export class CreateToDoListDto {

@@ -36,6 +36,7 @@ model ToDoList {
   order     Int         @default(autoincrement())
   deletedAt DateTime?
   type      ListType    @default(CUSTOM)
+  isSystem  Boolean     @default(false) // System lists (like "Finished Tasks") cannot be deleted
   shares    ListShare[]
   tasks     Task[]
   owner     User        @relation(fields: [ownerId], references: [id])
@@ -57,7 +58,10 @@ model Task {
   updatedAt          DateTime  @updatedAt
   description        String    @db.VarChar(255)
   completed          Boolean   @default(false)
+  completedAt        DateTime? // When the task was marked complete (for auto-archive timing)
+  completionCount    Int       @default(0) // How many times this repeating task has been completed
   todoListId         Int
+  originalListId     Int?      // Remember original list when archived (for restore)
   order              Int       @default(autoincrement())
   deletedAt          DateTime?
   dueDate            DateTime?
@@ -70,6 +74,7 @@ model Task {
 model Step {
   id          Int       @id @default(autoincrement())
   createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   description String
   completed   Boolean   @default(false)
   taskId      Int
@@ -84,4 +89,5 @@ enum ListType {
   MONTHLY
   YEARLY
   CUSTOM
+  FINISHED // System list for archived completed tasks
 }

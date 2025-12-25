@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Task Lifecycle Automation** (Backend v0.2.0, Mobile v1.2.0)
+  - Auto-reset for repeating tasks (DAILY at midnight, WEEKLY on Monday, MONTHLY on 1st, YEARLY on Jan 1st)
+  - Auto-archive completed tasks from CUSTOM lists to "Finished Tasks" list after 5 minutes
+  - System "Finished Tasks" list (undeletable) for archived completed tasks
+  - `completedAt` timestamp tracking for tasks
+  - `isSystem` flag for protected system lists
+  - NestJS scheduled tasks using @nestjs/schedule
 - Step editing functionality with inline edit/save/cancel
 - Reminder time persistence (client-side storage for custom times)
 - Alarm toggle for reminders (sound/vibration control)

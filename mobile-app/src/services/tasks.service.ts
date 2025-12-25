@@ -102,6 +102,37 @@ export class TasksService {
   }
 
   /**
+   * Restore an archived task to its original list
+   */
+  async restore(id: number): Promise<Task> {
+    try {
+      const response = await apiClient.post<Task>(`/tasks/${id}/restore`);
+      return response.data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError(0, 'Failed to restore task');
+    }
+  }
+
+  /**
+   * Permanently delete an archived task (hard delete, cannot be undone)
+   */
+  async permanentDelete(id: number): Promise<void> {
+    try {
+      await apiClient.delete(`/tasks/${id}/permanent`);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError(0, 'Failed to permanently delete task');
+    }
+  }
+}
+>>>>>>> main
+
+  /**
    * Restore a soft-deleted task
    */
   async restore(id: number): Promise<Task> {
