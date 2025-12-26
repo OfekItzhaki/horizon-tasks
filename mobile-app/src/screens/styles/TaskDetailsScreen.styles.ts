@@ -41,6 +41,7 @@ export const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
+    paddingBottom: Platform.OS === 'ios' ? 50 : 40,
   },
   header: {
     backgroundColor: '#fff',

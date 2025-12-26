@@ -458,7 +458,7 @@ export default function TasksScreen() {
             </Text>
           </View>
         }
-        contentContainerStyle={tasks.length === 0 ? styles.emptyContainer : undefined}
+        contentContainerStyle={tasks.length === 0 ? styles.emptyContainer : styles.listContentContainer}
       />
 
       {/* Floating Action Button */}

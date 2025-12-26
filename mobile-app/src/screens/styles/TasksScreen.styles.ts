@@ -186,6 +186,9 @@ export const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 10,
   },
+  listContentContainer: {
+    paddingBottom: Platform.OS === 'ios' ? 100 : 90,
+  },
   emptyContainer: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -212,7 +215,7 @@ export const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 20,
-    bottom: 20,
+    bottom: Platform.OS === 'ios' ? 40 : 30,
     width: 56,
     height: 56,
     borderRadius: 28,
