@@ -55,6 +55,17 @@ export default function TaskDetailsScreen() {
     loadTaskData();
   }, [taskId]);
 
+  // Sync editReminders with alarm states when they change (for edit mode sync)
+  useEffect(() => {
+    if (Object.keys(reminderAlarmStates).length > 0) {
+      setEditReminders(prev => 
+        prev.map(r => ({
+          ...r,
+          hasAlarm: reminderAlarmStates[r.id] !== undefined ? reminderAlarmStates[r.id] : r.hasAlarm,
+        }))
+      );
+    }
+  }, [reminderAlarmStates]);
 
   // Convert backend format to ReminderConfig format
   const convertBackendToReminders = (
@@ -320,10 +331,18 @@ export default function TaskDetailsScreen() {
   const handleToggleTask = async () => {
     if (!task) return;
 
+    const currentCompleted = Boolean(task.completed);
+    const newCompleted = !currentCompleted;
+    
+    // Optimistic update - update UI immediately
+    setTask(prev => prev ? { ...prev, completed: newCompleted } : prev);
+
     try {
-      await tasksService.update(taskId, { completed: !task.completed });
-      loadTaskData();
+      await tasksService.update(taskId, { completed: newCompleted });
+      // No need to reload - optimistic update already applied
     } catch (error: any) {
+      // Revert on error
+      setTask(prev => prev ? { ...prev, completed: currentCompleted } : prev);
       const errorMessage = error?.response?.data?.message || error?.message || 'Unable to toggle task completion. Please try again.';
       Alert.alert('Update Failed', errorMessage);
     }
@@ -347,10 +366,26 @@ export default function TaskDetailsScreen() {
   };
 
   const handleToggleStep = async (step: Step) => {
+    const currentCompleted = Boolean(step.completed);
+    const newCompleted = !currentCompleted;
+    
+    // Optimistic update - update UI immediately
+    setSteps(prevSteps => 
+      prevSteps.map(s => 
+        s.id === step.id ? { ...s, completed: newCompleted } : s
+      )
+    );
+
     try {
-      await stepsService.update(step.id, { completed: !step.completed });
-      loadTaskData();
+      await stepsService.update(step.id, { completed: newCompleted });
+      // No need to reload - optimistic update already applied
     } catch (error: any) {
+      // Revert on error
+      setSteps(prevSteps => 
+        prevSteps.map(s => 
+          s.id === step.id ? { ...s, completed: currentCompleted } : s
+        )
+      );
       const errorMessage = error?.response?.data?.message || error?.message || 'Unable to update step. Please try again.';
       Alert.alert('Update Failed', errorMessage);
     }
