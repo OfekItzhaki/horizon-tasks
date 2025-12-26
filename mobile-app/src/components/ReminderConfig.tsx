@@ -13,7 +13,7 @@ import {
   ReminderSpecificDate,
 } from '../types';
 import ReminderEditor from './ReminderEditor';
-import { formatReminderDisplay } from '../utils/helpers';
+import { formatReminderDisplay, DAY_NAMES } from '../utils/helpers';
 
 interface ReminderConfigProps {
   reminders: ReminderConfig[];
@@ -135,9 +135,23 @@ export default function ReminderConfigComponent({
               <View style={styles.reminderContent}>
                 <View style={styles.reminderTextRow}>
                   <Text style={styles.reminderText}>{formatReminderDisplay(reminder)}</Text>
-                  <Text style={styles.alarmIndicator}>
-                    {reminder.hasAlarm ? '🔔' : '🔕'}
-                  </Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.alarmToggle,
+                      reminder.hasAlarm && styles.alarmToggleActive
+                    ]}
+                    onPress={() => {
+                      // Toggle alarm directly in the list
+                      const updated = reminders.map(r => 
+                        r.id === reminder.id ? { ...r, hasAlarm: !r.hasAlarm } : r
+                      );
+                      onRemindersChange(updated);
+                    }}
+                  >
+                    <Text style={styles.alarmIndicator}>
+                      {reminder.hasAlarm ? '🔔' : '🔕'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
               <View style={styles.reminderActions}>
@@ -242,6 +256,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     flex: 1,
+  },
+  alarmToggle: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: '#f0f0f0',
+  },
+  alarmToggleActive: {
+    backgroundColor: '#e3f2fd',
   },
   alarmIndicator: {
     fontSize: 16,

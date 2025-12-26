@@ -1,6 +1,6 @@
 import { ReminderConfig, ReminderTimeframe, ReminderSpecificDate } from '../types';
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+export const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /**
  * Format a reminder configuration for display
