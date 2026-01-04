@@ -42,6 +42,7 @@ export enum ListType {
   MONTHLY = 'MONTHLY',
   YEARLY = 'YEARLY',
   CUSTOM = 'CUSTOM',
+  FINISHED = 'FINISHED',
 }
 
 export interface ToDoList {
