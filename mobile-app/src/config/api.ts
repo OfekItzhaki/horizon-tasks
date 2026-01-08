@@ -1,18 +1,19 @@
 /**
  * API Configuration
- * Set your backend API URL here
  * 
- * IMPORTANT: For physical devices, use your computer's IP address instead of localhost
- * Example: http://192.168.1.100:3000
+ * Production: Set EXPO_PUBLIC_API_URL environment variable to your Render backend URL
+ * Development: Uses local IP or localhost
  * 
- * To find your IP:
- * - Windows: ipconfig (look for IPv4 Address)
- * - Mac/Linux: ifconfig or ip addr
+ * Priority:
+ * 1. EXPO_PUBLIC_API_URL environment variable (for production builds)
+ * 2. Fallback to development URL (localhost or local IP)
  */
 export const API_CONFIG = {
-  // For physical devices, use your computer's IP address
-  // Change this to match your network (check with: ipconfig)
-  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.198:3000',
+  // Production: Set via EXPO_PUBLIC_API_URL in .env or EAS build secrets
+  // Development: Falls back to local IP for testing
+  baseURL: process.env.EXPO_PUBLIC_API_URL || __DEV__ 
+    ? 'http://192.168.1.198:3000'  // Development fallback
+    : 'https://your-render-url.onrender.com',  // Production fallback (update after deployment)
 };
 
 export const getApiUrl = (endpoint: string): string => {
