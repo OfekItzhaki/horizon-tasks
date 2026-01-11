@@ -2,22 +2,19 @@ import i18n from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next } from 'react-i18next';
 
-import en from './locales/en.json';
-import he from './locales/he.json';
+import {
+  resources,
+  supportedLanguages as sharedSupportedLanguages,
+  isRtlLanguage,
+  normalizeLanguage,
+} from '@tasks-management/frontend-services/i18n';
 
-const resources = {
-  en: { translation: en },
-  he: { translation: he },
-} as const;
-
-export const supportedLanguages = Object.keys(resources) as Array<
-  keyof typeof resources
->;
+export const supportedLanguages = sharedSupportedLanguages;
 
 function applyDocumentDirection(language: string) {
   if (typeof document === 'undefined') return;
-  document.documentElement.lang = language;
-  document.documentElement.dir = language.startsWith('he') ? 'rtl' : 'ltr';
+  document.documentElement.lang = normalizeLanguage(language);
+  document.documentElement.dir = isRtlLanguage(language) ? 'rtl' : 'ltr';
 }
 
 void i18n
