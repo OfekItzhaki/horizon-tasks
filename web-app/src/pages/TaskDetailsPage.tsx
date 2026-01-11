@@ -8,6 +8,7 @@ import {
   Task,
   ApiError,
   Step,
+  CreateStepDto,
   UpdateTaskDto,
   UpdateStepDto,
 } from '@tasks-management/frontend-services';
@@ -20,6 +21,8 @@ export default function TaskDetailsPage() {
   const numericTaskId = taskId ? Number(taskId) : null;
   const [isEditingTask, setIsEditingTask] = useState(false);
   const [taskDescriptionDraft, setTaskDescriptionDraft] = useState('');
+  const [showAddStep, setShowAddStep] = useState(false);
+  const [newStepDescription, setNewStepDescription] = useState('');
   const [editingStepId, setEditingStepId] = useState<number | null>(null);
   const [stepDescriptionDraft, setStepDescriptionDraft] = useState('');
 
@@ -69,6 +72,34 @@ export default function TaskDetailsPage() {
     },
     onError: (err) => {
       toast.error(formatApiError(err, 'Failed to update step'));
+    },
+  });
+
+  const createStepMutation = useMutation<
+    Step,
+    ApiError,
+    { task: Task; data: CreateStepDto }
+  >({
+    mutationFn: ({ task, data }) => stepsService.createStep(task.id, data),
+    onSuccess: async (_created, vars) => {
+      setNewStepDescription('');
+      setShowAddStep(false);
+      await invalidateTask(vars.task);
+      toast.success('Step added');
+    },
+    onError: (err) => {
+      toast.error(formatApiError(err, 'Failed to add step'));
+    },
+  });
+
+  const deleteStepMutation = useMutation<Step, ApiError, { task: Task; id: number }>({
+    mutationFn: ({ id }) => stepsService.deleteStep(id),
+    onSuccess: async (_deleted, vars) => {
+      await invalidateTask(vars.task);
+      toast.success('Step deleted');
+    },
+    onError: (err) => {
+      toast.error(formatApiError(err, 'Failed to delete step'));
     },
   });
 
@@ -159,21 +190,18 @@ export default function TaskDetailsPage() {
                 </div>
               </div>
             ) : (
-              <h1 className="text-2xl font-bold text-gray-900">{task.description}</h1>
+              <h1
+                className="text-2xl font-bold text-gray-900 cursor-text"
+                title="Click to edit"
+                onClick={() => {
+                  setIsEditingTask(true);
+                  setTaskDescriptionDraft(task.description);
+                }}
+              >
+                {task.description}
+              </h1>
             )}
           </div>
-          {!isEditingTask && (
-            <button
-              type="button"
-              onClick={() => {
-                setIsEditingTask(true);
-                setTaskDescriptionDraft(task.description);
-              }}
-              className="inline-flex justify-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200"
-            >
-              Edit
-            </button>
-          )}
         </div>
 
         {task.dueDate && (
@@ -185,9 +213,66 @@ export default function TaskDetailsPage() {
           </div>
         )}
 
-        {task.steps && task.steps.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">Steps</h2>
+        <div className="mt-6">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <h2 className="text-lg font-semibold text-gray-900">Steps</h2>
+            <button
+              type="button"
+              onClick={() => setShowAddStep((v) => !v)}
+              className="inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            >
+              {showAddStep ? 'Close' : 'Add step'}
+            </button>
+          </div>
+
+          {showAddStep && (
+            <form
+              className="bg-white rounded-lg border p-4 mb-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!newStepDescription.trim()) return;
+                createStepMutation.mutate({
+                  task,
+                  data: { description: newStepDescription.trim() },
+                });
+              }}
+            >
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-12 sm:items-end">
+                <div className="sm:col-span-10">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Description
+                  </label>
+                  <input
+                    value={newStepDescription}
+                    onChange={(e) => setNewStepDescription(e.target.value)}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="e.g. Call the supplier"
+                  />
+                </div>
+                <div className="sm:col-span-2 flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={createStepMutation.isPending || !newStepDescription.trim()}
+                    className="inline-flex flex-1 justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {createStepMutation.isPending ? 'Adding...' : 'Create'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddStep(false);
+                      setNewStepDescription('');
+                    }}
+                    className="inline-flex justify-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+
+          {task.steps && task.steps.length > 0 ? (
             <ul className="space-y-2">
               {task.steps.map((step) => (
                 <li
@@ -220,6 +305,11 @@ export default function TaskDetailsPage() {
                             ? 'line-through text-gray-500 truncate'
                             : 'text-gray-900 truncate'
                         }
+                        title="Click to edit"
+                        onClick={() => {
+                          setEditingStepId(step.id);
+                          setStepDescriptionDraft(step.description);
+                        }}
                       >
                         {step.description}
                       </span>
@@ -265,20 +355,24 @@ export default function TaskDetailsPage() {
                   ) : (
                     <button
                       type="button"
+                      disabled={deleteStepMutation.isPending}
                       onClick={() => {
-                        setEditingStepId(step.id);
-                        setStepDescriptionDraft(step.description);
+                        const ok = window.confirm(`Delete step "${step.description}"?`);
+                        if (!ok) return;
+                        deleteStepMutation.mutate({ task, id: step.id });
                       }}
-                      className="inline-flex justify-center rounded-md bg-gray-200 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-300"
+                      className="inline-flex justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Edit
+                      Delete
                     </button>
                   )}
                 </li>
               ))}
             </ul>
-          </div>
-        )}
+          ) : (
+            <p className="text-sm text-gray-500">No steps yet.</p>
+          )}
+        </div>
       </div>
     </div>
   );
