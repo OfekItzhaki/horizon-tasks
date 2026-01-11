@@ -10,6 +10,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\""
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.16",
     "@tasks-management/frontend-services": "file:../frontend-services",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
