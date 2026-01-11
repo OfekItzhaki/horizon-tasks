@@ -550,6 +550,18 @@ export default function TasksPage() {
                 queryFn: () => tasksService.getTaskById(task.id),
               });
             }}
+            onFocus={() => {
+              void queryClient.prefetchQuery({
+                queryKey: ['task', task.id],
+                queryFn: () => tasksService.getTaskById(task.id),
+              });
+            }}
+            onPointerDown={() => {
+              void queryClient.prefetchQuery({
+                queryKey: ['task', task.id],
+                queryFn: () => tasksService.getTaskById(task.id),
+              });
+            }}
             onClick={() => navigate(`/tasks/${task.id}`)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {

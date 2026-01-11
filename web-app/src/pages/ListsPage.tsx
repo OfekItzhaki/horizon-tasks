@@ -174,6 +174,28 @@ export default function ListsPage() {
                 queryFn: () => listsService.getListById(list.id),
               });
             }}
+            onFocus={() => {
+              // Keyboard navigation
+              void queryClient.prefetchQuery({
+                queryKey: ['tasks', list.id],
+                queryFn: () => tasksService.getTasksByList(list.id),
+              });
+              void queryClient.prefetchQuery({
+                queryKey: ['list', list.id],
+                queryFn: () => listsService.getListById(list.id),
+              });
+            }}
+            onPointerDown={() => {
+              // Touch devices (no hover)
+              void queryClient.prefetchQuery({
+                queryKey: ['tasks', list.id],
+                queryFn: () => tasksService.getTasksByList(list.id),
+              });
+              void queryClient.prefetchQuery({
+                queryKey: ['list', list.id],
+                queryFn: () => listsService.getListById(list.id),
+              });
+            }}
             className="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
           >
             <h3 className="text-lg font-semibold text-gray-900">{list.name}</h3>
