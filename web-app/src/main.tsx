@@ -6,6 +6,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { Toaster } from 'react-hot-toast';
 import App from './App.tsx';
 import ErrorFallback from './components/ErrorFallback';
+import './i18n';
 import './index.css';
 
 const queryClient = new QueryClient({

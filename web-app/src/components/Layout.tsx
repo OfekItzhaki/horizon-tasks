@@ -1,8 +1,10 @@
 import { Outlet, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const { t, i18n } = useTranslation();
 
   const handleLogout = async () => {
     await logout();
@@ -18,22 +20,31 @@ export default function Layout() {
                 to="/lists"
                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
               >
-                Lists
+                {t('nav.lists')}
               </Link>
             </div>
             <div className="flex items-center space-x-4">
+              <select
+                aria-label={t('nav.language')}
+                value={i18n.language?.startsWith('he') ? 'he' : 'en'}
+                onChange={(e) => void i18n.changeLanguage(e.target.value)}
+                className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="en">EN</option>
+                <option value="he">HE</option>
+              </select>
               <span className="text-sm text-gray-700">{user?.email}</span>
               <Link
                 to="/profile"
                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
               >
-                Profile
+                {t('nav.profile')}
               </Link>
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700"
               >
-                Logout
+                {t('nav.logout')}
               </button>
             </div>
           </div>
