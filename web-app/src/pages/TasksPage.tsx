@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { tasksService } from '../services/tasks.service';
 import { listsService } from '../services/lists.service';
 import FloatingActionButton from '../components/FloatingActionButton';
+import Skeleton from '../components/Skeleton';
 import { useTranslation } from 'react-i18next';
 import {
   Task,
@@ -361,7 +362,30 @@ export default function TasksPage() {
   });
 
   if (isLoading) {
-    return <div className="text-center py-8">{t('common.loading')}</div>;
+    return (
+      <div>
+        <div className="mb-6">
+          <Skeleton className="h-5 w-28" />
+        </div>
+        <div className="flex items-center justify-between mb-6 gap-3">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-9 w-24" />
+        </div>
+        <div className="space-y-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="p-4 bg-white rounded-lg shadow">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <Skeleton className="h-4 w-64" />
+                </div>
+                <Skeleton className="h-8 w-24" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (isError) {

@@ -7,6 +7,7 @@ import { tasksService } from '../services/tasks.service';
 import { ToDoList, ApiError, ListType } from '@tasks-management/frontend-services';
 import { formatApiError } from '../utils/formatApiError';
 import FloatingActionButton from '../components/FloatingActionButton';
+import Skeleton from '../components/Skeleton';
 import { useTranslation } from 'react-i18next';
 
 export default function ListsPage() {
@@ -75,7 +76,21 @@ export default function ListsPage() {
   });
 
   if (isLoading) {
-    return <div className="text-center py-8">{t('common.loading')}</div>;
+    return (
+      <div>
+        <div className="flex justify-between items-center mb-6 gap-3">
+          <Skeleton className="h-8 w-48" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="p-6 bg-white rounded-lg shadow">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="mt-3 h-4 w-24" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (isError) {

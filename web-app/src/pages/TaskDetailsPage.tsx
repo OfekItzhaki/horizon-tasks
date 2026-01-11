@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { tasksService } from '../services/tasks.service';
 import { stepsService } from '../services/steps.service';
 import FloatingActionButton from '../components/FloatingActionButton';
+import Skeleton from '../components/Skeleton';
 import { useTranslation } from 'react-i18next';
 import {
   Task,
@@ -267,7 +268,37 @@ export default function TaskDetailsPage() {
   });
 
   if (isLoading) {
-    return <div className="text-center py-8">{t('common.loading')}</div>;
+    return (
+      <div>
+        <div className="mb-6">
+          <Skeleton className="h-5 w-32" />
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex items-center space-x-3">
+              <Skeleton className="h-5 w-5 rounded" />
+              <Skeleton className="h-7 w-72" />
+            </div>
+            <Skeleton className="h-9 w-44" />
+          </div>
+          <Skeleton className="h-4 w-40" />
+          <div className="mt-6">
+            <Skeleton className="h-6 w-24" />
+            <div className="mt-3 space-y-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <Skeleton className="h-4 w-4 rounded" />
+                    <Skeleton className="h-4 w-64" />
+                  </div>
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (isError || !task) {
