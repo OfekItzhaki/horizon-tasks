@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    "todo-backend": {
+      "release-type": "node",
+      "package-name": "todo-backend",
+      "changelog-path": "todo-backend/CHANGELOG.md"
+    },
+    "frontend-services": {
+      "release-type": "node",
+      "package-name": "@tasks-management/frontend-services",
+      "changelog-path": "frontend-services/CHANGELOG.md"
+    },
+    "mobile-app": {
+      "release-type": "node",
+      "package-name": "mobile-app",
+      "changelog-path": "mobile-app/CHANGELOG.md",
+      "extra-files": ["mobile-app/app.json"]
+    }
+  }
+}
+
