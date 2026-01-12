@@ -7,11 +7,15 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  Linking,
 } from 'react-native';
+import Constants from 'expo-constants';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 
 export default function ProfileScreen() {
   const { user, logout, isLoading } = useAuth();
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -27,6 +31,13 @@ export default function ProfileScreen() {
     ]);
   };
 
+  const appVersion = Constants.expoConfig?.version ?? '1.0.0';
+  const handleOpenRepo = () => {
+    Linking.openURL('https://github.com/OfekItzhaki/TasksManagement').catch(() => {
+      Alert.alert('Error', 'Could not open repository');
+    });
+  };
+
   if (isLoading) {
     return (
       <View style={styles.center}>
@@ -38,7 +49,7 @@ export default function ProfileScreen() {
   if (!user) {
     return (
       <View style={styles.center}>
-        <Text>No user data available</Text>
+        <Text>{t('profile.notAuthenticated')}</Text>
       </View>
     );
   }
@@ -46,24 +57,40 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Profile</Text>
+        <Text style={styles.title}>{t('profile.title')}</Text>
       </View>
       <View style={styles.content}>
         <View style={styles.profileCard}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {user.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {user.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+          <Text style={styles.name}>{user.name || t('profile.name')}</Text>
+          <Text style={styles.email}>{user.email}</Text>
+          <Text style={styles.verified}>
+            {Boolean(user.emailVerified) ? `✓ ${t('profile.yes')}` : `✗ ${t('profile.no')}`}
           </Text>
         </View>
-        <Text style={styles.name}>{user.name || 'No name'}</Text>
-        <Text style={styles.email}>{user.email}</Text>
-        <Text style={styles.verified}>
-          {Boolean(user.emailVerified) ? '✓ Verified' : '✗ Not verified'}
-        </Text>
-      </View>
+
+        <View style={styles.aboutCard}>
+          <Text style={styles.aboutTitle}>{t('profile.about')}</Text>
+          <View style={styles.aboutRow}>
+            <Text style={styles.aboutLabel}>{t('profile.version')}</Text>
+            <Text style={styles.aboutValue}>{appVersion}</Text>
+          </View>
+          <View style={styles.aboutRow}>
+            <Text style={styles.aboutLabel}>{t('profile.credits')}</Text>
+            <Text style={styles.aboutValue}>{t('profile.creditsValue')}</Text>
+          </View>
+          <TouchableOpacity style={styles.aboutRow} onPress={handleOpenRepo}>
+            <Text style={styles.aboutLabel}>{t('profile.sourceCode')}</Text>
+            <Text style={styles.aboutLink}>{t('profile.openRepo')}</Text>
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={styles.logoutText}>{t('nav.logout')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -146,5 +173,43 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  aboutCard: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  aboutTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+  },
+  aboutRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  aboutLabel: {
+    fontSize: 14,
+    color: '#666',
+  },
+  aboutValue: {
+    fontSize: 14,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    color: '#333',
+    fontWeight: '500',
+  },
+  aboutLink: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '500',
   },
 });

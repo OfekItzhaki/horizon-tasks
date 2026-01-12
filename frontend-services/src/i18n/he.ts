@@ -94,6 +94,12 @@ export default {
     yes: 'כן',
     no: 'לא',
     memberSince: 'חבר מאז',
+    about: 'אודות',
+    version: 'גרסה',
+    credits: 'קרדיטים',
+    creditsValue: 'צוות Tasks Management',
+    sourceCode: 'קוד מקור',
+    openRepo: 'פתח מאגר',
   },
 } as const;
 
