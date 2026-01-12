@@ -62,6 +62,15 @@ export default {
       descriptionPlaceholder: 'לדוגמה: לקנות חלב',
     },
     deleteTaskConfirm: 'למחוק את המשימה "{{description}}"?',
+    restore: 'שחזור',
+    restoreConfirm: 'לשחזר את המשימה "{{description}}" לרשימה המקורית?',
+    restored: 'המשימה שוחזרה',
+    restoreFailed: 'שחזור המשימה נכשל',
+    deleteForever: 'מחיקה לצמיתות',
+    deleteForeverConfirm:
+      'למחוק את המשימה "{{description}}" לצמיתות? לא ניתן לבטל פעולה זו.',
+    deletedForever: 'המשימה נמחקה לצמיתות',
+    deleteForeverFailed: 'מחיקה לצמיתות נכשלה',
   },
   taskDetails: {
     backToTasks: '← חזרה למשימות',

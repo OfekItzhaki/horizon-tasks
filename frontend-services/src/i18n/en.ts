@@ -62,6 +62,15 @@ export default {
       descriptionPlaceholder: 'e.g. Buy milk',
     },
     deleteTaskConfirm: 'Delete task "{{description}}"?',
+    restore: 'Restore',
+    restoreConfirm: 'Restore task "{{description}}" to its original list?',
+    restored: 'Task restored',
+    restoreFailed: 'Failed to restore task',
+    deleteForever: 'Delete forever',
+    deleteForeverConfirm:
+      'Delete task "{{description}}" forever? This cannot be undone.',
+    deletedForever: 'Task deleted forever',
+    deleteForeverFailed: 'Failed to delete task forever',
   },
   taskDetails: {
     backToTasks: '← Back to Tasks',

@@ -1,6 +1,7 @@
 {
   "name": "@tasks-management/frontend-services",
   "version": "1.0.0",
+  "type": "module",
   "description": "Front-end services for Tasks Management API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
