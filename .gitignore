@@ -44,3 +44,5 @@ pnpm-lock.yaml  # Optional: remove if not using pnpm
 .expo/
 .expo-shared/
 
+# Development instructions (not needed in repository)
+instructions/
