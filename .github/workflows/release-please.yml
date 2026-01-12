@@ -2,7 +2,10 @@ name: Release Please
 
 on:
   push:
-    branches: [develop]
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
@@ -11,8 +14,13 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    # Skip on PRs - only run on pushes to main/master
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     steps:
       - uses: actions/checkout@v4
+        with:
+          # For PRs, checkout both base and head branches
+          fetch-depth: 0
 
       - name: Release Please
         id: release
@@ -21,4 +29,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          # For PRs, use the PR branch; for pushes, use the current branch
+          target-branch: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || github.ref_name }}
 
