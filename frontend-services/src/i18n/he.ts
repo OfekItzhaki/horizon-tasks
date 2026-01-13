@@ -106,7 +106,7 @@ export default {
     about: 'אודות',
     version: 'גרסה',
     credits: 'קרדיטים',
-    creditsValue: 'צוות Tasks Management',
+    creditsValue: 'אופק יצחקי',
     sourceCode: 'קוד מקור',
     openRepo: 'פתח מאגר',
   },

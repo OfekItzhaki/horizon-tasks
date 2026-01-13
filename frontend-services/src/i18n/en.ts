@@ -106,7 +106,7 @@ export default {
     about: 'About',
     version: 'Version',
     credits: 'Credits',
-    creditsValue: 'Tasks Management team',
+    creditsValue: 'Ofek Itzhaki',
     sourceCode: 'Source code',
     openRepo: 'Open repo',
   },
