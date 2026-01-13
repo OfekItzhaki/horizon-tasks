@@ -5,6 +5,7 @@ import { ToDoList, Task } from '@tasks-management/frontend-services';
 import { useTranslation } from 'react-i18next';
 import Skeleton from '../components/Skeleton';
 import { useTheme } from '../context/ThemeContext';
+import { isRtlLanguage } from '@tasks-management/frontend-services/i18n';
 import {
   PieChart,
   Pie,
@@ -20,8 +21,9 @@ import {
 } from 'recharts';
 
 export default function AnalysisPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { isDark } = useTheme();
+  const isRtl = isRtlLanguage(i18n.language);
 
   const { data: lists = [], isLoading: listsLoading, isError: listsError, error: listsErrorObj, refetch: refetchLists } = useQuery<ToDoList[]>({
     queryKey: ['lists'],
@@ -334,19 +336,19 @@ export default function AnalysisPage() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-[#1a1a1a]">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th className={`px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'}`}>
                   List Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th className={`px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'}`}>
                   Total
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th className={`px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'}`}>
                   Completed
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th className={`px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'}`}>
                   Pending
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th className={`px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'}`}>
                   Progress
                 </th>
               </tr>
