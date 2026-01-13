@@ -24,6 +24,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SortableTaskItem } from '../components/SortableTaskItem';
+import Pagination from '../components/Pagination';
 import {
   Task,
   ApiError,
@@ -780,11 +781,11 @@ export default function TasksPage() {
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={tasksOrder.map((t) => t.id)}
+          items={paginatedTasks.map((t) => t.id)}
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-4">
-            {tasksOrder.map((task) => (
+            {paginatedTasks.map((task) => (
               <SortableTaskItem
                 key={task.id}
                 task={task}
@@ -992,6 +993,17 @@ export default function TasksPage() {
           </div>
         </SortableContext>
       </DndContext>
+
+      {tasksOrder.length > itemsPerPage && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={tasksOrder.length}
+          onItemsPerPageChange={setItemsPerPage}
+        />
+      )}
 
       {tasks.length === 0 && (
         <div className="text-center py-12">
