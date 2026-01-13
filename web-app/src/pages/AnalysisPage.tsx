@@ -313,15 +313,15 @@ export default function AnalysisPage() {
               <YAxis stroke={isDark ? '#9ca3af' : '#6b7280'} style={{ fontSize: '12px' }} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: isDark ? '#1f1f1f' : 'rgba(255, 255, 255, 0.95)',
+                  backgroundColor: isDark ? '#1f1f1f' : '#ffffff',
                   border: isDark ? '1px solid #2a2a2a' : '1px solid #e5e7eb',
                   borderRadius: '8px',
-                  color: isDark ? '#ffffff' : '#000000',
+                  color: isDark ? '#ffffff' : '#1f2937',
                 }}
                 formatter={(value: number, name: string) => [value, name]}
                 labelFormatter={(label) => `List: ${label}`}
               />
-              <Legend wrapperStyle={{ color: isDark ? '#ffffff' : '#000000' }} />
+              <Legend wrapperStyle={{ color: isDark ? '#ffffff' : '#1f2937' }} />
               <Bar dataKey="completed" fill="#10b981" name="Completed" />
               <Bar dataKey="pending" fill="#ef4444" name="Pending" />
             </BarChart>
