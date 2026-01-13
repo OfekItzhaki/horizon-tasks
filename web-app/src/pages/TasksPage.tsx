@@ -645,6 +645,7 @@ export default function TasksPage() {
               <input
                 value={listNameDraft}
                 onChange={(e) => setListNameDraft(e.target.value)}
+                aria-label="Edit list name"
                 className="w-full max-w-xl rounded-md border border-gray-300 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
               <div className="flex gap-2">
@@ -691,6 +692,17 @@ export default function TasksPage() {
                 setIsEditingListName(true);
                 setListNameDraft(list.name);
               }}
+              role="button"
+              tabIndex={0}
+              aria-label={`List name: ${list?.name ?? t('tasks.defaultTitle')}. Click to edit.`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  if (!list || list.isSystem) return;
+                  setIsEditingListName(true);
+                  setListNameDraft(list.name);
+                }
+              }}
             >
               {list?.name ?? t('tasks.defaultTitle')}
             </h1>
@@ -702,6 +714,7 @@ export default function TasksPage() {
             <button
               type="button"
               onClick={() => setIsBulkMode(true)}
+              aria-label="Select multiple tasks for bulk operations"
               className="inline-flex justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
             >
               Select Multiple
@@ -743,6 +756,7 @@ export default function TasksPage() {
               <input
                 value={newTaskDescription}
                 onChange={(e) => setNewTaskDescription(e.target.value)}
+                aria-label={t('tasks.form.descriptionLabel')}
                 className="mt-1 block w-full rounded-md border border-gray-300 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder={t('tasks.form.descriptionPlaceholder')}
               />
@@ -895,6 +909,7 @@ export default function TasksPage() {
                             }
                             setSelectedTasks(newSelected);
                           }}
+                          aria-label={`Select task: ${task.description}`}
                           className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                         />
                       ) : (
@@ -916,6 +931,7 @@ export default function TasksPage() {
                               data: { completed: !task.completed },
                             });
                           }}
+                          aria-label={`Mark task as ${task.completed ? 'incomplete' : 'complete'}: ${task.description}`}
                           className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                         />
                       )}

@@ -64,6 +64,7 @@ export function SortableTaskItem({
       onKeyDown={onKeyDown}
       role="button"
       tabIndex={0}
+      aria-label={isBulkMode ? `Task: ${task.description}. ${isSelected ? 'Selected' : 'Not selected'}. Click to toggle selection.` : `Task: ${task.description}. ${task.completed ? 'Completed' : 'Pending'}. Click to view details.`}
     >
       {children}
     </div>
