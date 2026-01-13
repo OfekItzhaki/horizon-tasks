@@ -4,9 +4,24 @@ import { tasksService } from '../services/tasks.service';
 import { ToDoList, Task } from '@tasks-management/frontend-services';
 import { useTranslation } from 'react-i18next';
 import Skeleton from '../components/Skeleton';
+import { useTheme } from '../context/ThemeContext';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 export default function AnalysisPage() {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
 
   const { data: lists = [], isLoading: listsLoading, isError: listsError, error: listsErrorObj, refetch: refetchLists } = useQuery<ToDoList[]>({
     queryKey: ['lists'],
@@ -172,6 +187,132 @@ export default function AnalysisPage() {
           </p>
         </div>
       </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Completion Status Pie Chart */}
+        {allTasks.length > 0 && (
+          <div className="bg-white dark:bg-[#1f1f1f] p-6 rounded-lg shadow">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              Completion Status
+            </h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Completed', value: completedTasks.length, color: '#10b981' },
+                    { name: 'Pending', value: pendingTasks.length, color: '#ef4444' },
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {[
+                    { name: 'Completed', value: completedTasks.length, color: '#10b981' },
+                    { name: 'Pending', value: pendingTasks.length, color: '#ef4444' },
+                  ].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Tasks by Type Bar Chart */}
+        {Object.keys(tasksByType).length > 0 && (
+          <div className="bg-white dark:bg-[#1f1f1f] p-6 rounded-lg shadow">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              Tasks by Type
+            </h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={Object.entries(tasksByType).map(([type, stats]) => ({
+                  name: type.charAt(0) + type.slice(1).toLowerCase(),
+                  completed: stats.completed,
+                  pending: stats.pending,
+                }))}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.1} />
+                <XAxis
+                  dataKey="name"
+                  stroke={isDark ? '#9ca3af' : '#6b7280'}
+                  style={{ fontSize: '12px' }}
+                />
+                <YAxis stroke={isDark ? '#9ca3af' : '#6b7280'} style={{ fontSize: '12px' }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: isDark ? '#1f1f1f' : 'rgba(255, 255, 255, 0.95)',
+                    border: isDark ? '1px solid #2a2a2a' : '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    color: isDark ? '#ffffff' : '#000000',
+                  }}
+                />
+                <Legend wrapperStyle={{ color: isDark ? '#ffffff' : '#000000' }} />
+                <Bar dataKey="completed" fill="#10b981" name="Completed" />
+                <Bar dataKey="pending" fill="#ef4444" name="Pending" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+
+      {/* Tasks by List Bar Chart */}
+      {tasksByList.length > 0 && (
+        <div className="bg-white dark:bg-[#1f1f1f] p-6 rounded-lg shadow">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            Tasks by List (Chart)
+          </h2>
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart
+              data={tasksByList.map((item) => ({
+                name: item.listName.length > 15 ? item.listName.substring(0, 15) + '...' : item.listName,
+                fullName: item.listName,
+                completed: item.completed,
+                pending: item.pending,
+                total: item.total,
+              }))}
+              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#4b5563' : '#374151'} opacity={0.1} />
+              <XAxis
+                dataKey="name"
+                angle={-45}
+                textAnchor="end"
+                height={100}
+                stroke={isDark ? '#9ca3af' : '#6b7280'}
+                style={{ fontSize: '12px' }}
+              />
+              <YAxis stroke={isDark ? '#9ca3af' : '#6b7280'} style={{ fontSize: '12px' }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: isDark ? '#1f1f1f' : 'rgba(255, 255, 255, 0.95)',
+                  border: isDark ? '1px solid #2a2a2a' : '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  color: isDark ? '#ffffff' : '#000000',
+                }}
+                formatter={(value: number, name: string) => [value, name]}
+                labelFormatter={(label) => `List: ${label}`}
+              />
+              <Legend wrapperStyle={{ color: isDark ? '#ffffff' : '#000000' }} />
+              <Bar dataKey="completed" fill="#10b981" name="Completed" />
+              <Bar dataKey="pending" fill="#ef4444" name="Pending" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* Due Date Statistics */}
       {tasksWithDueDates.length > 0 && (
