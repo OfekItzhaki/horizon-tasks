@@ -357,8 +357,8 @@ export default function TaskDetailsPage() {
           <Skeleton className="h-5 w-32" />
         </div>
         <div className="bg-white dark:bg-[#1f1f1f] rounded-lg shadow p-6">
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center space-x-3">
+          <div className={`flex ${isRtl ? 'flex-row-reverse' : ''} items-start justify-between gap-3 mb-4`}>
+            <div className={`flex items-center ${isRtl ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
               <Skeleton className="h-5 w-5 rounded" />
               <Skeleton className="h-7 w-72" />
             </div>
@@ -369,8 +369,8 @@ export default function TaskDetailsPage() {
             <Skeleton className="h-6 w-24" />
             <div className="mt-3 space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center justify-between gap-3 p-3 bg-gray-50 dark:bg-[#1a1a1a] rounded">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div key={i} className={`flex ${isRtl ? 'flex-row-reverse' : ''} items-center justify-between gap-3 p-3 bg-gray-50 dark:bg-[#1a1a1a] rounded`}>
+                  <div className={`flex items-center ${isRtl ? 'space-x-reverse space-x-3' : 'gap-3'} min-w-0 flex-1`}>
                     <Skeleton className="h-4 w-4 rounded" />
                     <Skeleton className="h-4 w-64" />
                   </div>
@@ -538,7 +538,7 @@ export default function TaskDetailsPage() {
         )}
 
         <div className="mt-6">
-          <div className="flex items-center justify-between gap-3 mb-3">
+          <div className={`flex ${isRtl ? 'flex-row-reverse' : ''} items-center justify-between gap-3 mb-3`}>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {t('taskDetails.stepsTitle')}
             </h2>
