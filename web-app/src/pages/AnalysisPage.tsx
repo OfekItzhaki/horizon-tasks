@@ -244,16 +244,16 @@ export default function AnalysisPage() {
                     backgroundColor: isDark ? '#1f1f1f' : '#ffffff',
                     border: isDark ? '1px solid #2a2a2a' : '1px solid #e5e7eb',
                     borderRadius: '8px',
-                    color: isDark ? '#ffffff' : '#111827',
+                    color: isDark ? '#ffffff' : '#1f2937',
                   }}
                 />
-                <Legend wrapperStyle={{ color: isDark ? '#ffffff' : '#111827' }} />
+                <Legend wrapperStyle={{ color: isDark ? '#ffffff' : '#1f2937' }} />
                 {/* Center text showing streak */}
                 <text
                   x="50%"
                   y="45%"
                   textAnchor="middle"
-                  fill={isDark ? '#ffffff' : '#111827'}
+                  fill={isDark ? '#ffffff' : '#374151'}
                   fontSize={14}
                   fontWeight="bold"
                 >
