@@ -7,6 +7,7 @@ import { stepsService } from '../services/steps.service';
 import FloatingActionButton from '../components/FloatingActionButton';
 import Skeleton from '../components/Skeleton';
 import { useTranslation } from 'react-i18next';
+import { useKeyboardShortcuts } from '../utils/useKeyboardShortcuts';
 import {
   Task,
   ApiError,
@@ -31,6 +32,35 @@ export default function TaskDetailsPage() {
   const [newStepDescription, setNewStepDescription] = useState('');
   const [editingStepId, setEditingStepId] = useState<number | null>(null);
   const [stepDescriptionDraft, setStepDescriptionDraft] = useState('');
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'Escape',
+      handler: () => {
+        if (isEditingTask) {
+          setIsEditingTask(false);
+          setTaskDescriptionDraft(task?.description ?? '');
+        } else if (editingStepId !== null) {
+          setEditingStepId(null);
+          setStepDescriptionDraft('');
+        } else if (showAddStep) {
+          setShowAddStep(false);
+          setNewStepDescription('');
+        }
+      },
+      description: 'Cancel editing',
+    },
+    {
+      key: 's',
+      handler: () => {
+        if (!showAddStep && task) {
+          setShowAddStep(true);
+        }
+      },
+      description: 'Add new step',
+    },
+  ]);
 
   // Speed-up + consistency:
   // If the user just toggled completion in the list view and immediately navigates here,

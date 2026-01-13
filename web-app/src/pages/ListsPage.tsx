@@ -9,6 +9,7 @@ import { formatApiError } from '../utils/formatApiError';
 import FloatingActionButton from '../components/FloatingActionButton';
 import Skeleton from '../components/Skeleton';
 import { useTranslation } from 'react-i18next';
+import { useKeyboardShortcuts } from '../utils/useKeyboardShortcuts';
 
 export default function ListsPage() {
   const { t } = useTranslation();
@@ -26,6 +27,29 @@ export default function ListsPage() {
     queryKey: ['lists'],
     queryFn: () => listsService.getAllLists(),
   });
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      handler: () => {
+        if (!showCreate) {
+          setShowCreate(true);
+        }
+      },
+      description: 'Create new list',
+    },
+    {
+      key: 'Escape',
+      handler: () => {
+        if (showCreate) {
+          setShowCreate(false);
+          setNewListName('');
+        }
+      },
+      description: 'Cancel creating list',
+    },
+  ]);
 
   const createListMutation = useMutation<
     ToDoList,

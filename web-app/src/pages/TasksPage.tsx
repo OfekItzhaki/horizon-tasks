@@ -7,6 +7,7 @@ import { listsService } from '../services/lists.service';
 import FloatingActionButton from '../components/FloatingActionButton';
 import Skeleton from '../components/Skeleton';
 import { useTranslation } from 'react-i18next';
+import { useKeyboardShortcuts } from '../utils/useKeyboardShortcuts';
 import {
   Task,
   ApiError,
@@ -33,6 +34,47 @@ export default function TasksPage() {
   const [isBulkMode, setIsBulkMode] = useState(false);
 
   const numericListId = listId ? Number(listId) : null;
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      handler: () => {
+        if (!showCreate && !isFinishedList && numericListId) {
+          setShowCreate(true);
+        }
+      },
+      description: 'Create new task',
+    },
+    {
+      key: 'Escape',
+      handler: () => {
+        if (showCreate) {
+          setShowCreate(false);
+          setNewTaskDescription('');
+        } else if (isEditingListName) {
+          setIsEditingListName(false);
+          setListNameDraft(list?.name ?? '');
+        } else if (isBulkMode) {
+          setIsBulkMode(false);
+          setSelectedTasks(new Set());
+        }
+      },
+      description: 'Cancel current action',
+    },
+    {
+      key: 'b',
+      handler: () => {
+        if (!isFinishedList) {
+          setIsBulkMode(!isBulkMode);
+          if (isBulkMode) {
+            setSelectedTasks(new Set());
+          }
+        }
+      },
+      description: 'Toggle bulk mode',
+    },
+  ]);
 
   const { data: list } = useQuery<ListWithSystemFlag, ApiError>({
     queryKey: ['list', numericListId],
