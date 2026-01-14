@@ -26,5 +26,18 @@ export default defineConfig({
     commonjsOptions: {
       include: [/node_modules/, /frontend-services[\\/]dist/],
     },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+          'chart-vendor': ['recharts'],
+          'query-vendor': ['@tanstack/react-query'],
+          'i18n-vendor': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600, // Increase limit slightly to reduce warnings
   },
 });
