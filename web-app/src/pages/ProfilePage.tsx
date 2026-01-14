@@ -9,7 +9,7 @@ import { authService } from '../services/auth.service';
 import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
-  const { user, loading } = useAuth();
+  const { user, loading, updateUser } = useAuth();
   const { t, i18n } = useTranslation();
   const isRtl = isRtlLanguage(i18n.language);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -27,8 +27,13 @@ export default function ProfilePage() {
     onSuccess: async (updatedUser) => {
       toast.success(t('profile.pictureUpdated'));
       setSelectedFile(null);
-      // Refresh the page to update AuthContext user
-      setTimeout(() => window.location.reload(), 500);
+      setFilePreview(null);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      // Update user in context without page reload
+      updateUser(updatedUser);
     },
     onError: (error: Error) => {
       toast.error(error.message || t('profile.pictureUpdateFailed'));
