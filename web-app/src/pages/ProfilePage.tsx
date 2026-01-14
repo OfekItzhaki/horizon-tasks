@@ -163,8 +163,8 @@ export default function ProfilePage() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               {t('profile.emailVerified')}
             </label>
-            <div className={`mt-1 flex ${isRtl ? 'flex-row-reverse' : 'flex-row'} items-center gap-2 flex-wrap`} dir={isRtl ? 'rtl' : 'ltr'}>
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
+            <div className="mt-1 flex items-center gap-2 flex-wrap" dir={isRtl ? 'rtl' : 'ltr'} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white" dir={isRtl ? 'rtl' : 'ltr'}>
                 {user.emailVerified ? t('profile.yes') : t('profile.no')}
               </span>
               {!user.emailVerified && (
@@ -179,6 +179,7 @@ export default function ProfilePage() {
                     }
                   }}
                   className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
+                  dir={isRtl ? 'rtl' : 'ltr'}
                 >
                   {t('profile.resendVerification')}
                 </button>
