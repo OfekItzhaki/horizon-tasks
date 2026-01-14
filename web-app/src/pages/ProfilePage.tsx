@@ -163,7 +163,7 @@ export default function ProfilePage() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               {t('profile.emailVerified')}
             </label>
-            <div className={`mt-1 flex ${isRtl ? 'flex-row-reverse' : ''} items-center gap-2`}>
+            <div className={`mt-1 flex ${isRtl ? 'flex-row-reverse' : ''} items-center gap-2`} dir={isRtl ? 'rtl' : 'ltr'}>
               <p className="text-sm text-gray-900 dark:text-white">
                 {user.emailVerified ? t('profile.yes') : t('profile.no')}
               </p>
