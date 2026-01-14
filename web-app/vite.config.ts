@@ -20,6 +20,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['@tasks-management/frontend-services'],
+    force: true, // Force re-optimization on every start (remove after fix)
   },
   build: {
     commonjsOptions: {
