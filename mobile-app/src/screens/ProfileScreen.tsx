@@ -127,19 +127,9 @@ export default function ProfileScreen() {
       height: 24,
       tintColor: '#fff',
     },
-    emailVerificationRow: {
-      flexDirection: isRtl ? 'row-reverse' : 'row',
-      alignItems: 'center',
-      flexWrap: 'wrap',
-      gap: 8,
-    },
-    emailVerificationText: {
-      fontSize: 14,
-      color: colors.text,
-    },
     resendButton: {
-      paddingVertical: 4,
-      paddingHorizontal: 8,
+      marginTop: 8,
+      alignSelf: isRtl ? 'flex-end' : 'flex-start',
     },
     resendButtonText: {
       fontSize: 14,
@@ -442,16 +432,14 @@ export default function ProfileScreen() {
           {/* Email Verification */}
           <View style={styles.profileSection}>
             <Text style={styles.profileLabel}>{t('profile.emailVerified')}</Text>
-            <View style={styles.emailVerificationRow}>
-              <Text style={styles.emailVerificationText}>
-                {user.emailVerified ? t('profile.yes') : t('profile.no')}
-              </Text>
-              {!user.emailVerified && (
-                <TouchableOpacity onPress={handleResendVerification} style={styles.resendButton}>
-                  <Text style={styles.resendButtonText}>{t('profile.resendVerification')}</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            <Text style={styles.profileValue}>
+              {user.emailVerified ? t('profile.yes') : t('profile.no')}
+            </Text>
+            {!user.emailVerified && (
+              <TouchableOpacity onPress={handleResendVerification} style={styles.resendButton}>
+                <Text style={styles.resendButtonText}>{t('profile.resendVerification')}</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Member Since */}
