@@ -8,13 +8,19 @@ import {
   Patch,
   Post,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import UsersService from './users.service';
@@ -23,6 +29,8 @@ import {
   CurrentUser,
   CurrentUserPayload,
 } from '../auth/current-user.decorator';
+import { fileStorageConfig } from './utils/file-storage.config';
+import { FileUploadInterceptor } from './interceptors/file-upload.interceptor';
 
 @ApiTags('Users')
 @Controller('users')
@@ -81,6 +89,57 @@ class UsersController {
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.userService.updateUser(id, data, user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/upload-avatar')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Upload profile picture' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Profile picture uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid file or file too large' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - can only upload to own profile',
+  })
+  @UseInterceptors(
+    FileInterceptor('file', fileStorageConfig),
+    FileUploadInterceptor,
+  )
+  async uploadAvatar(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: CurrentUserPayload,
+  ) {
+    if (id !== user.userId) {
+      throw new BadRequestException('You can only upload to your own profile');
+    }
+
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    // Generate URL for the uploaded file
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const fileUrl = `${baseUrl}/uploads/${file.filename}`;
+
+    // Update user profile with new picture URL
+    return this.userService.updateUser(
+      id,
+      { profilePicture: fileUrl },
+      user.userId,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

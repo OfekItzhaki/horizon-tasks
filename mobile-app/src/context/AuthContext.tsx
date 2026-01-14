@@ -60,7 +60,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshUser = async () => {
-    await loadUser();
+    try {
+      const tokenExists = await authService.isAuthenticated();
+      if (!tokenExists) {
+        setUser(null);
+        setHasToken(false);
+        return;
+      }
+      // Fetch fresh user data from API
+      const { usersService } = await import('../services/users.service');
+      const freshUser = await usersService.getCurrent();
+      await UserStorage.setUser(freshUser);
+      setUser(freshUser);
+      setHasToken(true);
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+      // Fallback to stored user
+      const storedUser = await authService.getStoredUser();
+      setUser(storedUser);
+    }
   };
 
   // Re-check authentication state periodically (catches 401 token clears)

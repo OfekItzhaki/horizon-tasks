@@ -61,4 +61,13 @@ export class UpdateTaskDto {
   @IsOptional()
   @IsBoolean()
   completed?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Order/position of the task in the list',
+    example: 1,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  order?: number;
 }

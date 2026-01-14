@@ -26,6 +26,14 @@ class AuthService {
   getToken(): string | null {
     return frontendAuthService.getToken();
   }
+
+  async verifyEmail(token: string): Promise<User> {
+    return frontendAuthService.verifyEmail(token);
+  }
+
+  async resendVerification(email: string): Promise<User> {
+    return frontendAuthService.resendVerification(email);
+  }
 }
 
 export const authService = new AuthService();

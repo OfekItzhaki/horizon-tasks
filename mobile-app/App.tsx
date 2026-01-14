@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from './src/context/AuthContext';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { requestNotificationPermissions, rescheduleAllReminders } from './src/services/notifications.service';
 import { TokenStorage } from './src/utils/storage';
 import './src/i18n';
 
-export default function App() {
+function AppContent() {
+  const { isDark } = useTheme();
   useEffect(() => {
     const initializeNotifications = async () => {
       // Request notification permissions on app start
@@ -43,9 +45,19 @@ export default function App() {
   }, []);
 
   return (
-    <AuthProvider>
+    <>
       <AppNavigator />
-      <StatusBar style="auto" />
-    </AuthProvider>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

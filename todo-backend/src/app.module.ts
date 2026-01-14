@@ -12,11 +12,13 @@ import { ListSharesModule } from './list-shares/list-shares.module';
 import { MeModule } from './me/me.module';
 import { RemindersModule } from './reminders/reminders.module';
 import { TaskSchedulerModule } from './task-scheduler/task-scheduler.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     PrismaModule,
+    EmailModule,
     UsersModule,
     AuthModule,
     TodoListsModule,

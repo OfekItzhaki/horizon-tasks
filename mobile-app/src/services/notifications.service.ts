@@ -70,6 +70,8 @@ async function ensureNotificationHandlerConfigured(): Promise<void> {
         shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
       }),
     });
     
@@ -113,7 +115,6 @@ export async function requestNotificationPermissions(): Promise<boolean> {
           allowAlert: true,
           allowBadge: true,
           allowSound: true,
-          allowAnnouncements: false,
         },
       });
       finalStatus = status;
@@ -149,7 +150,7 @@ export async function scheduleReminderNotification(
     }
 
     // Build trigger based on reminder type
-    let trigger: Notifications.TriggerInput;
+    let trigger: Notifications.NotificationTriggerInput;
     const timeParts = (reminder.time || '09:00').split(':');
     const hours = parseInt(timeParts[0] || '9', 10);
     const minutes = parseInt(timeParts[1] || '0', 10);
@@ -160,9 +161,9 @@ export async function scheduleReminderNotification(
       await setupNotificationChannel();
       
       trigger = {
+        type: 'daily',
         hour: hours,
         minute: minutes,
-        repeats: true,
       } as Notifications.DailyTriggerInput;
       console.log(`Scheduling daily reminder at ${hours}:${minutes.toString().padStart(2, '0')} (repeats: true)`);
     } 
@@ -172,10 +173,10 @@ export async function scheduleReminderNotification(
       await setupNotificationChannel();
       
       trigger = {
+        type: 'weekly',
         weekday: reminder.dayOfWeek + 1, // expo-notifications uses 1-7 (Sunday = 1)
         hour: hours,
         minute: minutes,
-        repeats: true,
       } as Notifications.WeeklyTriggerInput;
       console.log(`Scheduling weekly reminder: weekday ${reminder.dayOfWeek + 1} at ${hours}:${minutes.toString().padStart(2, '0')} (repeats: true)`);
     } 
@@ -192,8 +193,9 @@ export async function scheduleReminderNotification(
       }
 
       trigger = {
+        type: 'date',
         date: triggerDate,
-      };
+      } as Notifications.DateTriggerInput;
     }
 
     // Ensure notification channel is set up before scheduling
@@ -283,25 +285,8 @@ function calculateNotificationDate(
       }
       break;
 
-    case ReminderTimeframe.EVERY_DAY:
-      // Next occurrence of this time today or tomorrow
-      notificationDate = new Date(now);
-      notificationDate.setHours(hours, minutes, 0, 0);
-      if (notificationDate < now) {
-        notificationDate.setDate(notificationDate.getDate() + 1);
-      }
-      return notificationDate;
-
-    case ReminderTimeframe.EVERY_WEEK:
-      if (reminder.dayOfWeek !== undefined) {
-        // Next occurrence of this day of week
-        const daysUntil = (reminder.dayOfWeek - now.getDay() + 7) % 7 || 7;
-        notificationDate = new Date(now);
-        notificationDate.setDate(notificationDate.getDate() + daysUntil);
-        notificationDate.setHours(hours, minutes, 0, 0);
-        return notificationDate;
-      }
-      break;
+    // Note: EVERY_DAY and EVERY_WEEK are handled earlier with recurring triggers
+    // and return null from this function, so they're not included in this switch
 
     case ReminderTimeframe.EVERY_MONTH:
       // 1st of next month

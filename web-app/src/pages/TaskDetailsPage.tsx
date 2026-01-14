@@ -7,6 +7,8 @@ import { stepsService } from '../services/steps.service';
 import FloatingActionButton from '../components/FloatingActionButton';
 import Skeleton from '../components/Skeleton';
 import { useTranslation } from 'react-i18next';
+import { useKeyboardShortcuts } from '../utils/useKeyboardShortcuts';
+import { isRtlLanguage } from '@tasks-management/frontend-services/i18n';
 import {
   Task,
   ApiError,
@@ -19,7 +21,8 @@ import {
 import { formatApiError } from '../utils/formatApiError';
 
 export default function TaskDetailsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRtl = isRtlLanguage(i18n.language);
   const { taskId } = useParams<{ taskId: string }>();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -31,6 +34,35 @@ export default function TaskDetailsPage() {
   const [newStepDescription, setNewStepDescription] = useState('');
   const [editingStepId, setEditingStepId] = useState<number | null>(null);
   const [stepDescriptionDraft, setStepDescriptionDraft] = useState('');
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'Escape',
+      handler: () => {
+        if (isEditingTask) {
+          setIsEditingTask(false);
+          setTaskDescriptionDraft(task?.description ?? '');
+        } else if (editingStepId !== null) {
+          setEditingStepId(null);
+          setStepDescriptionDraft('');
+        } else if (showAddStep) {
+          setShowAddStep(false);
+          setNewStepDescription('');
+        }
+      },
+      description: 'Cancel editing',
+    },
+    {
+      key: 's',
+      handler: () => {
+        if (!showAddStep && task) {
+          setShowAddStep(true);
+        }
+      },
+      description: 'Add new step',
+    },
+  ]);
 
   // Speed-up + consistency:
   // If the user just toggled completion in the list view and immediately navigates here,
@@ -58,6 +90,7 @@ export default function TaskDetailsPage() {
     isLoading,
     isError,
     error,
+    refetch,
   } = useQuery<Task, ApiError>({
     queryKey: ['task', numericTaskId],
     enabled: typeof numericTaskId === 'number' && !Number.isNaN(numericTaskId),
@@ -323,9 +356,9 @@ export default function TaskDetailsPage() {
         <div className="mb-6">
           <Skeleton className="h-5 w-32" />
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center space-x-3">
+        <div className="bg-white dark:bg-[#1f1f1f] rounded-lg shadow p-6">
+          <div className={`flex ${isRtl ? 'flex-row-reverse' : ''} items-start justify-between gap-3 mb-4`}>
+            <div className={`flex items-center ${isRtl ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
               <Skeleton className="h-5 w-5 rounded" />
               <Skeleton className="h-7 w-72" />
             </div>
@@ -336,8 +369,8 @@ export default function TaskDetailsPage() {
             <Skeleton className="h-6 w-24" />
             <div className="mt-3 space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div key={i} className={`flex ${isRtl ? 'flex-row-reverse' : ''} items-center justify-between gap-3 p-3 bg-gray-50 dark:bg-[#1a1a1a] rounded`}>
+                  <div className={`flex items-center ${isRtl ? 'space-x-reverse space-x-3' : 'gap-3'} min-w-0 flex-1`}>
                     <Skeleton className="h-4 w-4 rounded" />
                     <Skeleton className="h-4 w-64" />
                   </div>
@@ -353,18 +386,28 @@ export default function TaskDetailsPage() {
 
   if (isError || !task) {
     return (
-      <div className="rounded-md bg-red-50 p-4">
-        <div className="text-sm text-red-800">
+      <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
+        <div className="text-sm text-red-800 dark:text-red-200 mb-3">
           {isError
             ? formatApiError(error, t('taskDetails.loadFailed'))
             : t('taskDetails.notFound')}
         </div>
-        <Link
-          to="/lists"
-          className="mt-4 inline-block text-indigo-600 hover:text-indigo-700 text-sm font-medium"
-        >
-          {t('tasks.backToLists')}
-        </Link>
+        <div className="flex gap-3">
+          {isError && (
+            <button
+              onClick={() => refetch()}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+            >
+              {t('common.retry') || 'Retry'}
+            </button>
+          )}
+          <Link
+            to="/lists"
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+          >
+            {t('tasks.backToLists')}
+          </Link>
+        </div>
       </div>
     );
   }
@@ -376,13 +419,13 @@ export default function TaskDetailsPage() {
       <div className="mb-6">
         <Link
           to={task.todoListId ? `/lists/${task.todoListId}/tasks` : '/lists'}
-          className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium"
         >
           {t('taskDetails.backToTasks')}
         </Link>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-[#1f1f1f] rounded-lg shadow p-6">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center space-x-3">
           <input
@@ -401,7 +444,7 @@ export default function TaskDetailsPage() {
                 <input
                   value={taskDescriptionDraft}
                   onChange={(e) => setTaskDescriptionDraft(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-gray-300 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
                 <div className="flex gap-2">
                   <button
@@ -431,7 +474,7 @@ export default function TaskDetailsPage() {
                       setIsEditingTask(false);
                       setTaskDescriptionDraft(task.description);
                     }}
-                    className="inline-flex justify-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200"
+                    className="inline-flex justify-center rounded-md bg-gray-100 dark:bg-[#2a2a2a] px-3 py-2 text-sm font-medium text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-[#333333]"
                   >
                     {t('common.cancel')}
                   </button>
@@ -439,7 +482,7 @@ export default function TaskDetailsPage() {
               </div>
             ) : (
               <h1
-                className="text-2xl font-bold text-gray-900 cursor-text"
+                className="text-2xl font-bold text-gray-900 dark:text-white cursor-text"
                 title={t('taskDetails.clickToEdit')}
                 onClick={() => {
                   if (isArchivedTask) return;
@@ -487,23 +530,23 @@ export default function TaskDetailsPage() {
 
         {task.dueDate && (
           <div className="mb-4">
-            <span className="text-sm font-medium text-gray-700">Due Date: </span>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Due Date: </span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
               {new Date(task.dueDate).toLocaleDateString()}
             </span>
           </div>
         )}
 
         <div className="mt-6">
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <h2 className="text-lg font-semibold text-gray-900">
+          <div className={`flex ${isRtl ? 'flex-row-reverse' : ''} items-center justify-between gap-3 mb-3`}>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {t('taskDetails.stepsTitle')}
             </h2>
           </div>
 
           {showAddStep && (
             <form
-              className="bg-white rounded-lg border p-4 mb-4"
+              className="bg-white dark:bg-[#1a1a1a] rounded-lg border border-gray-200 dark:border-[#2a2a2a] p-4 mb-4"
               onSubmit={(e) => {
                 e.preventDefault();
                 if (!newStepDescription.trim()) return;
@@ -515,13 +558,13 @@ export default function TaskDetailsPage() {
             >
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-12 sm:items-end">
                 <div className="sm:col-span-10">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     {t('taskDetails.form.descriptionLabel')}
                   </label>
                   <input
                     value={newStepDescription}
                     onChange={(e) => setNewStepDescription(e.target.value)}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="mt-1 block w-full rounded-md border border-gray-300 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder={t('taskDetails.form.descriptionPlaceholder')}
                   />
                 </div>
@@ -541,7 +584,7 @@ export default function TaskDetailsPage() {
                       setShowAddStep(false);
                       setNewStepDescription('');
                     }}
-                    className="inline-flex justify-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200"
+                    className="inline-flex justify-center rounded-md bg-gray-100 dark:bg-[#2a2a2a] px-3 py-2 text-sm font-medium text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-[#333333]"
                   >
                     {t('common.cancel')}
                   </button>
@@ -555,7 +598,7 @@ export default function TaskDetailsPage() {
               {task.steps.map((step) => (
                 <li
                   key={step.id}
-                  className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded"
+                  className="flex items-center justify-between gap-3 p-3 bg-gray-50 dark:bg-[#1a1a1a] rounded"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <input
@@ -574,14 +617,14 @@ export default function TaskDetailsPage() {
                       <input
                         value={stepDescriptionDraft}
                         onChange={(e) => setStepDescriptionDraft(e.target.value)}
-                        className="min-w-0 flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="min-w-0 flex-1 rounded-md border border-gray-300 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     ) : (
                       <span
                         className={
                           step.completed
-                            ? 'line-through text-gray-500 truncate'
-                            : 'text-gray-900 truncate'
+                            ? 'line-through text-gray-500 dark:text-gray-400 truncate'
+                            : 'text-gray-900 dark:text-white truncate'
                         }
                         title={t('taskDetails.clickToEdit')}
                         onClick={() => {
@@ -625,7 +668,7 @@ export default function TaskDetailsPage() {
                           setEditingStepId(null);
                           setStepDescriptionDraft('');
                         }}
-                        className="inline-flex justify-center rounded-md bg-gray-200 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-300"
+                        className="inline-flex justify-center rounded-md bg-gray-200 dark:bg-[#2a2a2a] px-3 py-2 text-sm font-medium text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-[#333333]"
                       >
                         {t('common.cancel')}
                       </button>
@@ -650,7 +693,7 @@ export default function TaskDetailsPage() {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-gray-500">{t('taskDetails.noSteps')}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('taskDetails.noSteps')}</p>
           )}
         </div>
       </div>

@@ -96,6 +96,7 @@ export interface UpdateTaskDto {
   specificDayOfWeek?: number;
   reminderDaysBefore?: number[];
   completed?: boolean;
+  order?: number;
 }
 
 // Step Types

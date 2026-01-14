@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -11,6 +12,7 @@ import ListsScreen from '../screens/ListsScreen';
 import TasksScreen from '../screens/TasksScreen';
 import TaskDetailsScreen from '../screens/TaskDetailsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import AnalysisScreen from '../screens/AnalysisScreen';
 
 import { ListType } from '../types';
 
@@ -23,6 +25,7 @@ export type RootStackParamList = {
 
 export type MainTabParamList = {
   Lists: undefined;
+  Analysis: undefined;
   Profile: undefined;
 };
 
@@ -42,6 +45,11 @@ function MainTabs() {
         options={{ title: 'My Lists' }}
       />
       <Tab.Screen
+        name="Analysis"
+        component={AnalysisScreen}
+        options={{ title: 'Analysis' }}
+      />
+      <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{ title: 'Profile' }}
@@ -52,11 +60,12 @@ function MainTabs() {
 
 export default function AppNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { colors } = useTheme();
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -91,6 +100,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
 });
