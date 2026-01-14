@@ -127,6 +127,10 @@ export default function ProfileScreen() {
       height: 24,
       tintColor: '#fff',
     },
+    verificationStatus: {
+      fontWeight: '600',
+      color: colors.text,
+    },
     resendButton: {
       marginTop: 8,
     },
