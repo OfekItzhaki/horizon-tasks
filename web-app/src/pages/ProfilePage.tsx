@@ -161,27 +161,29 @@ export default function ProfilePage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {t('profile.emailVerified')}{' '}
-              <span className="font-semibold text-gray-900 dark:text-white">
+              {t('profile.emailVerified')}
+            </label>
+            <div className={`mt-1 flex ${isRtl ? 'flex-row-reverse' : 'flex-row'} items-center gap-2 flex-wrap`} dir={isRtl ? 'rtl' : 'ltr'}>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 {user.emailVerified ? t('profile.yes') : t('profile.no')}
               </span>
-            </label>
-            {!user.emailVerified && (
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await authService.resendVerification(user.email);
-                    toast.success(t('profile.verificationEmailSent'));
-                  } catch (error) {
-                    toast.error(error instanceof Error ? error.message : t('profile.verificationEmailSent'));
-                  }
-                }}
-                className={`mt-2 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium ${isRtl ? 'block text-right' : 'block text-left'}`}
-              >
-                {t('profile.resendVerification')}
-              </button>
-            )}
+              {!user.emailVerified && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await authService.resendVerification(user.email);
+                      toast.success(t('profile.verificationEmailSent'));
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : t('profile.verificationEmailSent'));
+                    }
+                  }}
+                  className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
+                >
+                  {t('profile.resendVerification')}
+                </button>
+              )}
+            </div>
           </div>
 
           <div>
