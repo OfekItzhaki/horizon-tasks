@@ -83,7 +83,7 @@ export default function ProfileScreen() {
       color: colors.text,
     },
     profilePictureContainer: {
-      alignItems: 'center',
+      alignItems: isRtl ? 'flex-end' : 'flex-start',
       marginBottom: 20,
     },
     profilePictureWrapper: {
@@ -406,8 +406,8 @@ export default function ProfileScreen() {
                     <ActivityIndicator size="small" color="#fff" />
                   </View>
                 ) : (
-                  <View style={styles.profilePictureOverlay}>
-                    <Text style={{ color: '#fff', fontSize: 20 }}>✏️</Text>
+                  <View style={[styles.profilePictureOverlay, { opacity: 0.7 }]}>
+                    <Text style={{ color: '#fff', fontSize: 24 }}>✏️</Text>
                   </View>
                 )}
               </View>
