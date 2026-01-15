@@ -14,6 +14,23 @@ export class PrismaService
         },
       },
     });
+    
+    // Log connection details (without password) for debugging
+    if (process.env.DATABASE_URL) {
+      try {
+        // Parse connection string safely
+        const dbUrl = process.env.DATABASE_URL;
+        const match = dbUrl.match(/postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
+        if (match) {
+          const [, , , host, port, database] = match;
+          console.log('[Prisma] Connecting to:', `postgresql://${host}:${port}/${database}`);
+        } else {
+          console.log('[Prisma] DATABASE_URL format detected');
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
+    }
   }
 
   async onModuleInit() {
