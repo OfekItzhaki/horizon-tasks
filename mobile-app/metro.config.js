@@ -7,47 +7,63 @@ const fs = require('fs');
 const config = getDefaultConfig(__dirname);
 
 // Find the frontend-services package location
-// It could be a symlink from node_modules or a direct relative path
-let frontendServicesPath = null;
-const nodeModulesPath = path.resolve(__dirname, 'node_modules/@tasks-management/frontend-services');
-const relativePath = path.resolve(__dirname, '../frontend-services');
-
-if (fs.existsSync(nodeModulesPath)) {
-  // Check if it's a symlink
-  const stats = fs.lstatSync(nodeModulesPath);
-  if (stats.isSymbolicLink()) {
-    frontendServicesPath = fs.readlinkSync(nodeModulesPath);
-  } else {
-    frontendServicesPath = nodeModulesPath;
+// In EAS builds, it's in node_modules as a local file dependency
+function findFrontendServicesPath() {
+  const nodeModulesPath = path.resolve(__dirname, 'node_modules/@tasks-management/frontend-services');
+  const relativePath = path.resolve(__dirname, '../frontend-services');
+  
+  // First check node_modules (EAS build environment)
+  if (fs.existsSync(nodeModulesPath)) {
+    try {
+      // Check if it's a symlink
+      const stats = fs.lstatSync(nodeModulesPath);
+      if (stats.isSymbolicLink()) {
+        return fs.realpathSync(nodeModulesPath);
+      }
+      return nodeModulesPath;
+    } catch (e) {
+      // Fallback to relative path
+    }
   }
-} else if (fs.existsSync(relativePath)) {
-  frontendServicesPath = relativePath;
+  
+  // Check relative path (local development)
+  if (fs.existsSync(relativePath)) {
+    return relativePath;
+  }
+  
+  return null;
 }
+
+const frontendServicesPath = findFrontendServicesPath();
 
 // Add support for resolving subpath exports from frontend-services
 if (frontendServicesPath) {
   const i18nPath = path.resolve(frontendServicesPath, 'dist/i18n/index.js');
   
-  config.resolver = {
-    ...config.resolver,
-    extraNodeModules: {
-      ...config.resolver.extraNodeModules,
-      // Map the subpath export to the actual file location
-      '@tasks-management/frontend-services/i18n': path.dirname(i18nPath),
-    },
-  };
-
   // Custom resolver for the subpath export
   const originalResolveRequest = config.resolver.resolveRequest;
   config.resolver.resolveRequest = (context, moduleName, platform) => {
     // Handle @tasks-management/frontend-services/i18n subpath export
     if (moduleName === '@tasks-management/frontend-services/i18n') {
-      if (fs.existsSync(i18nPath)) {
-        return {
-          type: 'sourceFile',
-          filePath: i18nPath,
-        };
+      // Try multiple possible paths
+      const possiblePaths = [
+        i18nPath,
+        path.resolve(frontendServicesPath, 'dist/i18n/index.js'),
+        path.resolve(__dirname, 'node_modules/@tasks-management/frontend-services/dist/i18n/index.js'),
+        path.resolve(__dirname, '../frontend-services/dist/i18n/index.js'),
+      ];
+      
+      for (const possiblePath of possiblePaths) {
+        if (fs.existsSync(possiblePath)) {
+          return {
+            type: 'sourceFile',
+            filePath: possiblePath,
+          };
+        }
       }
+      
+      // If file doesn't exist, log error but continue with default resolution
+      console.warn(`Warning: Could not find @tasks-management/frontend-services/i18n at any of: ${possiblePaths.join(', ')}`);
     }
     
     // Use default resolver for everything else
