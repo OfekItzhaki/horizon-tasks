@@ -32,23 +32,40 @@ config.resolver.extraNodeModules = {
 };
 
 // Custom resolver - MUST handle the package before default resolution
+// Metro's resolveRequest signature: (context, realModuleName, platform, moduleName)
 const originalResolveRequest = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, realModuleName, platform, moduleName) => {
+  const targetModule = realModuleName || moduleName;
+  
   // Handle @tasks-management/frontend-services - intercept FIRST
-  if (realModuleName === '@tasks-management/frontend-services' || moduleName === '@tasks-management/frontend-services') {
-    // Check all possible locations
-    const checkPaths = [
-      frontendServicesPath,
-      nodeModulesPath,
-      relativePath,
-    ].filter(Boolean);
+  if (targetModule === '@tasks-management/frontend-services') {
+    // Build list of all possible base paths to check
+    const basePaths = [];
     
-    for (const basePath of checkPaths) {
+    // Add detected path
+    if (frontendServicesPath) {
+      basePaths.push(frontendServicesPath);
+    }
+    
+    // Always check node_modules (EAS build)
+    basePaths.push(nodeModulesPath);
+    
+    // Always check relative path (local dev / fallback)
+    basePaths.push(relativePath);
+    
+    // Also check extraNodeModules mapped path
+    const extraPath = config.resolver.extraNodeModules?.['@tasks-management/frontend-services'];
+    if (extraPath && !basePaths.includes(extraPath)) {
+      basePaths.push(extraPath);
+    }
+    
+    // Try each base path
+    for (const basePath of basePaths) {
       const mainPath = path.resolve(basePath, 'dist/index.js');
       const packageJsonPath = path.resolve(basePath, 'package.json');
       
       try {
-        // Check if both package.json and dist/index.js exist
+        // Verify both package.json and dist/index.js exist
         if (fs.existsSync(packageJsonPath) && fs.existsSync(mainPath)) {
           return {
             type: 'sourceFile',
