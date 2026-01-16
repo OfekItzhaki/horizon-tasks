@@ -12,6 +12,12 @@ config.resolver.nodeModulesPaths = [
   path.resolve(__dirname, '..'),
 ];
 
+// Add watchFolders to ensure Metro watches the frontend-services directory
+config.watchFolders = [
+  ...(config.watchFolders || []),
+  path.resolve(__dirname, '../frontend-services'),
+];
+
 // Find frontend-services package location
 const nodeModulesPath = path.resolve(__dirname, 'node_modules/@tasks-management/frontend-services');
 const relativePath = path.resolve(__dirname, '../frontend-services');
