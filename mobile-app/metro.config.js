@@ -51,27 +51,33 @@ config.resolver.resolveRequest = (context, realModuleName, platform, moduleName)
   
   // Handle @tasks-management/frontend-services - intercept FIRST
   if (targetModule === '@tasks-management/frontend-services') {
-    // Build list of all possible base paths to check
+    // Build list of all possible base paths to check (check at runtime, not config time)
     const basePaths = [];
     
-    // Add detected path
-    if (frontendServicesPath) {
+    // Check node_modules first (EAS build should have it here)
+    const runtimeNodeModulesPath = path.resolve(__dirname, 'node_modules/@tasks-management/frontend-services');
+    if (fs.existsSync(runtimeNodeModulesPath)) {
+      basePaths.push(runtimeNodeModulesPath);
+    }
+    
+    // Check relative path (local dev)
+    const runtimeRelativePath = path.resolve(__dirname, '../frontend-services');
+    if (fs.existsSync(runtimeRelativePath)) {
+      basePaths.push(runtimeRelativePath);
+    }
+    
+    // Check detected path from config time
+    if (frontendServicesPath && fs.existsSync(frontendServicesPath)) {
       basePaths.push(frontendServicesPath);
     }
     
-    // Always check node_modules (EAS build)
-    basePaths.push(nodeModulesPath);
-    
-    // Always check relative path (local dev / fallback)
-    basePaths.push(relativePath);
-    
-    // Also check extraNodeModules mapped path
+    // Check extraNodeModules mapped path
     const extraPath = config.resolver.extraNodeModules?.['@tasks-management/frontend-services'];
-    if (extraPath && !basePaths.includes(extraPath)) {
+    if (extraPath && fs.existsSync(extraPath) && !basePaths.includes(extraPath)) {
       basePaths.push(extraPath);
     }
     
-    // Also check common EAS build paths
+    // Check common EAS build paths (check at runtime)
     const easBuildPaths = [
       '/home/expo/workingdir/build/frontend-services',
       path.resolve('/home/expo/workingdir/build', 'frontend-services'),
