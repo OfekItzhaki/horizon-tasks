@@ -4,17 +4,7 @@
   "description": "Front-end services for Tasks Management API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./i18n": {
-      "types": "./dist/i18n/index.d.ts",
-      "default": "./dist/i18n/index.js"
-    }
-  },
-  "react-native": "./dist/index.js",
+  "react-native": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch"
