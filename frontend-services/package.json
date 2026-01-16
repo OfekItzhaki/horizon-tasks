@@ -14,9 +14,7 @@
       "default": "./dist/i18n/index.js"
     }
   },
-  "react-native": {
-    "./i18n": "./dist/i18n/index.js"
-  },
+  "react-native": "./dist/index.js",
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch"
