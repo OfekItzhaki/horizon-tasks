@@ -65,6 +65,17 @@ config.resolver.resolveRequest = (context, realModuleName, platform, moduleName)
       basePaths.push(extraPath);
     }
     
+    // Also check common EAS build paths
+    const easBuildPaths = [
+      '/home/expo/workingdir/build/frontend-services',
+      path.resolve('/home/expo/workingdir/build', 'frontend-services'),
+    ];
+    for (const buildPath of easBuildPaths) {
+      if (fs.existsSync(buildPath) && !basePaths.includes(buildPath)) {
+        basePaths.push(buildPath);
+      }
+    }
+    
     // Try each base path
     for (const basePath of basePaths) {
       const mainPath = path.resolve(basePath, 'dist/index.js');
