@@ -40,19 +40,34 @@ config.resolver.extraNodeModules = {
   '@tasks-management/frontend-services': frontendServicesPath || nodeModulesPath || relativePath,
 };
 
-// Custom resolver to handle the package - MUST be called before default resolver
+// Custom resolver to handle the package
+// This MUST intercept before Metro's default resolution
 const originalResolveRequest = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  // Handle @tasks-management/frontend-services (main package) - check FIRST
+  // Handle @tasks-management/frontend-services (main package) - intercept FIRST
   if (moduleName === '@tasks-management/frontend-services') {
-    // Try all possible paths
-    const possibleMainPaths = [
-      frontendServicesPath ? path.resolve(frontendServicesPath, 'dist/index.js') : null,
-      path.resolve(nodeModulesPath, 'dist/index.js'),
-      path.resolve(relativePath, 'dist/index.js'),
-    ].filter(Boolean);
+    // Build all possible paths to check
+    const pathsToCheck = [];
     
-    for (const mainPath of possibleMainPaths) {
+    // Add paths based on what we found
+    if (frontendServicesPath) {
+      pathsToCheck.push(path.resolve(frontendServicesPath, 'dist/index.js'));
+    }
+    
+    // Always check node_modules (EAS build)
+    pathsToCheck.push(path.resolve(nodeModulesPath, 'dist/index.js'));
+    
+    // Always check relative path (local dev / fallback)
+    pathsToCheck.push(path.resolve(relativePath, 'dist/index.js'));
+    
+    // Also check if extraNodeModules path exists
+    const extraNodeModulesPath = config.resolver.extraNodeModules?.['@tasks-management/frontend-services'];
+    if (extraNodeModulesPath) {
+      pathsToCheck.push(path.resolve(extraNodeModulesPath, 'dist/index.js'));
+    }
+    
+    // Try each path
+    for (const mainPath of pathsToCheck) {
       try {
         if (fs.existsSync(mainPath)) {
           return {
@@ -61,23 +76,23 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
           };
         }
       } catch (e) {
-        // Continue
+        // Continue to next path
       }
     }
   }
   
-  // Handle subpath exports
+  // Handle subpath exports (legacy)
   if (
     moduleName === '@tasks-management/frontend-services/i18n' ||
     moduleName === '@tasks-management/frontend-services/dist/i18n'
   ) {
-    const possibleI18nPaths = [
+    const i18nPaths = [
       frontendServicesPath ? path.resolve(frontendServicesPath, 'dist/i18n/index.js') : null,
       path.resolve(nodeModulesPath, 'dist/i18n/index.js'),
       path.resolve(relativePath, 'dist/i18n/index.js'),
     ].filter(Boolean);
     
-    for (const i18nPath of possibleI18nPaths) {
+    for (const i18nPath of i18nPaths) {
       try {
         if (fs.existsSync(i18nPath)) {
           return {
