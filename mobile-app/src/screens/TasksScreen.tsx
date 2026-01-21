@@ -21,6 +21,7 @@ import DatePicker from '../components/DatePicker';
 import { scheduleTaskReminders, cancelAllTaskNotifications } from '../services/notifications.service';
 import { EveryDayRemindersStorage, ReminderTimesStorage, ReminderAlarmsStorage } from '../utils/storage';
 import { convertRemindersToBackend, formatDate } from '../utils/helpers';
+import { handleApiError, isAuthError, showErrorAlert } from '../utils/errorHandler';
 import { styles } from './styles/TasksScreen.styles';
 
 type TasksScreenRouteProp = RouteProp<RootStackParamList, 'Tasks'>;
@@ -64,17 +65,8 @@ export default function TasksScreen() {
       setAllTasks(normalizedTasks);
     } catch (error: any) {
       // Silently ignore auth errors - the navigation will handle redirect to login
-      const isAuthError = error?.response?.status === 401 || 
-                          error?.message?.toLowerCase()?.includes('unauthorized');
-      if (!isAuthError) {
-        const errorMessage = error?.message || error?.response?.data?.message || 'Unable to load tasks.';
-        const isTimeout = errorMessage.toLowerCase().includes('too long') || 
-                         errorMessage.toLowerCase().includes('timeout') ||
-                         error?.code === 'ECONNABORTED';
-        const finalMessage = isTimeout 
-          ? 'Loading tasks is taking too long. Please try again later.'
-          : errorMessage + ' Please try again later.';
-        Alert.alert('Error Loading Tasks', finalMessage);
+      if (!isAuthError(error)) {
+        handleApiError(error, 'Unable to load tasks. Please try again later.');
       }
     } finally {
       setLoading(false);
@@ -157,14 +149,13 @@ export default function TasksScreen() {
           t.id === task.id ? { ...t, completed: currentCompleted } : t
         )
       );
-      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to update task. Please try again.';
-      Alert.alert('Update Failed', errorMessage);
+      handleApiError(error, 'Unable to update task. Please try again.');
     }
   };
 
   const handleAddTask = async () => {
     if (!newTaskDescription.trim()) {
-      Alert.alert('Validation Error', 'Please enter a task description before adding.');
+      showErrorAlert('Validation Error', null, 'Please enter a task description before adding.');
       return;
     }
 
@@ -251,8 +242,7 @@ export default function TasksScreen() {
       loadTasks();
       // Success feedback - UI update is visible, no alert needed
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to create task. Please try again.';
-      Alert.alert('Create Task Failed', errorMessage);
+      handleApiError(error, 'Unable to create task. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -278,8 +268,7 @@ export default function TasksScreen() {
               await tasksService.delete(task.id);
               loadTasks();
             } catch (error: any) {
-              const errorMessage = error?.response?.data?.message || error?.message || 'Unable to delete task. Please try again.';
-              Alert.alert('Delete Failed', errorMessage);
+              handleApiError(error, 'Unable to delete task. Please try again.');
             }
           },
         },
@@ -298,11 +287,10 @@ export default function TasksScreen() {
           onPress: async () => {
             try {
               await tasksService.restore(task.id);
-              Alert.alert('Success', 'Task restored to original list');
+              showErrorAlert('Success', null, 'Task restored to original list');
               loadTasks();
             } catch (error: any) {
-              const errorMessage = error?.response?.data?.message || error?.message || 'Unable to restore task. Please try again.';
-              Alert.alert('Restore Failed', errorMessage);
+              handleApiError(error, 'Unable to restore task. Please try again.');
             }
           },
         },
@@ -329,8 +317,7 @@ export default function TasksScreen() {
                       await tasksService.permanentDelete(task.id);
                       loadTasks();
                     } catch (error: any) {
-                      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to delete task. Please try again.';
-                      Alert.alert('Delete Failed', errorMessage);
+                      handleApiError(error, 'Unable to delete task. Please try again.');
                     }
                   },
                 },
