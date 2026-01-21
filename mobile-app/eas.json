@@ -17,7 +17,8 @@
       "distribution": "internal",
       "node": "20.19.4",
       "env": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_API_URL": "https://tasksmanagement-lv54.onrender.com"
       },
       "android": {
         "buildType": "apk"

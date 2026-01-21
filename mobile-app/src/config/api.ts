@@ -11,9 +11,9 @@
 export const API_CONFIG = {
   // Production: Set via EXPO_PUBLIC_API_URL in .env or EAS build secrets
   // Development: Falls back to local IP for testing
-  baseURL: process.env.EXPO_PUBLIC_API_URL || __DEV__ 
+  baseURL: process.env.EXPO_PUBLIC_API_URL || (__DEV__ 
     ? 'http://192.168.1.198:3000'  // Development fallback
-    : 'https://tasksmanagement-lv54.onrender.com',  // Production fallback (update after deployment)
+    : 'https://tasksmanagement-lv54.onrender.com'),  // Production fallback (update after deployment)
 };
 
 export const getApiUrl = (endpoint: string): string => {
