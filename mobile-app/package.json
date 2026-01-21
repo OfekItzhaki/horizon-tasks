@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test:metro": "node test-metro-resolution.js && npx expo start --no-dev --minify",
-    "test:resolve": "node test-metro-resolution.js"
+    "test:resolve": "node test-metro-resolution.js",
+    "postinstall": "node ensure-frontend-services-built.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
