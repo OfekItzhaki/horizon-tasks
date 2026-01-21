@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "1cd400c0-d51b-4d0d-a6b2-f6f3952237db"
+      }
+    },
+    "android": {
+      "package": "com.seginomikata.todobackend"
+    }
+  }
+}
