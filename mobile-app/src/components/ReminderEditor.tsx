@@ -129,12 +129,6 @@ export default function ReminderEditor({
         : {}),
     };
     
-    console.log('Saving reminder with time:', {
-      originalTime: config.time,
-      formattedTime: timeToUse,
-      fullReminder: reminderToSave,
-    });
-    
     onSave(reminderToSave);
   };
 

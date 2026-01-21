@@ -56,13 +56,6 @@ export default function ReminderConfigComponent({
   };
 
   const saveReminder = (reminder: ReminderConfig) => {
-    console.log('saveReminder called with:', {
-      reminder,
-      reminderTime: reminder.time,
-      editingReminderId: editingReminder?.id,
-      currentReminders: reminders.map(r => ({ id: r.id, time: r.time })),
-    });
-    
     if (editingReminder) {
       // Check if this reminder already exists in the list
       const existingIndex = reminders.findIndex((r) => r.id === editingReminder.id);
@@ -81,24 +74,17 @@ export default function ReminderConfigComponent({
               daysBefore: reminder.daysBefore,
               hasAlarm: reminder.hasAlarm,
             };
-            console.log('Updating reminder:', {
-              old: { id: r.id, time: r.time },
-              new: { id: updatedReminder.id, time: updatedReminder.time },
-            });
             return updatedReminder;
           }
           return r;
         });
-        console.log('Updated reminders list:', updated.map(r => ({ id: r.id, time: r.time, timeframe: r.timeframe })));
         onRemindersChange(updated);
       } else {
         // Add new (editingReminder was set but reminder doesn't exist in list yet)
-        console.log('Adding new reminder (editingReminder exists but not in list)');
         onRemindersChange([...reminders, reminder]);
       }
     } else {
       // Add new
-      console.log('Adding new reminder');
       onRemindersChange([...reminders, reminder]);
     }
     setEditingReminder(null);
