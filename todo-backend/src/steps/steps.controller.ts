@@ -26,7 +26,7 @@ import {
 } from '../auth/current-user.decorator';
 
 @ApiTags('Steps')
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class StepsController {

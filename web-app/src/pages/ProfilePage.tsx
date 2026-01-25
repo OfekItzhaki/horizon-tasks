@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { BUILD_INFO } from '../utils/buildInfo';
-import { isRtlLanguage } from '@tasks-management/frontend-services/i18n';
+import { isRtlLanguage } from '@tasks-management/frontend-services';
 import { usersService } from '@tasks-management/frontend-services';
 import { authService } from '../services/auth.service';
 import toast from 'react-hot-toast';

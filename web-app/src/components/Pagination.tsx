@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { isRtlLanguage } from '@tasks-management/frontend-services/i18n';
+import { isRtlLanguage } from '@tasks-management/frontend-services';
 
 interface PaginationProps {
   currentPage: number;

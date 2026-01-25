@@ -15,7 +15,7 @@ import { TodoListsService } from '../todo-lists/todo-lists.service';
 import { TasksService } from '../tasks/tasks.service';
 
 @ApiTags('Me')
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('me')
 export class MeController {

@@ -5,7 +5,7 @@ import { ToDoList, Task } from '@tasks-management/frontend-services';
 import { useTranslation } from 'react-i18next';
 import Skeleton from '../components/Skeleton';
 import { useTheme } from '../context/ThemeContext';
-import { isRtlLanguage } from '@tasks-management/frontend-services/i18n';
+import { isRtlLanguage } from '@tasks-management/frontend-services';
 import {
   PieChart,
   Pie,

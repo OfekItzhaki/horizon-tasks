@@ -28,7 +28,7 @@ import {
 } from '../auth/current-user.decorator';
 
 @ApiTags('Tasks')
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('tasks')
 export class TasksController {

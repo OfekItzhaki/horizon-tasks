@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LoginDto, ApiError } from '@tasks-management/frontend-services';
 import { useTranslation } from 'react-i18next';
-import { isRtlLanguage } from '@tasks-management/frontend-services/i18n';
+import { isRtlLanguage } from '@tasks-management/frontend-services';
 
 export default function LoginPage() {
   const { t, i18n } = useTranslation();

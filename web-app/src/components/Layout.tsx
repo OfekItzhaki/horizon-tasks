@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { supportedLanguages } from '../i18n';
-import { isRtlLanguage } from '@tasks-management/frontend-services/i18n';
+import { isRtlLanguage } from '@tasks-management/frontend-services';
 
 export default function Layout() {
   const { user, logout } = useAuth();

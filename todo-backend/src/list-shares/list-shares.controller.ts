@@ -24,7 +24,7 @@ import {
 } from '../auth/current-user.decorator';
 
 @ApiTags('List Sharing')
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('list-shares')
 export class ListSharesController {

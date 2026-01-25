@@ -25,7 +25,7 @@ import {
 } from '../auth/current-user.decorator';
 
 @ApiTags('To-Do Lists')
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('todo-lists')
 export class TodoListsController {

@@ -7,7 +7,7 @@ import {
   supportedLanguages as sharedSupportedLanguages,
   isRtlLanguage,
   normalizeLanguage,
-} from '@tasks-management/frontend-services/i18n';
+} from '@tasks-management/frontend-services';
 
 export const supportedLanguages = sharedSupportedLanguages;
 
