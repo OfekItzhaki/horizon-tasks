@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useQueuedMutation } from '../hooks/useQueuedMutation';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { tasksService } from '../services/tasks.service';
@@ -47,6 +47,7 @@ export default function TaskDetailsPage() {
   const [newStepDescription, setNewStepDescription] = useState('');
   const [editingStepId, setEditingStepId] = useState<number | null>(null);
   const [stepDescriptionDraft, setStepDescriptionDraft] = useState('');
+  const stepInputRef = useRef<HTMLInputElement>(null);
   
   // Full edit mode state (for description, due date, reminders)
   const [isFullEditMode, setIsFullEditMode] = useState(false);
@@ -152,6 +153,16 @@ export default function TaskDetailsPage() {
       }
     }
   }, [task, isFullEditMode]);
+
+  // Auto-focus step input when showAddStep becomes true
+  useEffect(() => {
+    if (showAddStep && stepInputRef.current) {
+      // Small delay to ensure the input is rendered
+      setTimeout(() => {
+        stepInputRef.current?.focus();
+      }, 0);
+    }
+  }, [showAddStep]);
 
 
   const invalidateTask = (t: Task) => {
@@ -982,8 +993,30 @@ export default function TaskDetailsPage() {
         <div className="mt-6">
           <div className={`flex ${isRtl ? 'flex-row-reverse' : ''} items-center justify-between gap-3 mb-3`}>
             <h2 className="premium-header-section text-lg">
-              {t('taskDetails.stepsTitle')}
+              {t('taskDetails.stepsTitle', { defaultValue: 'Steps' })}
             </h2>
+            {!showAddStep && (
+              <button
+                type="button"
+                onClick={() => setShowAddStep(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-purple-600 rounded-lg hover:from-primary-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-4 w-4"
+                >
+                  <path d="M12 5v14" />
+                  <path d="M5 12h14" />
+                </svg>
+                {t('taskDetails.addStep', { defaultValue: 'Add Step' })}
+              </button>
+            )}
           </div>
 
           {showAddStep && (
@@ -1004,6 +1037,7 @@ export default function TaskDetailsPage() {
                     {t('taskDetails.form.descriptionLabel')}
                   </label>
                   <input
+                    ref={stepInputRef}
                     value={newStepDescription}
                     onChange={(e) => setNewStepDescription(e.target.value)}
                     className="mt-1 block w-full rounded-md border border-gray-300 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -1035,7 +1069,13 @@ export default function TaskDetailsPage() {
             </form>
           )}
 
-          {task.steps && task.steps.length > 0 ? (
+          {!showAddStep && task.steps && task.steps.length === 0 && (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <p className="text-sm">{t('taskDetails.noSteps', { defaultValue: 'No steps yet' })}</p>
+            </div>
+          )}
+
+          {task.steps && task.steps.length > 0 && (
             <ul className="space-y-2">
               {task.steps.map((step) => (
                 <li
@@ -1134,8 +1174,6 @@ export default function TaskDetailsPage() {
                 </li>
               ))}
             </ul>
-          ) : (
-            <p className="text-sm text-gray-500 dark:text-gray-400">{t('taskDetails.noSteps')}</p>
           )}
         </div>
       </div>

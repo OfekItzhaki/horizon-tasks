@@ -20,6 +20,7 @@ import { ToDoList, CreateTodoListDto } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedStyles } from '../utils/useThemedStyles';
 import { handleApiError, isAuthError } from '../utils/errorHandler';
+import { rescheduleAllReminders } from '../services/notifications.service';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -302,6 +303,15 @@ export default function ListsScreen() {
   useFocusEffect(
     React.useCallback(() => {
       loadLists();
+      
+      // Reschedule all reminders to sync with backend (including web-app changes)
+      // This runs in the background and doesn't block the UI
+      rescheduleAllReminders().catch((error) => {
+        if (__DEV__) {
+          console.error('Error rescheduling reminders:', error);
+        }
+        // Silently fail - don't interrupt user experience
+      });
     }, [])
   );
 
