@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 interface CalendarHeatmapProps {
   data: Array<{ date: string; count: number }>;
@@ -8,6 +9,7 @@ interface CalendarHeatmapProps {
 
 export default function CalendarHeatmap({ data, days = 90 }: CalendarHeatmapProps) {
   const { isDark } = useTheme();
+  const { t } = useTranslation();
 
   // Create a map for quick lookup
   const dataMap = useMemo(() => {
@@ -125,15 +127,21 @@ export default function CalendarHeatmap({ data, days = 90 }: CalendarHeatmapProp
       <div className="grid grid-cols-3 gap-3">
         <div className="text-center p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
           <div className="text-3xl font-bold text-primary-600 dark:text-primary-400 mb-1">{currentStreak}</div>
-          <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Current Streak</div>
+          <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+            {t('analysis.currentStreak', { defaultValue: 'Current Streak' })}
+          </div>
         </div>
         <div className="text-center p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
           <div className="text-3xl font-bold text-primary-600 dark:text-primary-400 mb-1">{longestStreak}</div>
-          <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Longest Streak</div>
+          <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+            {t('analysis.longestStreak', { defaultValue: 'Longest Streak' })}
+          </div>
         </div>
         <div className="text-center p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
           <div className="text-3xl font-bold text-primary-600 dark:text-primary-400 mb-1">{totalDaysWithCompletions}</div>
-          <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Total Days</div>
+          <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+            {t('analysis.totalDays', { defaultValue: 'Total Days' })}
+          </div>
         </div>
       </div>
 
@@ -163,14 +171,18 @@ export default function CalendarHeatmap({ data, days = 90 }: CalendarHeatmapProp
 
       {/* Legend */}
       <div className="flex items-center justify-center gap-3 pt-2">
-        <span className="text-xs text-gray-500 dark:text-gray-400">Less</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {t('analysis.less', { defaultValue: 'Less' })}
+        </span>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded" style={{ backgroundColor: isDark ? '#1f2937' : '#e5e7eb' }} />
           <div className="w-3 h-3 rounded" style={{ backgroundColor: '#10b981' }} />
           <div className="w-3 h-3 rounded" style={{ backgroundColor: '#059669' }} />
           <div className="w-3 h-3 rounded" style={{ backgroundColor: '#047857' }} />
         </div>
-        <span className="text-xs text-gray-500 dark:text-gray-400">More</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {t('analysis.more', { defaultValue: 'More' })}
+        </span>
       </div>
     </div>
   );

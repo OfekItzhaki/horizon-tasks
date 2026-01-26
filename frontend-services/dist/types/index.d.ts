@@ -57,6 +57,7 @@ export interface Task {
     id: number;
     description: string;
     completed: boolean;
+    completedAt: string | null;
     todoListId: number;
     order: number;
     dueDate: string | null;

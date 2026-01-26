@@ -25,7 +25,7 @@ import {
 import CalendarHeatmap from '../components/CalendarHeatmap';
 
 export default function AnalysisPage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { isDark } = useTheme();
   const isRtl = isRtlLanguage(i18n.language);
 
@@ -49,23 +49,25 @@ export default function AnalysisPage() {
 
   if (hasError && !isLoading) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Task Analysis</h1>
+      <div className={`space-y-6 ${isRtl ? 'rtl' : ''}`} dir={isRtl ? 'rtl' : 'ltr'}>
+        <h1 className={`text-3xl font-bold text-gray-900 dark:text-white ${isRtl ? 'text-right' : 'text-left'}`}>
+          {t('analysis.title', { defaultValue: 'Task Analysis' })}
+        </h1>
         <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
-          <div className="text-sm text-red-800 dark:text-red-200 mb-3">
+          <div className={`text-sm text-red-800 dark:text-red-200 mb-3 ${isRtl ? 'text-right' : 'text-left'}`}>
             {listsError
-              ? `Failed to load lists: ${listsErrorObj?.message || 'Unknown error'}`
+              ? `${t('analysis.loadListsFailed', { defaultValue: 'Failed to load lists' })}: ${listsErrorObj?.message || t('common.unknownError', { defaultValue: 'Unknown error' })}`
               : tasksError
-              ? `Failed to load tasks: ${tasksErrorObj?.message || 'Unknown error'}`
-              : 'An error occurred'}
+              ? `${t('analysis.loadTasksFailed', { defaultValue: 'Failed to load tasks' })}: ${tasksErrorObj?.message || t('common.unknownError', { defaultValue: 'Unknown error' })}`
+              : t('common.errorOccurred', { defaultValue: 'An error occurred' })}
           </div>
-          <div className="flex gap-3">
+          <div className={`flex gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
             {listsError && (
               <button
                 onClick={() => refetchLists()}
                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
               >
-                Retry Lists
+                {t('analysis.retryLists', { defaultValue: 'Retry Lists' })}
               </button>
             )}
             {tasksError && (
@@ -73,7 +75,7 @@ export default function AnalysisPage() {
                 onClick={() => refetchTasks()}
                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
               >
-                Retry Tasks
+                {t('analysis.retryTasks', { defaultValue: 'Retry Tasks' })}
               </button>
             )}
           </div>
@@ -218,7 +220,7 @@ export default function AnalysisPage() {
         return completedDate.getTime() === date.getTime();
       }).length;
       
-      const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const label = date.toLocaleDateString(i18n.language === 'he' ? 'he-IL' : 'en-US', { month: 'short', day: 'numeric' });
       trends.push({ date: dateKey, completions: completionsOnDate, label });
     }
     
@@ -228,17 +230,17 @@ export default function AnalysisPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-9 w-48" />
+      <div className={`space-y-6 ${isRtl ? 'rtl' : ''}`} dir={isRtl ? 'rtl' : 'ltr'}>
+        <Skeleton className="h-9 w-48 mx-auto" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white dark:bg-[#1f1f1f] p-6 rounded-lg shadow">
+            <div key={i} className="premium-card p-6">
               <Skeleton className="h-4 w-24 mb-2" />
               <Skeleton className="h-8 w-16" />
             </div>
           ))}
         </div>
-        <div className="bg-white dark:bg-[#1f1f1f] p-6 rounded-lg shadow">
+        <div className="premium-card p-6">
           <Skeleton className="h-6 w-32 mb-4" />
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -251,60 +253,68 @@ export default function AnalysisPage() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <h1 className="text-4xl font-bold gradient-text text-center">Task Analysis</h1>
+    <div className={`space-y-6 animate-fade-in ${isRtl ? 'rtl' : ''}`} dir={isRtl ? 'rtl' : 'ltr'}>
+      <h1 className="text-4xl font-bold gradient-text text-center">{t('analysis.title', { defaultValue: 'Task Analysis' })}</h1>
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="premium-card p-6">
-          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Total Lists</h3>
-          <p className="text-4xl font-bold text-gray-900 dark:text-white">{lists.length}</p>
+          <h3 className={`text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+            {t('analysis.totalLists', { defaultValue: 'Total Lists' })}
+          </h3>
+          <p className={`text-4xl font-bold text-gray-900 dark:text-white ${isRtl ? 'text-right' : 'text-left'}`}>{lists.length}</p>
         </div>
         <div className="premium-card p-6">
-          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Total Tasks</h3>
-          <p className="text-4xl font-bold text-gray-900 dark:text-white">{allTasks.length}</p>
+          <h3 className={`text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+            {t('analysis.totalTasks', { defaultValue: 'Total Tasks' })}
+          </h3>
+          <p className={`text-4xl font-bold text-gray-900 dark:text-white ${isRtl ? 'text-right' : 'text-left'}`}>{allTasks.length}</p>
         </div>
         <div className="premium-card p-6">
-          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Completed</h3>
-          <p className="text-4xl font-bold text-green-600 dark:text-green-400">
+          <h3 className={`text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+            {t('analysis.completed', { defaultValue: 'Completed' })}
+          </h3>
+          <p className={`text-4xl font-bold text-green-600 dark:text-green-400 ${isRtl ? 'text-right' : 'text-left'}`}>
             {completedTasks.length}
           </p>
         </div>
         <div className="premium-card p-6">
-          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Completion Rate</h3>
-          <p className="text-4xl font-bold text-primary-600 dark:text-primary-400">
+          <h3 className={`text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+            {t('analysis.completionRate', { defaultValue: 'Completion Rate' })}
+          </h3>
+          <p className={`text-4xl font-bold text-primary-600 dark:text-primary-400 ${isRtl ? 'text-right' : 'text-left'}`}>
             {completionRate.toFixed(1)}%
           </p>
         </div>
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
         {/* Completion Status Pie Chart with Streak */}
         {allTasks.length > 0 && (
           <div className="premium-card p-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-              Completion Status
+            <h2 className={`text-2xl font-bold text-gray-900 dark:text-white mb-6 ${isRtl ? 'text-right' : 'text-left'}`}>
+              {t('analysis.completionStatus', { defaultValue: 'Completion Status' })}
             </h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
                   data={[
-                    { name: 'Completed', value: completedTasks.length, color: '#10b981' },
-                    { name: 'Pending', value: pendingTasks.length, color: '#ef4444' },
+                    { name: t('analysis.completed', { defaultValue: 'Completed' }), value: completedTasks.length, color: '#10b981' },
+                    { name: t('analysis.pending', { defaultValue: 'Pending' }), value: pendingTasks.length, color: '#ef4444' },
                   ]}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  innerRadius={60}
+                  label={false}
+                  outerRadius={90}
+                  innerRadius={70}
                   fill="#8884d8"
                   dataKey="value"
                 >
                   {[
-                    { name: 'Completed', value: completedTasks.length, color: '#10b981' },
-                    { name: 'Pending', value: pendingTasks.length, color: '#ef4444' },
+                    { name: t('analysis.completed', { defaultValue: 'Completed' }), value: completedTasks.length, color: '#10b981' },
+                    { name: t('analysis.pending', { defaultValue: 'Pending' }), value: pendingTasks.length, color: '#ef4444' },
                   ].map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
@@ -317,46 +327,62 @@ export default function AnalysisPage() {
                     color: isDark ? '#ffffff' : '#1f2937',
                   }}
                 />
-                <Legend wrapperStyle={{ color: isDark ? '#ffffff' : '#1f2937' }} />
-                {/* Center text showing streak */}
+                {/* Center text showing streak - cleaner layout */}
                 <text
                   x="50%"
-                  y="45%"
+                  y="42%"
                   textAnchor="middle"
                   fill={isDark ? '#ffffff' : '#374151'}
-                  fontSize={14}
-                  fontWeight="bold"
+                  fontSize={13}
+                  fontWeight="600"
                 >
-                  Daily Streak
+                  {t('analysis.dailyStreak', { defaultValue: 'Daily Streak' })}
                 </text>
                 <text
                   x="50%"
-                  y="55%"
+                  y="52%"
                   textAnchor="middle"
                   fill={isDark ? '#10b981' : '#059669'}
-                  fontSize={24}
+                  fontSize={28}
                   fontWeight="bold"
                 >
                   {currentStreak}
                 </text>
                 <text
                   x="50%"
-                  y="65%"
+                  y="60%"
                   textAnchor="middle"
                   fill={isDark ? '#9ca3af' : '#6b7280'}
-                  fontSize={12}
+                  fontSize={11}
                 >
-                  {currentStreak === 1 ? 'day' : 'days'}
+                  {currentStreak === 1 
+                    ? t('analysis.day', { defaultValue: 'day' })
+                    : t('analysis.days', { defaultValue: 'days' })}
                 </text>
               </PieChart>
             </ResponsiveContainer>
+            {/* Custom Legend with better spacing */}
+            <div className={`flex items-center justify-center gap-6 mt-6 ${isRtl ? 'flex-row-reverse' : ''}`}>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444' }} />
+                <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {t('analysis.pending', { defaultValue: 'Pending' })}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded" style={{ backgroundColor: '#10b981' }} />
+                <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {t('analysis.completed', { defaultValue: 'Completed' })}
+                </span>
+              </div>
+            </div>
           </div>
         )}
 
         {/* Daily Completion Activity Calendar Heatmap */}
         <div className="premium-card p-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Daily Completion Activity
+          <h2 className={`text-2xl font-bold text-gray-900 dark:text-white mb-6 ${isRtl ? 'text-right' : 'text-left'}`}>
+            {t('analysis.dailyActivity', { defaultValue: 'Daily Completion Activity' })}
           </h2>
           <CalendarHeatmap data={dailyCompletions} days={90} />
         </div>
@@ -365,30 +391,49 @@ export default function AnalysisPage() {
       {/* Tasks by List Bar Chart */}
       {tasksByList.length > 0 && (
         <div className="premium-card p-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Tasks by List (Chart)
+          <h2 className={`text-2xl font-bold text-gray-900 dark:text-white mb-4 ${isRtl ? 'text-right' : 'text-left'}`}>
+            {t('analysis.tasksByListChart', { defaultValue: 'Tasks by List (Chart)' })}
           </h2>
           <ResponsiveContainer width="100%" height={400}>
             <BarChart
               data={tasksByList.map((item) => ({
-                name: item.listName.length > 15 ? item.listName.substring(0, 15) + '...' : item.listName,
+                name: item.listName.length > 10 ? item.listName.substring(0, 10) + '...' : item.listName,
                 fullName: item.listName,
                 completed: item.completed,
                 pending: item.pending,
                 total: item.total,
               }))}
-              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+              margin={{ top: 0, right: isRtl ? 50 : 30, left: isRtl ? 5 : 20, bottom: 30 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#4b5563' : '#374151'} opacity={0.1} />
               <XAxis
                 dataKey="name"
-                angle={-45}
-                textAnchor="end"
+                angle={isRtl ? 45 : -45}
+                textAnchor={isRtl ? 'start' : 'end'}
                 height={100}
+                interval={0}
                 stroke={isDark ? '#9ca3af' : '#6b7280'}
-                style={{ fontSize: '12px' }}
+                tick={{ 
+                  fill: isDark ? '#9ca3af' : '#6b7280',
+                  fontSize: 10,
+                  dy: 8,
+                  dx: isRtl ? -5 : 5
+                }}
+                tickMargin={8}
               />
-              <YAxis stroke={isDark ? '#9ca3af' : '#6b7280'} style={{ fontSize: '12px' }} />
+              <YAxis 
+                stroke={isDark ? '#9ca3af' : '#6b7280'} 
+                style={{ fontSize: '12px' }}
+                width={isRtl ? 50 : undefined}
+                orientation={isRtl ? 'right' : 'left'}
+                allowDecimals={false}
+                tick={{ 
+                  fill: isDark ? '#9ca3af' : '#6b7280',
+                  fontSize: 12,
+                  dx: isRtl ? 10 : 0
+                }}
+                tickMargin={isRtl ? 5 : 5}
+              />
               <Tooltip
                 contentStyle={{
                   backgroundColor: isDark ? '#1f1f1f' : '#ffffff',
@@ -397,37 +442,70 @@ export default function AnalysisPage() {
                   color: isDark ? '#ffffff' : '#1f2937',
                 }}
                 formatter={(value: number | undefined, name: string | undefined) => [value ?? 0, name ?? '']}
-                labelFormatter={(label) => `List: ${label}`}
+                labelFormatter={(label) => `${t('analysis.list', { defaultValue: 'List' })}: ${label}`}
               />
-              <Legend wrapperStyle={{ color: isDark ? '#ffffff' : '#1f2937' }} />
-              <Bar dataKey="completed" fill="#10b981" name="Completed" />
-              <Bar dataKey="pending" fill="#ef4444" name="Pending" />
+              <Bar dataKey="completed" fill="#10b981" name={t('analysis.completed', { defaultValue: 'Completed' })} />
+              <Bar dataKey="pending" fill="#ef4444" name={t('analysis.pending', { defaultValue: 'Pending' })} />
             </BarChart>
           </ResponsiveContainer>
+          {/* Custom Legend with better spacing */}
+          <div className={`flex items-center justify-center gap-6 -mt-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444' }} />
+              <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                {t('analysis.pending', { defaultValue: 'Pending' })}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#10b981' }} />
+              <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                {t('analysis.completed', { defaultValue: 'Completed' })}
+              </span>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Completion Trends Line Chart */}
       {completionTrends.length > 0 && (
         <div className="premium-card p-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Completion Trends (Last 30 Days)
+          <h2 className={`text-2xl font-bold text-gray-900 dark:text-white mb-4 ${isRtl ? 'text-right' : 'text-left'}`}>
+            {t('analysis.completionTrends', { defaultValue: 'Completion Trends (Last 30 Days)' })}
           </h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart
               data={completionTrends}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              margin={{ top: 0, right: isRtl ? 50 : 30, left: isRtl ? 5 : 20, bottom: 30 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#4b5563' : '#374151'} opacity={0.1} />
               <XAxis
                 dataKey="label"
                 stroke={isDark ? '#9ca3af' : '#6b7280'}
-                style={{ fontSize: '12px' }}
-                angle={-45}
-                textAnchor="end"
+                angle={isRtl ? 45 : -45}
+                textAnchor={isRtl ? 'start' : 'end'}
                 height={80}
+                interval={completionTrends.length > 10 ? Math.floor(completionTrends.length / 7) : 0}
+                tick={{ 
+                  fill: isDark ? '#9ca3af' : '#6b7280',
+                  fontSize: 10,
+                  dy: 8,
+                  dx: isRtl ? -5 : 5
+                }}
+                tickMargin={8}
               />
-              <YAxis stroke={isDark ? '#9ca3af' : '#6b7280'} style={{ fontSize: '12px' }} />
+              <YAxis 
+                stroke={isDark ? '#9ca3af' : '#6b7280'} 
+                style={{ fontSize: '12px' }}
+                width={isRtl ? 50 : undefined}
+                orientation={isRtl ? 'right' : 'left'}
+                allowDecimals={false}
+                tick={{ 
+                  fill: isDark ? '#9ca3af' : '#6b7280',
+                  fontSize: 12,
+                  dx: isRtl ? 10 : 0
+                }}
+                tickMargin={isRtl ? 5 : 5}
+              />
               <Tooltip
                 contentStyle={{
                   backgroundColor: isDark ? '#1f1f1f' : '#ffffff',
@@ -435,9 +513,8 @@ export default function AnalysisPage() {
                   borderRadius: '8px',
                   color: isDark ? '#ffffff' : '#1f2937',
                 }}
-                formatter={(value: number | undefined) => [`${value ?? 0} tasks`, 'Completions']}
+                formatter={(value: number | undefined) => [`${value ?? 0} ${t('analysis.tasks', { defaultValue: 'tasks' })}`, t('analysis.completions', { defaultValue: 'Completions' })]}
               />
-              <Legend wrapperStyle={{ color: isDark ? '#ffffff' : '#1f2937' }} />
               <Line
                 type="monotone"
                 dataKey="completions"
@@ -445,38 +522,58 @@ export default function AnalysisPage() {
                 strokeWidth={2}
                 dot={{ fill: '#10b981', r: 4 }}
                 activeDot={{ r: 6 }}
-                name="Tasks Completed"
+                name={t('analysis.tasksCompleted', { defaultValue: 'Tasks Completed' })}
               />
             </LineChart>
           </ResponsiveContainer>
+          {/* Custom Legend with better spacing */}
+          <div className={`flex items-center justify-center -mt-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-0.5" style={{ backgroundColor: '#10b981' }} />
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#10b981' }} />
+              <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                {t('analysis.tasksCompleted', { defaultValue: 'Tasks Completed' })}
+              </span>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Due Date Statistics */}
       {tasksWithDueDates.length > 0 && (
         <div className="premium-card p-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Due Date Overview</h2>
+          <h2 className={`text-2xl font-bold text-gray-900 dark:text-white mb-6 ${isRtl ? 'text-right' : 'text-left'}`}>
+            {t('analysis.dueDateOverview', { defaultValue: 'Due Date Overview' })}
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Overdue</h3>
+            <div className={isRtl ? 'text-right' : 'text-left'}>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {t('analysis.overdue', { defaultValue: 'Overdue' })}
+              </h3>
               <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
                 {overdueTasks.length}
               </p>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Due Today</h3>
+            <div className={isRtl ? 'text-right' : 'text-left'}>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {t('analysis.dueToday', { defaultValue: 'Due Today' })}
+              </h3>
               <p className="text-2xl font-bold text-orange-600 dark:text-orange-400 mt-1">
                 {dueTodayTasks.length}
               </p>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Due This Week</h3>
+            <div className={isRtl ? 'text-right' : 'text-left'}>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {t('analysis.dueThisWeek', { defaultValue: 'Due This Week' })}
+              </h3>
               <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">
                 {dueThisWeekTasks.length}
               </p>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">With Due Dates</h3>
+            <div className={isRtl ? 'text-right' : 'text-left'}>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {t('analysis.withDueDates', { defaultValue: 'With Due Dates' })}
+              </h3>
               <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                 {tasksWithDueDates.length}
               </p>
@@ -488,22 +585,30 @@ export default function AnalysisPage() {
       {/* Steps Statistics */}
       {tasksWithSteps.length > 0 && (
         <div className="premium-card p-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Steps Progress</h2>
+          <h2 className={`text-2xl font-bold text-gray-900 dark:text-white mb-6 ${isRtl ? 'text-right' : 'text-left'}`}>
+            {t('analysis.stepsProgress', { defaultValue: 'Steps Progress' })}
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Tasks with Steps</h3>
+            <div className={isRtl ? 'text-right' : 'text-left'}>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {t('analysis.tasksWithSteps', { defaultValue: 'Tasks with Steps' })}
+              </h3>
               <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                 {tasksWithSteps.length}
               </p>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Steps Completed</h3>
+            <div className={isRtl ? 'text-right' : 'text-left'}>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {t('analysis.stepsCompleted', { defaultValue: 'Steps Completed' })}
+              </h3>
               <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
                 {completedSteps} / {totalSteps}
               </p>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Steps Completion</h3>
+            <div className={isRtl ? 'text-right' : 'text-left'}>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {t('analysis.stepsCompletion', { defaultValue: 'Steps Completion' })}
+              </h3>
               <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
                 {stepsCompletionRate.toFixed(1)}%
               </p>
@@ -514,25 +619,27 @@ export default function AnalysisPage() {
 
       {/* Tasks by List */}
       <div className="premium-card p-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Tasks by List</h2>
+        <h2 className={`text-2xl font-bold text-gray-900 dark:text-white mb-6 ${isRtl ? 'text-right' : 'text-left'}`}>
+          {t('analysis.tasksByList', { defaultValue: 'Tasks by List' })}
+        </h2>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700" dir={isRtl ? 'rtl' : 'ltr'}>
             <thead className="glass-card">
               <tr>
                 <th className={`px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'}`}>
-                  List Name
+                  {t('analysis.listName', { defaultValue: 'List Name' })}
                 </th>
                 <th className={`px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'}`}>
-                  Total
+                  {t('analysis.total', { defaultValue: 'Total' })}
                 </th>
                 <th className={`px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'}`}>
-                  Completed
+                  {t('analysis.completed', { defaultValue: 'Completed' })}
                 </th>
                 <th className={`px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'}`}>
-                  Pending
+                  {t('analysis.pending', { defaultValue: 'Pending' })}
                 </th>
                 <th className={`px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'}`}>
-                  Progress
+                  {t('analysis.progress', { defaultValue: 'Progress' })}
                 </th>
               </tr>
             </thead>
@@ -541,16 +648,16 @@ export default function AnalysisPage() {
                 const progress = item.total > 0 ? (item.completed / item.total) * 100 : 0;
                 return (
                   <tr key={index}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white ${isRtl ? 'text-right' : 'text-left'}`}>
                       {item.listName}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300 ${isRtl ? 'text-right' : 'text-left'}`}>
                       {item.total}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400">
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400 ${isRtl ? 'text-right' : 'text-left'}`}>
                       {item.completed}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400">
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400 ${isRtl ? 'text-right' : 'text-left'}`}>
                       {item.pending}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

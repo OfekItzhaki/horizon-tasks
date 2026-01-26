@@ -812,8 +812,8 @@ export default function TasksPage() {
               <button
                 type="button"
                 onClick={() => setIsBulkMode(true)}
-                aria-label="Select multiple tasks for bulk operations"
-                className={`absolute ${isRtl ? 'right-0' : 'left-0'} -top-12 z-10 inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-glow hover:shadow-glow-lg hover:from-primary-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-300 hover:scale-110 active:scale-95`}
+                aria-label={t('tasks.selectMultiple')}
+                className={`group absolute ${isRtl ? 'right-0' : 'left-0'} -top-12 z-10 inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-glow hover:shadow-glow-lg hover:from-primary-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-300 hover:scale-110 active:scale-95`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -828,6 +828,11 @@ export default function TasksPage() {
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
+                {/* Hover tooltip */}
+                <span className={`absolute ${isRtl ? 'left-full ml-2' : 'right-full mr-2'} top-1/2 -translate-y-1/2 whitespace-nowrap px-3 py-1.5 text-sm font-medium text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-20`}>
+                  {t('tasks.selectMultiple')}
+                  <span className={`absolute top-1/2 -translate-y-1/2 ${isRtl ? 'right-full' : 'left-full'} border-4 border-transparent ${isRtl ? 'border-l-gray-900 dark:border-l-gray-800' : 'border-r-gray-900 dark:border-r-gray-800'}`} />
+                </span>
               </button>
             )}
             {paginatedTasks.map((task) => (
