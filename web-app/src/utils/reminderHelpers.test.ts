@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import {
   ReminderTimeframe,
   ReminderSpecificDate,
-  ReminderConfig,
+  type ReminderConfig,
   convertBackendToReminders,
   convertRemindersToBackend,
   formatReminderDisplay,
-} from './reminderHelpers';
+} from '@tasks-management/frontend-services';
 
 describe('reminderHelpers', () => {
   describe('convertBackendToReminders', () => {
@@ -403,6 +403,25 @@ describe('reminderHelpers', () => {
       expect(result.reminderDaysBefore).toEqual([7]);
       expect(result.specificDayOfWeek).toBe(2);
     });
+
+    it('should preserve location in reminderConfig round-trip', () => {
+      const reminders: ReminderConfig[] = [
+        {
+          id: 'loc-1',
+          timeframe: ReminderTimeframe.EVERY_DAY,
+          time: '10:00',
+          location: 'Office',
+          hasAlarm: true,
+        },
+      ];
+      const back = convertRemindersToBackend(reminders);
+      expect(back.reminderConfig).toBeDefined();
+      expect(Array.isArray(back.reminderConfig)).toBe(true);
+      expect(back.reminderConfig![0].location).toBe('Office');
+      const restored = convertBackendToReminders(undefined, null, null, back.reminderConfig);
+      expect(restored).toHaveLength(1);
+      expect(restored[0].location).toBe('Office');
+    });
   });
 
   describe('formatReminderDisplay', () => {
@@ -530,7 +549,7 @@ describe('reminderHelpers', () => {
         time: '09:00',
       };
 
-      const t = (key: string, options?: any) => {
+      const t = (key: string, options?: { defaultValue?: string; count?: number }) => {
         if (key === 'reminders.everyDay') return 'Jeden Tag';
         if (key === 'reminders.at') return 'um';
         return options?.defaultValue || key;
