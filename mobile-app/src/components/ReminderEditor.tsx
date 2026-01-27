@@ -10,10 +10,10 @@ import {
   Dimensions,
 } from 'react-native';
 import {
-  ReminderConfig,
+  type ReminderConfig,
   ReminderTimeframe,
   ReminderSpecificDate,
-} from '../types';
+} from '@tasks-management/frontend-services';
 import DatePicker from './DatePicker';
 
 interface ReminderEditorProps {

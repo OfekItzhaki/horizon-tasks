@@ -17,12 +17,20 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { tasksService } from '../services/tasks.service';
 import { stepsService } from '../services/steps.service';
-import { Task, Step, UpdateTaskDto, ReminderConfig, ReminderTimeframe, ReminderSpecificDate } from '../types';
+import { Task, Step, UpdateTaskDto } from '../types';
+import {
+  type ReminderConfig,
+  ReminderTimeframe,
+  ReminderSpecificDate,
+  convertBackendToReminders,
+  convertRemindersToBackend,
+  formatReminderDisplay,
+} from '@tasks-management/frontend-services';
 import ReminderConfigComponent from '../components/ReminderConfig';
 import DatePicker from '../components/DatePicker';
 import { scheduleTaskReminders, cancelAllTaskNotifications } from '../services/notifications.service';
 import { ReminderAlarmsStorage, ReminderTimesStorage } from '../utils/storage';
-import { convertRemindersToBackend, formatDate, formatReminderDisplay } from '../utils/helpers';
+import { formatDate } from '../utils/helpers';
 import { handleApiError, isAuthError, showErrorAlert } from '../utils/errorHandler';
 import { TaskHeader } from '../components/task/TaskHeader';
 import { TaskInfoSection } from '../components/task/TaskInfoSection';
@@ -625,48 +633,6 @@ export default function TaskDetailsScreen() {
     }
   }, [reminderAlarmStates]);
 
-  // Convert backend format to ReminderConfig format
-  const convertBackendToReminders = (
-    reminderDaysBefore: number[] | undefined,
-    specificDayOfWeek: number | null | undefined,
-    dueDate: string | null | undefined,
-    reminderConfig?: any,
-  ): ReminderConfig[] => {
-    const reminders: ReminderConfig[] = [];
-
-    // Convert reminderDaysBefore array to ReminderConfig
-    // Only show these if there's a due date, since they're relative to due date
-    if (reminderDaysBefore && reminderDaysBefore.length > 0 && dueDate) {
-      reminderDaysBefore.forEach((days) => {
-        reminders.push({
-          id: `days-before-${days}`,
-          timeframe: ReminderTimeframe.SPECIFIC_DATE,
-          time: '09:00', // Default time, user can edit
-          daysBefore: days,
-        });
-      });
-    }
-
-    // Convert specificDayOfWeek to ReminderConfig
-    if (specificDayOfWeek !== null && specificDayOfWeek !== undefined && specificDayOfWeek >= 0 && specificDayOfWeek <= 6) {
-      reminders.push({
-        id: `day-of-week-${specificDayOfWeek}`,
-        timeframe: ReminderTimeframe.EVERY_WEEK,
-        time: '09:00', // Default time, user can edit
-        dayOfWeek: specificDayOfWeek,
-      });
-    }
-    
-    // Convert reminderConfig JSON field (contains "every day" and other reminders)
-    if (reminderConfig && Array.isArray(reminderConfig)) {
-      reminderConfig.forEach((config: ReminderConfig) => {
-        reminders.push(config);
-      });
-    }
-
-    return reminders;
-  };
-
   const loadTaskData = async () => {
     try {
       const [taskData, stepsData] = await Promise.all([
@@ -680,35 +646,29 @@ export default function TaskDetailsScreen() {
       // Initialize edit form
       setEditDescription(taskData.description);
       setEditDueDate(taskData.dueDate ? taskData.dueDate.split('T')[0] : '');
-      // Convert reminderDaysBefore to ReminderConfig format
-      const convertedReminders = convertBackendToReminders(
+      let convertedReminders = convertBackendToReminders(
         taskData.reminderDaysBefore,
         taskData.specificDayOfWeek,
         taskData.dueDate || undefined,
         taskData.reminderConfig,
       );
-      
-      // Extract "every day" reminders for display purposes
+
       const everyDayReminders = convertedReminders.filter(r => r.timeframe === ReminderTimeframe.EVERY_DAY);
       setDisplayEveryDayReminders(everyDayReminders);
-      
-      // Load alarm states for all reminders
+
       const alarmStates = await ReminderAlarmsStorage.getAlarmsForTask(taskId);
       setReminderAlarmStates(alarmStates || {});
-      
-      // Load saved times for all reminders
+
       const savedTimes = await ReminderTimesStorage.getTimesForTask(taskId);
-      
-      // Apply alarm states and saved times to all reminders
+
       if (alarmStates || savedTimes) {
         convertedReminders = convertedReminders.map(r => ({
           ...r,
           hasAlarm: alarmStates?.[r.id] !== undefined ? alarmStates[r.id] : r.hasAlarm,
-          // Use saved time if available, otherwise keep the default/current time
           time: savedTimes?.[r.id] || r.time || '09:00',
         }));
       }
-      
+
       setEditReminders(convertedReminders);
     } catch (error: any) {
       // Silently ignore auth errors - the navigation will handle redirect to login
@@ -1011,25 +971,20 @@ export default function TaskDetailsScreen() {
   
   // Prepare display reminders
   const displayReminders = !isEditing ? (() => {
-    const allDisplayReminders = convertBackendToReminders(
+    const raw = convertBackendToReminders(
       task.reminderDaysBefore,
       task.specificDayOfWeek,
       task.dueDate || undefined,
       task.reminderConfig,
     );
-    
-    // Apply alarm states and saved times from state
-    allDisplayReminders = allDisplayReminders.map(r => {
-      // Find matching reminder in editReminders to get the correct time
+    return raw.map(r => {
       const matchingReminder = editReminders.find(er => er.id === r.id);
       return {
         ...r,
-        hasAlarm: reminderAlarmStates[r.id] !== undefined ? reminderAlarmStates[r.id] : (r.hasAlarm || false),
-        time: matchingReminder?.time || r.time || '09:00',
+        hasAlarm: reminderAlarmStates[r.id] !== undefined ? reminderAlarmStates[r.id] : (r.hasAlarm ?? false),
+        time: matchingReminder?.time ?? r.time ?? '09:00',
       };
     });
-    
-    return allDisplayReminders;
   })() : [];
 
   return (

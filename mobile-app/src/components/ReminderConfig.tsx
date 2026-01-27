@@ -8,12 +8,13 @@ import {
   Modal,
 } from 'react-native';
 import {
-  ReminderConfig,
+  type ReminderConfig,
   ReminderTimeframe,
   ReminderSpecificDate,
-} from '../types';
+  formatReminderDisplay,
+  DAY_NAMES,
+} from '@tasks-management/frontend-services';
 import ReminderEditor from './ReminderEditor';
-import { formatReminderDisplay, DAY_NAMES } from '../utils/helpers';
 
 interface ReminderConfigProps {
   reminders: ReminderConfig[];

@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Task, ReminderConfig } from '../../types';
+import { Task } from '../../types';
+import type { ReminderConfig } from '@tasks-management/frontend-services';
+import { formatReminderDisplay } from '@tasks-management/frontend-services';
 import DatePicker from '../DatePicker';
-import { formatDate, formatReminderDisplay } from '../../utils/helpers';
+import { formatDate } from '../../utils/helpers';
 import { styles } from '../../screens/styles/TaskDetailsScreen.styles';
 
 interface TaskInfoSectionProps {

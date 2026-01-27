@@ -18,12 +18,14 @@ import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { tasksService } from '../services/tasks.service';
-import { Task, CreateTaskDto, ReminderConfig, ReminderTimeframe, ListType } from '../types';
+import { Task, CreateTaskDto, ListType } from '../types';
+import type { ReminderConfig } from '@tasks-management/frontend-services';
 import ReminderConfigComponent from '../components/ReminderConfig';
 import DatePicker from '../components/DatePicker';
 import { scheduleTaskReminders, cancelAllTaskNotifications } from '../services/notifications.service';
 import { ReminderTimesStorage, ReminderAlarmsStorage } from '../utils/storage';
-import { convertRemindersToBackend, formatDate } from '../utils/helpers';
+import { convertRemindersToBackend } from '@tasks-management/frontend-services';
+import { formatDate } from '../utils/helpers';
 import { handleApiError, isAuthError, showErrorAlert } from '../utils/errorHandler';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedStyles } from '../utils/useThemedStyles';
@@ -596,14 +598,12 @@ export default function TasksScreen() {
           taskData.reminderDaysBefore = [];
         }
         // Set specificDayOfWeek if provided
-        if (reminderData.specificDayOfWeek !== undefined) {
+        if (reminderData.specificDayOfWeek !== undefined && reminderData.specificDayOfWeek !== null) {
           taskData.specificDayOfWeek = reminderData.specificDayOfWeek;
         } else {
-          // Clear specificDayOfWeek if not in result
           taskData.specificDayOfWeek = undefined;
         }
       } else {
-        // Explicitly set empty arrays to prevent backend defaults
         taskData.reminderDaysBefore = [];
         taskData.specificDayOfWeek = undefined;
       }
