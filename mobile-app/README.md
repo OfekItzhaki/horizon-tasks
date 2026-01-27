@@ -8,7 +8,8 @@ React Native mobile app built with Expo for managing to-do lists, tasks, and rem
 - 📋 To-Do Lists management (Daily, Weekly, Monthly, Yearly, Custom)
 - ✅ Tasks with completion tracking
 - 📝 Sub-tasks (Steps)
-- 🔔 Reminders notifications (⚠️ See Note Below)
+- 🔔 Reminders (specific date, every day/week/month/year, days before due) with optional **location**; shared logic from `frontend-services`
+- 🔕 Push notifications for reminders (task name, time, location when set) (⚠️ See Note Below)
 - 👥 List sharing
 - 📱 Native iOS and Android support
 

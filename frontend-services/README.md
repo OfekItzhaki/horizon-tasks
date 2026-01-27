@@ -195,6 +195,35 @@ API_CONFIG.baseURL = 'https://api.example.com';
 // API_BASE_URL=https://api.example.com
 ```
 
+## Shared Reminder Module
+
+Reminder types and helpers are shared between web-app and mobile-app:
+
+```typescript
+import {
+  ReminderConfig,
+  ReminderTimeframe,
+  ReminderSpecificDate,
+  DAY_NAMES,
+  convertBackendToReminders,
+  convertRemindersToBackend,
+  formatReminderDisplay,
+} from '@tasks-management/frontend-services';
+
+// ReminderConfig includes: id, timeframe, time, specificDate, customDate,
+// dayOfWeek, daysBefore, hasAlarm, location (optional)
+
+const reminders = convertBackendToReminders(
+  task.reminderDaysBefore,
+  task.specificDayOfWeek,
+  task.dueDate,
+  task.reminderConfig
+);
+
+const backend = convertRemindersToBackend(reminders, dueDate);
+const label = formatReminderDisplay(reminder, t); // t optional for i18n
+```
+
 ## TypeScript Support
 
 Full TypeScript support with all types exported:
@@ -205,6 +234,9 @@ import {
   Task,
   ToDoList,
   ReminderNotification,
+  ReminderConfig,
+  ReminderTimeframe,
+  ReminderSpecificDate,
   CreateTaskDto,
   // ... all types
 } from '@tasks-management/frontend-services';

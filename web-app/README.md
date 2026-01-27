@@ -80,4 +80,24 @@ web-app/
 - 📋 Todo Lists Management
 - ✅ Tasks Management
 - 📝 Task Details with Steps
+- 🔔 Reminders (specific date, every day/week/month/year, days before due) with optional **location**; shared logic from `frontend-services`
+- 🔕 Browser notifications for reminders (task name, time, location when set)
 - 👤 User Profile
+
+### Verifying notifications
+
+1. **Test notification (dev only)**  
+   With `npm run dev`, log in, then open the browser console and run:
+   ```js
+   await window.__tasksTestNotification?.()
+   ```
+   If you see a test notification, permissions and delivery work.
+
+2. **Custom reminder “in a few minutes”**  
+   Edit a task → Add reminder → **Specific Date** → **Custom Date** → today’s date → time = current time + 2–3 minutes → Save.  
+   - Check the console for `[Notifications] Scheduled … in X s`.  
+   - If the reminder time has already passed when you save, you should get a notification **immediately** (and see `[Notifications] Firing immediately …`).
+
+3. **If you don’t get notifications**  
+   - Ensure the site has notification permission (browser address bar / site settings).  
+   - In dev, look for `[Notifications] Skipped: …` or `[Notifications] Firing immediately …` / `Scheduled …` to see what the service is doing.
