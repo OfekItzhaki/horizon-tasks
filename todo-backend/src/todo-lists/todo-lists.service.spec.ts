@@ -109,12 +109,6 @@ describe('TodoListsService', () => {
           deletedAt: null,
           ownerId,
         },
-        include: {
-          tasks: {
-            where: { deletedAt: null },
-            orderBy: { order: 'asc' },
-          },
-        },
         orderBy: { order: 'asc' },
       });
       expect(result).toEqual(mockLists);

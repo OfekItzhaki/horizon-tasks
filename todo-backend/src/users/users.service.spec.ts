@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import UsersService from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ListType } from '@prisma/client';
@@ -14,6 +15,10 @@ import * as crypto from 'crypto';
 
 jest.mock('bcrypt');
 jest.mock('crypto');
+
+const mockEmailService = {
+  sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+};
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -30,13 +35,12 @@ describe('UsersService', () => {
   };
 
   beforeEach(async () => {
+    mockEmailService.sendVerificationEmail.mockResolvedValue(undefined);
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
-        {
-          provide: PrismaService,
-          useValue: mockPrismaService,
-        },
+        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: EmailService, useValue: mockEmailService },
       ],
     }).compile();
 
@@ -44,7 +48,6 @@ describe('UsersService', () => {
   });
 
   afterEach(() => {
-    // Reset mock implementations between tests (clearAllMocks leaves mockResolvedValueOnce queues).
     jest.resetAllMocks();
   });
 
