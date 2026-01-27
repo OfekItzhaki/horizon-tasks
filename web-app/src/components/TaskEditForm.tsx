@@ -1,4 +1,4 @@
-import { ReminderConfig } from '../utils/reminderHelpers';
+import type { ReminderConfig } from '@tasks-management/frontend-services';
 import ReminderConfigComponent from './ReminderConfig';
 import { useTranslation } from 'react-i18next';
 import { isRtlLanguage } from '@tasks-management/frontend-services';
@@ -59,6 +59,7 @@ export default function TaskEditForm({
       <ReminderConfigComponent
         reminders={editReminders}
         onRemindersChange={onRemindersChange}
+        taskDueDate={editDueDate.trim() ? editDueDate : null}
       />
 
       <div className={`flex gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>

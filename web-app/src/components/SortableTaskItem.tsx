@@ -22,15 +22,20 @@ export function SortableTaskItem({
   isBulkMode,
   isSelected,
   isFinishedList,
-  onToggleSelect: _onToggleSelect,
-  onToggleComplete: _onToggleComplete,
-  onDelete: _onDelete,
-  onRestore: _onRestore,
-  onPermanentDelete: _onPermanentDelete,
+  onToggleSelect,
+  onToggleComplete,
+  onDelete,
+  onRestore,
+  onPermanentDelete,
   onClick,
   onKeyDown,
   children,
 }: SortableTaskItemProps) {
+  void onToggleSelect;
+  void onToggleComplete;
+  void onDelete;
+  void onRestore;
+  void onPermanentDelete;
   const {
     attributes,
     listeners,

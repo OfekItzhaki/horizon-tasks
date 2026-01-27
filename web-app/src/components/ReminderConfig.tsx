@@ -7,13 +7,20 @@ import {
   ReminderSpecificDate,
   DAY_NAMES,
   formatReminderDisplay,
-} from '../utils/reminderHelpers';
-import { useTheme } from '../context/ThemeContext';
+} from '@tasks-management/frontend-services';
+import {
+  validateTime,
+  validateCustomReminderDate,
+  validateDaysBefore,
+  normalizeTime,
+} from '../utils/dateTimeValidation';
 import { isRtlLanguage } from '@tasks-management/frontend-services';
 
 interface ReminderConfigProps {
   reminders: ReminderConfig[];
   onRemindersChange: (reminders: ReminderConfig[]) => void;
+  /** Task due date (YYYY-MM-DD) when set; required for "days before due date" reminders. */
+  taskDueDate?: string | null;
 }
 
 const TIMEFRAMES = [
@@ -31,10 +38,9 @@ const SPECIFIC_DATES = [
   { value: ReminderSpecificDate.CUSTOM_DATE, label: 'Custom Date' },
 ];
 
-const ReminderConfigComponent = memo(function ReminderConfigComponent({ reminders, onRemindersChange }: ReminderConfigProps) {
+const ReminderConfigComponent = memo(function ReminderConfigComponent({ reminders, onRemindersChange, taskDueDate = null }: ReminderConfigProps) {
   const { t, i18n } = useTranslation();
   const isRtl = isRtlLanguage(i18n.language);
-  const { isDark } = useTheme();
   const [editingReminder, setEditingReminder] = useState<ReminderConfig | null>(null);
   const [showEditor, setShowEditor] = useState(false);
 
@@ -177,6 +183,7 @@ const ReminderConfigComponent = memo(function ReminderConfigComponent({ reminder
           reminder={editingReminder}
           onSave={saveReminder}
           onCancel={handleCancelEditor}
+          taskDueDate={taskDueDate ?? null}
         />
       )}
     </div>
@@ -189,22 +196,27 @@ interface ReminderEditorProps {
   reminder: ReminderConfig;
   onSave: (reminder: ReminderConfig) => void;
   onCancel: () => void;
+  taskDueDate: string | null;
 }
 
-function ReminderEditor({ reminder, onSave, onCancel }: ReminderEditorProps) {
+function ReminderEditor({ reminder, onSave, onCancel, taskDueDate }: ReminderEditorProps) {
   const { t, i18n } = useTranslation();
   const isRtl = isRtlLanguage(i18n.language);
-  const { isDark } = useTheme();
   const [config, setConfig] = useState<ReminderConfig>({
     ...reminder,
     time: reminder.time || '09:00',
   });
+  const [location, setLocation] = useState<string>(reminder.location ?? '');
   const [daysBefore, setDaysBefore] = useState<string>(
-    reminder.daysBefore?.toString() || ''
+    reminder.daysBefore?.toString() ?? ''
   );
   const [customDate, setCustomDate] = useState<string>(
     reminder.customDate ? reminder.customDate.split('T')[0] : ''
   );
+  const [timeError, setTimeError] = useState<string | null>(null);
+  const [customDateError, setCustomDateError] = useState<string | null>(null);
+  const [daysBeforeError, setDaysBeforeError] = useState<string | null>(null);
+  const [daysBeforeDueDateError, setDaysBeforeDueDateError] = useState<string | null>(null);
 
   // Handle Escape key to close modal
   useEffect(() => {
@@ -218,17 +230,48 @@ function ReminderEditor({ reminder, onSave, onCancel }: ReminderEditorProps) {
   }, [onCancel]);
 
   const handleSave = () => {
-    let timeToUse = config.time || '09:00';
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(timeToUse)) {
-      timeToUse = '09:00';
+    setTimeError(null);
+    setCustomDateError(null);
+    setDaysBeforeError(null);
+    setDaysBeforeDueDateError(null);
+
+    const timeRes = validateTime(config.time ?? '');
+    if (!timeRes.valid) {
+      setTimeError(timeRes.error ?? t('validation.invalidTime', { defaultValue: 'Invalid time.' }));
+      return;
+    }
+
+    if (config.timeframe === ReminderTimeframe.SPECIFIC_DATE && config.specificDate === ReminderSpecificDate.CUSTOM_DATE) {
+      const dateRes = validateCustomReminderDate(customDate);
+      if (!dateRes.valid) {
+        setCustomDateError(dateRes.error ?? t('validation.invalidDate', { defaultValue: 'Invalid date.' }));
+        return;
+      }
+    }
+
+    if (config.timeframe === ReminderTimeframe.SPECIFIC_DATE && daysBefore.trim()) {
+      const dbRes = validateDaysBefore(daysBefore);
+      if (!dbRes.valid) {
+        setDaysBeforeError(dbRes.error ?? t('validation.invalidDaysBefore', { defaultValue: 'Invalid value.' }));
+        return;
+      }
+      const num = parseInt(daysBefore, 10);
+      if (!Number.isNaN(num) && num > 0 && !taskDueDate) {
+        setDaysBeforeDueDateError(
+          t('validation.daysBeforeRequiresDueDate', {
+            defaultValue: 'Set a task due date to use "days before due date" reminders.',
+          })
+        );
+        return;
+      }
     }
 
     const reminderToSave: ReminderConfig = {
       ...config,
-      time: timeToUse,
-      daysBefore: daysBefore ? parseInt(daysBefore, 10) : undefined,
-      customDate: customDate ? new Date(customDate).toISOString() : undefined,
+      time: normalizeTime(config.time ?? '') ?? '09:00',
+      location: location.trim() || undefined,
+      daysBefore: daysBefore.trim() ? parseInt(daysBefore, 10) : undefined,
+      customDate: customDate.trim() ? new Date(customDate).toISOString() : undefined,
       dayOfWeek: config.timeframe === ReminderTimeframe.EVERY_WEEK && config.dayOfWeek === undefined
         ? 1
         : config.dayOfWeek,
@@ -330,9 +373,18 @@ function ReminderEditor({ reminder, onSave, onCancel }: ReminderEditorProps) {
                 <input
                   type="date"
                   value={customDate}
-                  onChange={(e) => setCustomDate(e.target.value)}
-                  className="premium-input w-full focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all"
+                  min={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => {
+                    setCustomDate(e.target.value);
+                    setCustomDateError(null);
+                  }}
+                  className={`premium-input w-full focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all ${customDateError ? 'border-red-500 dark:border-red-400' : ''}`}
                 />
+                {customDateError && (
+                  <p className="mt-1.5 text-sm text-red-600 dark:text-red-400" role="alert">
+                    {customDateError}
+                  </p>
+                )}
               </div>
             )}
 
@@ -346,10 +398,19 @@ function ReminderEditor({ reminder, onSave, onCancel }: ReminderEditorProps) {
                 type="number"
                 min="0"
                 value={daysBefore}
-                onChange={(e) => setDaysBefore(e.target.value)}
-                placeholder="e.g. 1, 7"
-                className="premium-input w-full focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all"
+                onChange={(e) => {
+                  setDaysBefore(e.target.value);
+                  setDaysBeforeError(null);
+                  setDaysBeforeDueDateError(null);
+                }}
+                placeholder="e.g. 0, 1, 7"
+                className={`premium-input w-full focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all ${(daysBeforeError || daysBeforeDueDateError) ? 'border-red-500 dark:border-red-400' : ''}`}
               />
+              {(daysBeforeError || daysBeforeDueDateError) && (
+                <p className="mt-1.5 text-sm text-red-600 dark:text-red-400" role="alert">
+                  {daysBeforeError ?? daysBeforeDueDateError}
+                </p>
+              )}
             </div>
           )}
 
@@ -383,7 +444,29 @@ function ReminderEditor({ reminder, onSave, onCancel }: ReminderEditorProps) {
             <input
               type="time"
               value={config.time || '09:00'}
-              onChange={(e) => setConfig({ ...config, time: e.target.value })}
+              onChange={(e) => {
+                setConfig({ ...config, time: e.target.value });
+                setTimeError(null);
+              }}
+              className={`premium-input w-full focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all ${timeError ? 'border-red-500 dark:border-red-400' : ''}`}
+            />
+            {timeError && (
+              <p className="mt-1.5 text-sm text-red-600 dark:text-red-400" role="alert">
+                {timeError}
+              </p>
+            )}
+          </div>
+
+          {/* Location (optional) */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+              {t('reminders.location', { defaultValue: 'Location' })} <span className="text-gray-500 font-normal">({t('common.optional', { defaultValue: 'optional' })})</span>
+            </label>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder={t('reminders.locationPlaceholder', { defaultValue: 'e.g. Office, 123 Main St' })}
               className="premium-input w-full focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all"
             />
           </div>

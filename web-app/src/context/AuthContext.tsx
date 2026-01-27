@@ -14,11 +14,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Check token synchronously first (instant check)
   const hasToken = authService.isAuthenticated();
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false); // Start as false - don't block render
-  const [userLoading, setUserLoading] = useState(hasToken); // Only load user if token exists
+  const [userLoading, setUserLoading] = useState(hasToken);
 
   useEffect(() => {
     // Load user data in background if token exists

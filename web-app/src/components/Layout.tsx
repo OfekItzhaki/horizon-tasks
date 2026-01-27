@@ -27,7 +27,7 @@ export default function Layout() {
           {t(`languageNames.${lng}`, { defaultValue: String(lng).toUpperCase() })}
         </option>
       )),
-    [t, supportedLanguages],
+    [t],
   );
 
   // Memoize current language value
@@ -52,7 +52,7 @@ export default function Layout() {
     const baseUrl = user.profilePicture.split('?')[0]; // Remove any existing query params
     const timestamp = user.updatedAt ? new Date(user.updatedAt).getTime() : Date.now();
     return `${baseUrl}?v=${timestamp}`;
-  }, [user?.profilePicture, user?.updatedAt, user?.id]); // Include user.id to force recalculation
+  }, [user?.profilePicture, user?.updatedAt]);
 
   // Memoize user initial for placeholder
   const userInitial = useMemo(

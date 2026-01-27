@@ -19,7 +19,7 @@ interface StepsListProps {
   onCreateStepClick: () => void;
   onCancelAddStep: () => void;
   createStepMutation: { isPending: boolean };
-  stepInputRef: React.RefObject<HTMLInputElement>;
+  stepInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export default function StepsList({

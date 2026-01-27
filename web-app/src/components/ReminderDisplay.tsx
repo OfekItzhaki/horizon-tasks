@@ -1,7 +1,11 @@
-import { Task, ReminderConfig, ReminderTimeframe } from '@tasks-management/frontend-services';
-import { convertBackendToReminders, formatReminderDisplay } from '../utils/reminderHelpers';
-import { useTranslation } from 'react-i18next';
+import { Task } from '@tasks-management/frontend-services';
 import { isRtlLanguage } from '@tasks-management/frontend-services';
+import { useTranslation } from 'react-i18next';
+import {
+  ReminderTimeframe,
+  convertBackendToReminders,
+  formatReminderDisplay,
+} from '@tasks-management/frontend-services';
 
 interface ReminderDisplayProps {
   task: Task;
@@ -76,6 +80,13 @@ export default function ReminderDisplay({ task }: ReminderDisplayProps) {
                       <span className="flex items-center gap-1 text-primary-600 dark:text-primary-400">
                         <span>🔔</span>
                         <span>{t('reminders.alarmOn', { defaultValue: 'Alarm enabled' })}</span>
+                      </span>
+                    )}
+
+                    {reminder.location && (
+                      <span className="flex items-center gap-1" title={reminder.location}>
+                        <span>📍</span>
+                        <span className="truncate max-w-[180px]">{reminder.location}</span>
                       </span>
                     )}
                     
