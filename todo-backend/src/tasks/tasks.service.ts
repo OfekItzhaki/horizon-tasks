@@ -1,8 +1,8 @@
 import {
   Injectable,
-  NotFoundException,
   BadRequestException,
   Inject,
+  Logger,
   forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
@@ -10,87 +10,43 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { ListType, Prisma } from '@prisma/client';
 import { TaskSchedulerService } from '../task-scheduler/task-scheduler.service';
+import { TaskAccessHelper } from './helpers/task-access.helper';
 
 @Injectable()
 export class TasksService {
+  private readonly logger = new Logger(TasksService.name);
+
   constructor(
     private prisma: PrismaService,
+    private taskAccess: TaskAccessHelper,
     @Inject(forwardRef(() => TaskSchedulerService))
     private taskScheduler: TaskSchedulerService,
   ) {}
-
-  private async ensureListAccess(todoListId: number, userId: number) {
-    // Check if user owns the list OR has shared access to it
-    const list = await this.prisma.toDoList.findFirst({
-      where: {
-        id: todoListId,
-        deletedAt: null,
-        OR: [
-          { ownerId: userId },
-          { shares: { some: { sharedWithId: userId } } },
-        ],
-      },
-    });
-
-    if (!list) {
-      throw new NotFoundException(`ToDoList with ID ${todoListId} not found`);
-    }
-
-    return list;
-  }
-
-  private async findTaskForUser(id: number, userId: number) {
-    // Check if user owns the list OR has shared access
-    const task = await this.prisma.task.findFirst({
-      where: {
-        id,
-        deletedAt: null,
-        todoList: {
-          deletedAt: null,
-          OR: [
-            { ownerId: userId },
-            { shares: { some: { sharedWithId: userId } } },
-          ],
-        },
-      },
-      include: {
-        steps: {
-          where: {
-            deletedAt: null,
-          },
-          orderBy: {
-            order: 'asc',
-          },
-        },
-        todoList: true,
-      },
-    });
-
-    if (!task) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
-    }
-
-    return task;
-  }
 
   async create(
     todoListId: number,
     createTaskDto: CreateTaskDto,
     ownerId: number,
   ) {
-    await this.ensureListAccess(todoListId, ownerId);
+    await this.taskAccess.ensureListAccess(todoListId, ownerId);
 
-    return this.prisma.task.create({
+    const task = await this.prisma.task.create({
       data: {
         description: createTaskDto.description,
         dueDate: createTaskDto.dueDate,
         specificDayOfWeek: createTaskDto.specificDayOfWeek,
         reminderDaysBefore: createTaskDto.reminderDaysBefore ?? [],
-        reminderConfig: createTaskDto.reminderConfig,
+        reminderConfig: createTaskDto.reminderConfig
+          ? JSON.parse(JSON.stringify(createTaskDto.reminderConfig))
+          : undefined,
         completed: createTaskDto.completed ?? false,
         todoListId,
       },
     });
+    this.logger.log(
+      `Task created: taskId=${task.id} todoListId=${todoListId} userId=${ownerId}`,
+    );
+    return task;
   }
 
   async findAll(userId: number, todoListId?: number) {
@@ -140,11 +96,11 @@ export class TasksService {
   }
 
   async findOne(id: number, ownerId: number) {
-    return this.findTaskForUser(id, ownerId);
+    return this.taskAccess.findTaskForUser(id, ownerId);
   }
 
   async update(id: number, updateTaskDto: UpdateTaskDto, ownerId: number) {
-    const existingTask = await this.findTaskForUser(id, ownerId);
+    const existingTask = await this.taskAccess.findTaskForUser(id, ownerId);
 
     // Track completedAt timestamp
     let completedAt: Date | null | undefined = undefined;
@@ -168,30 +124,37 @@ export class TasksService {
                                       finalSpecificDayOfWeek !== undefined &&
                                       existingTask.completionCount > 0;
 
-    return this.prisma.task.update({
+    const updated = await this.prisma.task.update({
       where: { id },
       data: {
         description: updateTaskDto.description,
         dueDate: updateTaskDto.dueDate,
         specificDayOfWeek: updateTaskDto.specificDayOfWeek,
         reminderDaysBefore: updateTaskDto.reminderDaysBefore,
-        reminderConfig: updateTaskDto.reminderConfig,
+        reminderConfig:
+          updateTaskDto.reminderConfig !== undefined
+            ? JSON.parse(JSON.stringify(updateTaskDto.reminderConfig))
+            : undefined,
         completed: updateTaskDto.completed,
         ...(completedAt !== undefined && { completedAt }),
         ...(shouldResetCompletionCount && { completionCount: 0 }),
       },
     });
+    this.logger.log(`Task updated: taskId=${id} userId=${ownerId}`);
+    return updated;
   }
 
   async remove(id: number, ownerId: number) {
-    await this.findTaskForUser(id, ownerId);
+    await this.taskAccess.findTaskForUser(id, ownerId);
 
-    return this.prisma.task.update({
+    const result = await this.prisma.task.update({
       where: { id },
       data: {
         deletedAt: new Date(),
       },
     });
+    this.logger.log(`Task removed (soft): taskId=${id} userId=${ownerId}`);
+    return result;
   }
 
   async getTasksByDate(userId: number, date: Date = new Date()) {
@@ -394,7 +357,7 @@ export class TasksService {
    * Restore an archived task back to its original list
    */
   async restore(id: number, ownerId: number) {
-    const task = await this.findTaskForUser(id, ownerId);
+    const task = await this.taskAccess.findTaskForUser(id, ownerId);
 
     // Check if task is in a FINISHED list
     if (task.todoList.type !== ListType.FINISHED) {
@@ -419,7 +382,7 @@ export class TasksService {
     }
 
     // Restore task to original list
-    return this.prisma.task.update({
+    const restored = await this.prisma.task.update({
       where: { id },
       data: {
         todoListId: task.originalListId,
@@ -435,13 +398,17 @@ export class TasksService {
         todoList: true,
       },
     });
+    this.logger.log(
+      `Task restored: taskId=${id} originalListId=${task.originalListId} userId=${ownerId}`,
+    );
+    return restored;
   }
 
   /**
    * Permanently delete an archived task (hard delete)
    */
   async permanentDelete(id: number, ownerId: number) {
-    const task = await this.findTaskForUser(id, ownerId);
+    const task = await this.taskAccess.findTaskForUser(id, ownerId);
 
     // Only allow permanent deletion of archived tasks
     if (task.todoList.type !== ListType.FINISHED) {
@@ -460,6 +427,7 @@ export class TasksService {
       where: { id },
     });
 
+    this.logger.log(`Task permanently deleted: taskId=${id} userId=${ownerId}`);
     return { message: 'Task permanently deleted' };
   }
 }
