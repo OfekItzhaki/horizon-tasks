@@ -619,10 +619,6 @@ export default function TaskDetailsPage() {
         )}
       </div>
 
-      <FloatingActionButton
-        ariaLabel={t('taskDetails.addStepFab')}
-        onClick={() => stepManagement.setShowAddStep(true)}
-      />
     </div>
   );
 }

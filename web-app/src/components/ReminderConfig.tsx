@@ -144,7 +144,7 @@ const ReminderConfigComponent = memo(function ReminderConfigComponent({ reminder
                 className="premium-card p-4 flex items-center justify-between gap-3"
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">
+                  <span className="text-sm text-gray-700 dark:text-gray-200 flex-1">
                     {display.display}
                   </span>
                   <button
@@ -304,7 +304,7 @@ function ReminderEditor({ reminder, onSave, onCancel, taskDueDate }: ReminderEdi
           </h3>
           <button
             onClick={onCancel}
-            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-3xl leading-none font-light w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-200 text-3xl leading-none font-light w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             aria-label={t('common.close', { defaultValue: 'Close' })}
           >
             ×
@@ -317,7 +317,7 @@ function ReminderEditor({ reminder, onSave, onCancel, taskDueDate }: ReminderEdi
           <div className="space-y-6">
             {/* Timeframe Selection */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
                 {t('reminders.timeframe', { defaultValue: 'Timeframe' })}:
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -336,7 +336,7 @@ function ReminderEditor({ reminder, onSave, onCancel, taskDueDate }: ReminderEdi
                     }
                     className={`px-4 py-3 rounded-xl text-sm font-semibold ${config.timeframe === tf.value
                       ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-lg shadow-primary-500/30 scale-105'
-                      : 'glass-card text-gray-700 dark:text-gray-300'
+                      : 'glass-card text-gray-700 dark:text-gray-200'
                       }`}
                   >
                     {tf.label}
@@ -348,7 +348,7 @@ function ReminderEditor({ reminder, onSave, onCancel, taskDueDate }: ReminderEdi
             {/* Specific Date Options */}
             {config.timeframe === ReminderTimeframe.SPECIFIC_DATE && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
                   {t('reminders.dateOption', { defaultValue: 'Date Option' })}:
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -358,7 +358,7 @@ function ReminderEditor({ reminder, onSave, onCancel, taskDueDate }: ReminderEdi
                       onClick={() => setConfig({ ...config, specificDate: sd.value })}
                       className={`px-4 py-3 rounded-xl text-sm font-semibold ${config.specificDate === sd.value
                         ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-lg shadow-primary-500/30 scale-105'
-                        : 'glass-card text-gray-700 dark:text-gray-300'
+                        : 'glass-card text-gray-700 dark:text-gray-200'
                         }`}
                     >
                       {sd.label}
@@ -372,7 +372,7 @@ function ReminderEditor({ reminder, onSave, onCancel, taskDueDate }: ReminderEdi
             {config.timeframe === ReminderTimeframe.SPECIFIC_DATE &&
               config.specificDate === ReminderSpecificDate.CUSTOM_DATE && (
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
                     {t('reminders.customDate', { defaultValue: 'Custom Date' })}:
                   </label>
                   <input
@@ -396,7 +396,7 @@ function ReminderEditor({ reminder, onSave, onCancel, taskDueDate }: ReminderEdi
             {/* Days Before Due Date */}
             {config.timeframe === ReminderTimeframe.SPECIFIC_DATE && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
                   {t('reminders.daysBefore', { defaultValue: 'Days Before Due Date' })}:
                 </label>
                 <input
@@ -422,7 +422,7 @@ function ReminderEditor({ reminder, onSave, onCancel, taskDueDate }: ReminderEdi
             {/* Day of Week (for EVERY_WEEK) */}
             {config.timeframe === ReminderTimeframe.EVERY_WEEK && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
                   {t('reminders.dayOfWeek', { defaultValue: 'Day of Week' })}:
                 </label>
                 <select
@@ -443,10 +443,10 @@ function ReminderEditor({ reminder, onSave, onCancel, taskDueDate }: ReminderEdi
 
             {/* Time Input (24-hour format) */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
                 <span>🕐</span>
                 {t('reminders.time', { defaultValue: 'Time' })}
-                <span className="text-xs font-normal text-gray-500">(24h)</span>
+                <span className="text-xs font-normal text-gray-500 dark:text-gray-400">(24h)</span>
               </label>
               <div className="flex items-center gap-2">
                 <div className="flex-1">
@@ -495,8 +495,8 @@ function ReminderEditor({ reminder, onSave, onCancel, taskDueDate }: ReminderEdi
 
             {/* Location (optional) */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                {t('reminders.location', { defaultValue: 'Location' })} <span className="text-gray-500 font-normal">({t('common.optional', { defaultValue: 'optional' })})</span>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                {t('reminders.location', { defaultValue: 'Location' })} <span className="text-gray-500 dark:text-gray-400 font-normal">({t('common.optional', { defaultValue: 'optional' })})</span>
               </label>
               <input
                 type="text"
@@ -516,7 +516,7 @@ function ReminderEditor({ reminder, onSave, onCancel, taskDueDate }: ReminderEdi
                 onChange={(e) => setConfig({ ...config, hasAlarm: e.target.checked })}
                 className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
               />
-              <label htmlFor="hasAlarm" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label htmlFor="hasAlarm" className="text-sm font-medium text-gray-700 dark:text-gray-200">
                 {t('reminders.enableAlarm', { defaultValue: 'Enable Alarm' })}
               </label>
             </div>
