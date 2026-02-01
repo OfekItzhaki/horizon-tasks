@@ -5,4 +5,4 @@ export {
   type ReminderConfig,
 } from './types';
 export { convertBackendToReminders, convertRemindersToBackend } from './convert';
-export { formatReminderDisplay } from './format';
+export { formatReminderDisplay, formatTimeForDisplay, type FormatReminderOptions } from './format';

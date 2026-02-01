@@ -8,8 +8,37 @@ import { ReminderTimeframe, ReminderSpecificDate, DAY_NAMES } from './types';
 
 type T = ((key: string, opts?: { defaultValue?: string; count?: number }) => string) | undefined;
 
-export function formatReminderDisplay(reminder: ReminderConfig, t?: T): string {
-  const timeStr = reminder.time || '09:00';
+export interface FormatReminderOptions {
+  /** When false, times are shown in 12h (e.g. 9:00 AM). When true, 24h (e.g. 09:00). Default: true. */
+  use24h?: boolean;
+}
+
+/**
+ * Format a time string (HH:mm) for display.
+ * @param timeStr - 24h time like "09:00" or "14:30"
+ * @param use24h - true = "09:00" / "14:30", false = "9:00 AM" / "2:30 PM"
+ */
+export function formatTimeForDisplay(timeStr: string, use24h: boolean): string {
+  const t = (timeStr || '09:00').trim();
+  const [hPart, mPart] = t.split(':');
+  const hours = parseInt(hPart || '9', 10);
+  const minutes = parseInt(mPart || '0', 10);
+  if (use24h) {
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
+  const h12 = hours % 12 || 12;
+  const ampm = hours < 12 ? 'AM' : 'PM';
+  return `${h12}:${String(minutes).padStart(2, '0')} ${ampm}`;
+}
+
+export function formatReminderDisplay(
+  reminder: ReminderConfig,
+  t?: T,
+  options?: FormatReminderOptions,
+): string {
+  const use24h = options?.use24h !== false;
+  const rawTime = reminder.time || '09:00';
+  const timeStr = formatTimeForDisplay(rawTime, use24h);
   let description = '';
 
   if (reminder.daysBefore != null && reminder.daysBefore > 0) {
