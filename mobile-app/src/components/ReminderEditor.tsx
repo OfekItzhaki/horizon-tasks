@@ -25,6 +25,19 @@ interface ReminderEditorProps {
   dayNames: string[];
 }
 
+function getInitialCustomDate(reminder: ReminderConfig): string | undefined {
+  const raw = reminder.customDate;
+  if (!raw) return undefined;
+  const d = new Date(raw);
+  d.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (d < today) {
+    return today.toISOString();
+  }
+  return raw;
+}
+
 export default function ReminderEditor({
   reminder,
   onSave,
@@ -37,10 +50,12 @@ export default function ReminderEditor({
   const initialTime = reminder.time || '09:00';
   // Convert HH:MM to HHMM for easier editing (remove colon)
   const timeForInput = initialTime.replace(':', '');
-  
-  const [config, setConfig] = useState<ReminderConfig>({ 
+  const initialCustomDate = getInitialCustomDate(reminder);
+
+  const [config, setConfig] = useState<ReminderConfig>({
     ...reminder,
     time: timeForInput, // Store as HHMM for easier editing
+    customDate: initialCustomDate,
   });
 
   const handleTimeframeChange = (timeframe: ReminderTimeframe) => {
@@ -298,18 +313,18 @@ export default function ReminderEditor({
             </View>
           )}
 
-          {/* Time Input */}
-          <Text style={styles.label}>Time (HHMM):</Text>
+          {/* Time Input (24-hour format) */}
+          <Text style={styles.label}>Time (24h, HH:mm):</Text>
           <TextInput
             style={styles.input}
-            placeholder="0900"
+            placeholder="09:00"
             value={config.time}
             onChangeText={handleTimeChange}
             keyboardType="numeric"
             maxLength={5}
           />
           <Text style={styles.helperText}>
-            Enter time as 4 digits (e.g., 0900 for 9:00 AM, 1430 for 2:30 PM). Colon will be added automatically.
+            Enter time in 24-hour format (e.g. 09:00, 14:30, 17:41). Use 4 digits; colon is added automatically.
           </Text>
 
           {/* Alarm Toggle */}
