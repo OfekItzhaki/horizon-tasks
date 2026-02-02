@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authService } from '../services/auth.service';
+import { createContext, useContext, useEffect, ReactNode } from 'react';
+import { useAuthStore } from '../store/authStore';
 import { User, LoginDto } from '@tasks-management/frontend-services';
 
 interface AuthContextType {
@@ -14,57 +14,29 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const hasToken = authService.isAuthenticated();
-  const [user, setUser] = useState<User | null>(null);
-  const [userLoading, setUserLoading] = useState(hasToken);
+  const {
+    user,
+    loading,
+    isAuthenticated,
+    initialize,
+    login,
+    logout,
+    updateUser
+  } = useAuthStore();
 
   useEffect(() => {
-    // Load user data in background if token exists
-    // This doesn't block the UI from rendering
-    if (hasToken) {
-      const loadUser = async () => {
-        try {
-          const currentUser = await authService.getCurrentUser();
-          setUser(currentUser);
-        } catch {
-          // Token might be invalid, clear it
-          authService.logout();
-          setUser(null);
-        } finally {
-          setUserLoading(false);
-        }
-      };
-
-      loadUser();
-    } else {
-      setUserLoading(false);
-    }
-  }, [hasToken]);
-
-  const login = async (credentials: LoginDto) => {
-    const response = await authService.login(credentials);
-    setUser(response.user);
-  };
-
-  const logout = async () => {
-    authService.logout();
-    setUser(null);
-    setUserLoading(false);
-  };
-
-  const updateUser = (updatedUser: User) => {
-    setUser(updatedUser);
-  };
+    initialize();
+  }, [initialize]);
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        loading: userLoading, // Only show loading when actually fetching user data
+        loading,
         login,
         logout,
         updateUser,
-        isAuthenticated: hasToken, // Use token check (instant) instead of user (slow)
+        isAuthenticated,
       }}
     >
       {children}
