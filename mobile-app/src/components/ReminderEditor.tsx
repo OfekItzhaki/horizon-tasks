@@ -52,13 +52,11 @@ export default function ReminderEditor({
   const styles = useThemedStyles(createTaskDetailsStyles);
   // Initialize config with reminder, ensuring time is properly formatted
   const initialTime = reminder.time || '09:00';
-  // Convert HH:MM to HHMM for easier editing (remove colon)
-  const timeForInput = initialTime.replace(':', '');
   const initialCustomDate = getInitialCustomDate(reminder);
 
   const [config, setConfig] = useState<ReminderConfig>({
     ...reminder,
-    time: timeForInput, // Store as HHMM for easier editing
+    time: initialTime, // Keep time in HH:MM format
     customDate: initialCustomDate,
   });
 
