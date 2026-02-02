@@ -286,7 +286,7 @@ export const createTasksStyles = (colors: typeof lightColors) => StyleSheet.crea
   fab: {
     position: 'absolute',
     right: 24,
-    bottom: Platform.OS === 'ios' ? 40 : 30,
+    bottom: Platform.OS === 'ios' ? 50 : 60,
     width: 68,
     height: 68,
     borderRadius: 24,

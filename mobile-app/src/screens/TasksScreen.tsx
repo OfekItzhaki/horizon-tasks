@@ -432,8 +432,6 @@ export default function TasksScreen() {
             tint="dark"
             style={StyleSheet.absoluteFill}
           />
-          {/* Extra darkness layer to ensure background is hidden */}
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.7)' }]} />
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add New Task</Text>
 
