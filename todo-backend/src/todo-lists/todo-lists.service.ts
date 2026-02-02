@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ListType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateToDoListDto } from './dto/create-todo-list.dto';
@@ -6,10 +6,12 @@ import { UpdateToDoListDto } from './dto/update-todo-list.dto';
 
 @Injectable()
 export class TodoListsService {
+  private readonly logger = new Logger(TodoListsService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async create(createToDoListDto: CreateToDoListDto, ownerId: number) {
-    return this.prisma.toDoList.create({
+    const list = await this.prisma.toDoList.create({
       data: {
         name: createToDoListDto.name,
         // List "type" is an internal scheduling/system detail.
@@ -18,6 +20,8 @@ export class TodoListsService {
         ownerId,
       },
     });
+    this.logger.log(`List created: listId=${list.id} userId=${ownerId}`);
+    return list;
   }
 
   async findAll(ownerId: number) {
@@ -26,16 +30,8 @@ export class TodoListsService {
         deletedAt: null,
         ownerId,
       },
-      include: {
-        tasks: {
-          where: {
-            deletedAt: null,
-          },
-          orderBy: {
-            order: 'asc',
-          },
-        },
-      },
+      // Tasks are not needed for list view - only when viewing a specific list
+      // This dramatically reduces payload size and improves performance
       orderBy: {
         order: 'asc',
       },
@@ -85,13 +81,15 @@ export class TodoListsService {
   ) {
     const list = await this.findOne(id, ownerId);
 
-    return this.prisma.toDoList.update({
+    const updated = await this.prisma.toDoList.update({
       where: { id },
       data: {
         name: updateToDoListDto.name ?? list.name,
         // Type is not user-editable.
       },
     });
+    this.logger.log(`List updated: listId=${id} userId=${ownerId}`);
+    return updated;
   }
 
   async remove(id: number, ownerId: number) {
@@ -102,11 +100,13 @@ export class TodoListsService {
       throw new Error('System lists cannot be deleted');
     }
 
-    return this.prisma.toDoList.update({
+    const result = await this.prisma.toDoList.update({
       where: { id },
       data: {
         deletedAt: new Date(),
       },
     });
+    this.logger.log(`List removed (soft): listId=${id} userId=${ownerId}`);
+    return result;
   }
 }

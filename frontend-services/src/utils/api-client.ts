@@ -14,11 +14,22 @@ export class ApiClient {
     // Extract headers and method from options to prevent them from overriding our defaults
     const { headers: optionsHeaders, method: optionsMethod, ...restOptions } = options;
 
+    // Check if body is FormData
+    const isFormData = restOptions.body instanceof FormData;
+
     // Build headers: start with defaults, merge user-provided headers, then add auth
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       ...(optionsHeaders as Record<string, string>),
     };
+
+    // Only set Content-Type to JSON if not FormData and not already set
+    // Browser will automatically set Content-Type with boundary for FormData
+    if (!isFormData && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    } else if (isFormData && headers['Content-Type']) {
+      // Remove Content-Type if it's set for FormData (browser will set it with boundary)
+      delete headers['Content-Type'];
+    }
 
     // Authorization header should always be added if token exists (takes precedence)
     if (token) {
@@ -37,7 +48,7 @@ export class ApiClient {
 
       // Handle empty responses (204 No Content)
       if (response.status === 204) {
-        return null as T;
+        return undefined as unknown as T;
       }
 
       let data;
@@ -93,9 +104,10 @@ export class ApiClient {
   }
 
   async post<T>(path: string, body?: unknown, options?: RequestInit): Promise<T> {
+    const isFormData = body instanceof FormData;
     return this.request<T>('POST', path, {
       ...options,
-      body: body ? JSON.stringify(body) : undefined,
+      body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
     });
   }
 

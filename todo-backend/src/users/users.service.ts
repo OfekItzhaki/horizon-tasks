@@ -7,6 +7,7 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { User, Prisma, ListType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
@@ -34,7 +35,10 @@ type SanitizedUser = Omit<User, 'passwordHash' | 'emailVerificationToken'>;
 
 @Injectable()
 class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   private sanitizeUser<
     T extends {
@@ -136,7 +140,11 @@ class UsersService {
   }
 
   private async createDefaultLists(userId: number) {
-    const defaultLists = [
+    const defaultLists: Array<{
+      name: string;
+      type: ListType;
+      isSystem?: boolean;
+    }> = [
       { name: 'Daily', type: ListType.DAILY },
       { name: 'Weekly', type: ListType.WEEKLY },
       { name: 'Monthly', type: ListType.MONTHLY },
@@ -149,7 +157,7 @@ class UsersService {
       data: defaultLists.map((list) => ({
         name: list.name,
         type: list.type,
-        isSystem: Boolean((list as any).isSystem ?? false),
+        isSystem: Boolean(list.isSystem ?? false),
         ownerId: userId,
       })),
     });
@@ -172,6 +180,14 @@ class UsersService {
 
     // Create default lists for the new user
     await this.createDefaultLists(user.id);
+
+    // Send verification email (don't await to avoid blocking user creation)
+    this.emailService
+      .sendVerificationEmail(user.email, emailVerificationToken, user.name || undefined)
+      .catch((error) => {
+        console.error('Failed to send verification email:', error);
+        // Don't throw - user creation should succeed even if email fails
+      });
 
     const sanitized = this.sanitizeUser(user);
     if (!sanitized) {
@@ -233,6 +249,14 @@ class UsersService {
         emailVerificationSentAt: new Date(),
       } as Prisma.UserUpdateInput,
     });
+
+    // Send verification email (don't await to avoid blocking response)
+    this.emailService
+      .sendVerificationEmail(updatedUser.email, emailVerificationToken, updatedUser.name || undefined)
+      .catch((error) => {
+        console.error('Failed to send verification email:', error);
+        // Don't throw - token generation should succeed even if email fails
+      });
 
     const sanitized = this.sanitizeUser(updatedUser);
     if (!sanitized) {

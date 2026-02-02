@@ -1,9 +1,15 @@
 export default {
   nav: {
     lists: 'רשימות',
+    analysis: 'ניתוח',
     profile: 'פרופיל',
     logout: 'התנתקות',
     language: 'שפה',
+    theme: {
+      light: 'בהיר',
+      dark: 'כהה',
+      auto: 'אוטומטי',
+    },
   },
   languageNames: {
     en: 'English',
@@ -16,6 +22,10 @@ export default {
     close: 'סגירה',
     create: 'יצירה',
     loading: 'טוען...',
+    unknownError: 'שגיאה לא ידועה',
+    errorOccurred: 'אירעה שגיאה',
+    retry: 'נסה שוב',
+    edit: 'ערוך',
   },
   login: {
     title: 'התחברות למנהל המשימות',
@@ -57,6 +67,9 @@ export default {
     listUpdateFailed: 'עדכון הרשימה נכשל',
     listDeleted: 'הרשימה נמחקה',
     listDeleteFailed: 'מחיקת הרשימה נכשלה',
+    selectMultiple: 'בחר מספר',
+    deleteSelected: 'מחק',
+    deleteSelectedConfirm: 'למחוק {{count}} משימה{{plural}}?',
     form: {
       descriptionLabel: 'תיאור',
       descriptionPlaceholder: 'לדוגמה: לקנות חלב',
@@ -89,6 +102,8 @@ export default {
     stepsTitle: 'שלבים',
     noSteps: 'אין שלבים עדיין.',
     addStepFab: 'הוסף שלב',
+    dueDate: 'תאריך יעד',
+    descriptionRequired: 'תיאור נדרש',
     form: {
       descriptionLabel: 'תיאור',
       descriptionPlaceholder: 'לדוגמה: להתקשר לספק',

@@ -24,7 +24,7 @@ import {
 } from '../auth/current-user.decorator';
 
 @ApiTags('List Sharing')
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('list-shares')
 export class ListSharesController {
@@ -49,7 +49,10 @@ export class ListSharesController {
   @Get('user/:userId')
   @ApiOperation({ summary: 'Get all lists shared with a user' })
   @ApiResponse({ status: 200, description: 'Returns shared lists' })
-  @ApiResponse({ status: 403, description: 'Forbidden - can only view own shares' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - can only view own shares',
+  })
   getSharedLists(
     @Param('userId', ParseIntPipe) userId: number,
     @CurrentUser() user: CurrentUserPayload,

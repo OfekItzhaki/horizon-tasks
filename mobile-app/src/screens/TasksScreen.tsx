@@ -11,17 +11,27 @@ import {
   RefreshControl,
   ScrollView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { Platform, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { tasksService } from '../services/tasks.service';
-import { Task, CreateTaskDto, ReminderConfig, ReminderTimeframe, ListType } from '../types';
+import { Task, CreateTaskDto, ListType } from '../types';
+import type { ReminderConfig } from '@tasks-management/frontend-services';
 import ReminderConfigComponent from '../components/ReminderConfig';
 import DatePicker from '../components/DatePicker';
 import { scheduleTaskReminders, cancelAllTaskNotifications } from '../services/notifications.service';
-import { EveryDayRemindersStorage, ReminderTimesStorage, ReminderAlarmsStorage } from '../utils/storage';
-import { convertRemindersToBackend, formatDate } from '../utils/helpers';
-import { styles } from './styles/TasksScreen.styles';
+import { ReminderTimesStorage, ReminderAlarmsStorage } from '../utils/storage';
+import { convertRemindersToBackend } from '@tasks-management/frontend-services';
+import { formatDate } from '../utils/helpers';
+import { handleApiError, isAuthError, showErrorAlert } from '../utils/errorHandler';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedStyles } from '../utils/useThemedStyles';
+import { createTasksStyles } from './styles/TasksScreen.styles';
+import { TaskListItem } from '../components/task/TaskListItem';
 
 type TasksScreenRouteProp = RouteProp<RootStackParamList, 'Tasks'>;
 
@@ -31,7 +41,9 @@ export default function TasksScreen() {
   const route = useRoute<TasksScreenRouteProp>();
   const navigation = useNavigation<NavigationProp>();
   const { listId, listName, listType } = route.params;
-  
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createTasksStyles);
+
   // Helper to check if a task has repeating reminders (based on task properties, not list type)
   const isRepeatingTask = (task: Task): boolean => {
     // Task has weekly reminder if specificDayOfWeek is set
@@ -50,7 +62,6 @@ export default function TasksScreen() {
   const [sortBy, setSortBy] = useState<'default' | 'dueDate' | 'completed' | 'alphabetical'>('default');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
 
   const loadTasks = async () => {
@@ -64,17 +75,8 @@ export default function TasksScreen() {
       setAllTasks(normalizedTasks);
     } catch (error: any) {
       // Silently ignore auth errors - the navigation will handle redirect to login
-      const isAuthError = error?.response?.status === 401 || 
-                          error?.message?.toLowerCase()?.includes('unauthorized');
-      if (!isAuthError) {
-        const errorMessage = error?.message || error?.response?.data?.message || 'Unable to load tasks.';
-        const isTimeout = errorMessage.toLowerCase().includes('too long') || 
-                         errorMessage.toLowerCase().includes('timeout') ||
-                         error?.code === 'ECONNABORTED';
-        const finalMessage = isTimeout 
-          ? 'Loading tasks is taking too long. Please try again later.'
-          : errorMessage + ' Please try again later.';
-        Alert.alert('Error Loading Tasks', finalMessage);
+      if (!isAuthError(error)) {
+        handleApiError(error, 'Unable to load tasks. Please try again later.');
       }
     } finally {
       setLoading(false);
@@ -139,32 +141,31 @@ export default function TasksScreen() {
   const toggleTask = async (task: Task) => {
     const currentCompleted = Boolean(task.completed);
     const newCompleted = !currentCompleted;
-    
+
     // Optimistic update - update UI immediately
-    setAllTasks(prevTasks => 
-      prevTasks.map(t => 
+    setAllTasks(prevTasks =>
+      prevTasks.map(t =>
         t.id === task.id ? { ...t, completed: newCompleted } : t
       )
     );
-    
+
     try {
       await tasksService.update(task.id, { completed: newCompleted });
       // No need to reload - optimistic update already applied
     } catch (error: any) {
       // Revert on error
-      setAllTasks(prevTasks => 
-        prevTasks.map(t => 
+      setAllTasks(prevTasks =>
+        prevTasks.map(t =>
           t.id === task.id ? { ...t, completed: currentCompleted } : t
         )
       );
-      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to update task. Please try again.';
-      Alert.alert('Update Failed', errorMessage);
+      handleApiError(error, 'Unable to update task. Please try again.');
     }
   };
 
   const handleAddTask = async () => {
     if (!newTaskDescription.trim()) {
-      Alert.alert('Validation Error', 'Please enter a task description before adding.');
+      showErrorAlert('Validation Error', null, 'Please enter a task description before adding.');
       return;
     }
 
@@ -197,29 +198,18 @@ export default function TasksScreen() {
           taskData.reminderDaysBefore = [];
         }
         // Set specificDayOfWeek if provided
-        if (reminderData.specificDayOfWeek !== undefined) {
+        if (reminderData.specificDayOfWeek !== undefined && reminderData.specificDayOfWeek !== null) {
           taskData.specificDayOfWeek = reminderData.specificDayOfWeek;
         } else {
-          // Clear specificDayOfWeek if not in result
           taskData.specificDayOfWeek = undefined;
         }
       } else {
-        // Explicitly set empty arrays to prevent backend defaults
         taskData.reminderDaysBefore = [];
         taskData.specificDayOfWeek = undefined;
       }
 
       const createdTask = await tasksService.create(listId, taskData);
-      
-      // Separate EVERY_DAY reminders (client-side storage) from others
-      const everyDayReminders = taskReminders.filter(r => r.timeframe === ReminderTimeframe.EVERY_DAY);
-      const otherReminders = taskReminders.filter(r => r.timeframe !== ReminderTimeframe.EVERY_DAY);
-      
-      // Store EVERY_DAY reminders client-side
-      if (everyDayReminders.length > 0) {
-        await EveryDayRemindersStorage.setRemindersForTask(createdTask.id, everyDayReminders);
-      }
-      
+
       // Store reminder times for all reminders (backend doesn't store times)
       const reminderTimes: Record<string, string> = {};
       taskReminders.forEach(reminder => {
@@ -228,16 +218,16 @@ export default function TasksScreen() {
           reminderTimes[reminder.id] = reminder.time;
         }
       });
-      
+
       if (Object.keys(reminderTimes).length > 0) {
         await ReminderTimesStorage.setTimesForTask(createdTask.id, reminderTimes);
       }
-      
+
       setNewTaskDescription('');
       setNewTaskDueDate('');
       setTaskReminders([]);
       setShowAddModal(false);
-      
+
       // Schedule notifications for reminders (include all reminders)
       if (taskReminders.length > 0) {
         await scheduleTaskReminders(
@@ -247,12 +237,12 @@ export default function TasksScreen() {
           dueDateStr || null,
         );
       }
-      
-      loadTasks();
+
+      // Reload tasks to refresh daily reminders state
+      await loadTasks();
       // Success feedback - UI update is visible, no alert needed
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to create task. Please try again.';
-      Alert.alert('Create Task Failed', errorMessage);
+      handleApiError(error, 'Unable to create task. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -272,14 +262,12 @@ export default function TasksScreen() {
               // Cancel all notifications for this task
               await cancelAllTaskNotifications(task.id);
               // Clean up client-side storage for this task
-              await EveryDayRemindersStorage.removeRemindersForTask(task.id);
               await ReminderTimesStorage.removeTimesForTask(task.id);
               await ReminderAlarmsStorage.removeAlarmsForTask(task.id);
               await tasksService.delete(task.id);
               loadTasks();
             } catch (error: any) {
-              const errorMessage = error?.response?.data?.message || error?.message || 'Unable to delete task. Please try again.';
-              Alert.alert('Delete Failed', errorMessage);
+              handleApiError(error, 'Unable to delete task. Please try again.');
             }
           },
         },
@@ -298,11 +286,10 @@ export default function TasksScreen() {
           onPress: async () => {
             try {
               await tasksService.restore(task.id);
-              Alert.alert('Success', 'Task restored to original list');
+              showErrorAlert('Success', null, 'Task restored to original list');
               loadTasks();
             } catch (error: any) {
-              const errorMessage = error?.response?.data?.message || error?.message || 'Unable to restore task. Please try again.';
-              Alert.alert('Restore Failed', errorMessage);
+              handleApiError(error, 'Unable to restore task. Please try again.');
             }
           },
         },
@@ -323,14 +310,12 @@ export default function TasksScreen() {
                       // Cancel all notifications for this task
                       await cancelAllTaskNotifications(task.id);
                       // Clean up client-side storage
-                      await EveryDayRemindersStorage.removeRemindersForTask(task.id);
                       await ReminderTimesStorage.removeTimesForTask(task.id);
                       await ReminderAlarmsStorage.removeAlarmsForTask(task.id);
                       await tasksService.permanentDelete(task.id);
                       loadTasks();
                     } catch (error: any) {
-                      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to delete task. Please try again.';
-                      Alert.alert('Delete Failed', errorMessage);
+                      handleApiError(error, 'Unable to delete task. Please try again.');
                     }
                   },
                 },
@@ -345,7 +330,7 @@ export default function TasksScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -353,35 +338,42 @@ export default function TasksScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <LinearGradient
+          colors={[colors.primary, '#a855f7']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        />
         <View style={styles.headerTop}>
-          <Text style={styles.title}>{listName}</Text>
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={styles.searchButton}
-              onPress={() => setShowSearch(!showSearch)}
-            >
-              <Text style={styles.searchButtonText}>🔍</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={20} color={colors.primary} />
+          </TouchableOpacity>
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            <Text style={styles.title}>{listName}</Text>
             <Text style={styles.taskCount}>{tasks.length} task{tasks.length !== 1 ? 's' : ''}</Text>
           </View>
+          <View style={{ width: 40 }} />
         </View>
-        {showSearch && (
+        <View style={styles.searchSortRow}>
           <TextInput
             style={styles.searchInput}
             placeholder="Search tasks..."
+            placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
-            autoFocus
           />
-        )}
-        <TouchableOpacity
-          style={styles.sortButton}
-          onPress={() => setShowSortMenu(true)}
-        >
-          <Text style={styles.sortButtonText}>
-            Sort: {sortBy === 'default' ? 'Default' : sortBy === 'dueDate' ? 'Due Date' : sortBy === 'completed' ? 'Status' : 'A-Z'}
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.sortButton}
+            onPress={() => setShowSortMenu(true)}
+          >
+            <Text style={styles.sortButtonText}>
+              Sort: {sortBy === 'default' ? 'Default' : sortBy === 'dueDate' ? 'Due Date' : sortBy === 'completed' ? 'Status' : 'A-Z'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -391,70 +383,14 @@ export default function TasksScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        renderItem={({ item }) => {
-          const isCompleted = Boolean(item.completed);
-          const isOverdue =
-            item.dueDate &&
-            !isCompleted &&
-            new Date(item.dueDate) < new Date() &&
-            new Date(item.dueDate).toDateString() !== new Date().toDateString();
-          const completionCount = item.completionCount || 0;
-
-          return (
-            <TouchableOpacity
-              style={[
-                styles.taskItem,
-                isCompleted && styles.taskItemCompleted,
-                isOverdue && styles.taskItemOverdue,
-              ]}
-              onPress={() => {
-                // Navigate to task details on tap
-                navigation.navigate('TaskDetails', { taskId: item.id });
-              }}
-              onLongPress={() => isArchivedList ? handleArchivedTaskOptions(item) : handleDeleteTask(item)}
-            >
-              <View style={styles.taskContent}>
-                <TouchableOpacity
-                  style={[styles.taskCheckbox, isCompleted && styles.taskCheckboxCompleted]}
-                  onPress={(e) => {
-                    e.stopPropagation?.();
-                    toggleTask(item);
-                  }}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  {isCompleted && <Text style={styles.checkmark}>✓</Text>}
-                </TouchableOpacity>
-                <View style={styles.taskTextContainer}>
-                  <Text
-                    style={[
-                      styles.taskText,
-                      isCompleted && styles.taskTextCompleted,
-                    ]}
-                  >
-                    {item.description}
-                  </Text>
-                  <View style={styles.taskMetaRow}>
-                    {item.dueDate && (
-                      <Text
-                        style={[
-                          styles.dueDate,
-                          isOverdue && styles.dueDateOverdue,
-                        ]}
-                      >
-                        Due: {formatDate(item.dueDate)}
-                      </Text>
-                    )}
-                    {isRepeatingTask(item) && completionCount > 0 && (
-                      <Text style={styles.completionCount}>
-                        🔄 {completionCount}x completed
-                      </Text>
-                    )}
-                  </View>
-                </View>
-              </View>
-            </TouchableOpacity>
-          );
-        }}
+        renderItem={({ item }) => (
+          <TaskListItem
+            task={item}
+            onPress={() => navigation.navigate('TaskDetails', { taskId: item.id })}
+            onLongPress={() => isArchivedList ? handleArchivedTaskOptions(item) : handleDeleteTask(item)}
+            onToggle={() => toggleTask(item)}
+          />
+        )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📝</Text>
@@ -473,7 +409,14 @@ export default function TasksScreen() {
         onPress={() => setShowAddModal(true)}
         activeOpacity={0.8}
       >
-        <Text style={styles.fabText}>+</Text>
+        <LinearGradient
+          colors={['#6366f1', '#a855f7']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ width: '100%', height: '100%', borderRadius: 24, justifyContent: 'center', alignItems: 'center' }}
+        >
+          <Text style={styles.fabText}>+</Text>
+        </LinearGradient>
       </TouchableOpacity>
 
       {/* Add Task Modal */}
@@ -484,9 +427,14 @@ export default function TasksScreen() {
         onRequestClose={() => setShowAddModal(false)}
       >
         <View style={styles.modalOverlay}>
+          <BlurView
+            intensity={100}
+            tint="dark"
+            style={StyleSheet.absoluteFill}
+          />
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add New Task</Text>
-            
+
             <ScrollView
               style={styles.modalScrollView}
               contentContainerStyle={styles.modalScrollContent}

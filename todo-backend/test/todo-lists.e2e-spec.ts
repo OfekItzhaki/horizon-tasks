@@ -152,12 +152,9 @@ describe('To-Do Lists (e2e)', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200)
         .expect((res) => {
-          const deletedList = res.body.find(
-            (list: any) => list.id === listId,
-          );
+          const deletedList = res.body.find((list: any) => list.id === listId);
           expect(deletedList).toBeUndefined();
         });
     });
   });
 });
-

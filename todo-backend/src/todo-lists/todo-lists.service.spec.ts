@@ -6,7 +6,6 @@ import { ListType } from '@prisma/client';
 
 describe('TodoListsService', () => {
   let service: TodoListsService;
-  let prisma: PrismaService;
 
   const mockPrismaService = {
     toDoList: {
@@ -29,7 +28,6 @@ describe('TodoListsService', () => {
     }).compile();
 
     service = module.get<TodoListsService>(TodoListsService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -110,12 +108,6 @@ describe('TodoListsService', () => {
         where: {
           deletedAt: null,
           ownerId,
-        },
-        include: {
-          tasks: {
-            where: { deletedAt: null },
-            orderBy: { order: 'asc' },
-          },
         },
         orderBy: { order: 'asc' },
       });
@@ -305,4 +297,3 @@ describe('TodoListsService', () => {
     });
   });
 });
-

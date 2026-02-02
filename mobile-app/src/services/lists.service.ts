@@ -7,13 +7,9 @@ export class ListsService {
    */
   async getAll(): Promise<ToDoList[]> {
     try {
-      console.log('ListsService.getAll() - Fetching lists...');
       const response = await apiClient.get<ToDoList[]>('/todo-lists');
-      console.log('ListsService.getAll() - Raw response:', response);
-      console.log('ListsService.getAll() - response.data:', response.data);
       return response.data;
     } catch (error) {
-      console.error('ListsService.getAll() - Error:', error);
       if (error instanceof ApiError) {
         throw error;
       }

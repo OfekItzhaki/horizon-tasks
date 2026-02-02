@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsBoolean,
   IsDate,
   IsInt,
@@ -6,9 +7,11 @@ import {
   IsString,
   Min,
   Max,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ReminderConfigItemDto } from './reminder-config-item.dto';
 
 export class CreateTaskDto {
   @ApiProperty({
@@ -30,7 +33,8 @@ export class CreateTaskDto {
   dueDate?: Date;
 
   @ApiPropertyOptional({
-    description: 'Specific day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)',
+    description:
+      'Specific day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)',
     example: 1,
     minimum: 0,
     maximum: 6,
@@ -52,6 +56,17 @@ export class CreateTaskDto {
   @IsInt({ each: true })
   @Min(0, { each: true })
   reminderDaysBefore?: number[];
+
+  @ApiPropertyOptional({
+    description: 'Reminder configurations (every day, week, etc.)',
+    type: [ReminderConfigItemDto],
+    example: [{ timeframe: 'EVERY_DAY', time: '09:00', hasAlarm: true }],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ReminderConfigItemDto)
+  reminderConfig?: ReminderConfigItemDto[];
 
   @ApiPropertyOptional({
     description: 'Whether the task is completed',

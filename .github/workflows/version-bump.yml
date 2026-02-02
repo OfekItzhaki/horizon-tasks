@@ -1,0 +1,147 @@
+name: Bump Version
+
+on:
+  workflow_dispatch:  # Manual trigger
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      apps:
+        description: 'Apps to bump (comma-separated: mobile,web)'
+        required: true
+        default: 'mobile'
+  # Uncomment to auto-trigger on EAS build completion (requires EAS webhook setup)
+  # repository_dispatch:
+  #   types: [eas-build-complete]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump-version:
+    name: Bump Version
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump Mobile App Version
+        if: contains(github.event.inputs.apps, 'mobile') || contains(github.event.inputs.apps, 'all')
+        working-directory: mobile-app
+        run: |
+          # Read current version
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Bump version based on type
+          if [ "${{ github.event.inputs.version_type }}" == "patch" ]; then
+            NEW_VERSION=$(npm version patch --no-git-tag)
+          elif [ "${{ github.event.inputs.version_type }}" == "minor" ]; then
+            NEW_VERSION=$(npm version minor --no-git-tag)
+          elif [ "${{ github.event.inputs.version_type }}" == "major" ]; then
+            NEW_VERSION=$(npm version major --no-git-tag)
+          fi
+          
+          # Remove 'v' prefix if present
+          NEW_VERSION=${NEW_VERSION#v}
+          echo "New version: $NEW_VERSION"
+          
+          # Update app.json version
+          if [ -f "app.json" ]; then
+            # Use node to update app.json
+            node -e "
+              const fs = require('fs');
+              const appJson = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+              appJson.expo.version = '$NEW_VERSION';
+              fs.writeFileSync('app.json', JSON.stringify(appJson, null, 2) + '\n');
+            "
+          fi
+          
+          # Update Android versionCode (increment by 1)
+          if [ -f "app.json" ]; then
+            node -e "
+              const fs = require('fs');
+              const appJson = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+              if (appJson.expo.android) {
+                appJson.expo.android.versionCode = (appJson.expo.android.versionCode || 0) + 1;
+              }
+              fs.writeFileSync('app.json', JSON.stringify(appJson, null, 2) + '\n');
+            "
+          fi
+          
+          echo "VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "MOBILE_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Bump Web App Version
+        if: contains(github.event.inputs.apps, 'web') || contains(github.event.inputs.apps, 'all')
+        working-directory: web-app
+        run: |
+          # Read current version
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Bump version based on type
+          if [ "${{ github.event.inputs.version_type }}" == "patch" ]; then
+            NEW_VERSION=$(npm version patch --no-git-tag)
+          elif [ "${{ github.event.inputs.version_type }}" == "minor" ]; then
+            NEW_VERSION=$(npm version minor --no-git-tag)
+          elif [ "${{ github.event.inputs.version_type }}" == "major" ]; then
+            NEW_VERSION=$(npm version major --no-git-tag)
+          fi
+          
+          # Remove 'v' prefix if present
+          NEW_VERSION=${NEW_VERSION#v}
+          echo "New version: $NEW_VERSION"
+          echo "WEB_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: bump version(s) - ${{ github.event.inputs.version_type }}"
+          title: "chore: Bump version(s) - ${{ github.event.inputs.version_type }}"
+          body: |
+            ## Version Bump
+            
+            **Type:** ${{ github.event.inputs.version_type }}
+            **Apps:** ${{ github.event.inputs.apps }}
+            
+            ### Changes:
+            ${{ env.MOBILE_VERSION && format('- Mobile App: {0}', env.MOBILE_VERSION) || '' }}
+            ${{ env.WEB_VERSION && format('- Web App: {0}', env.WEB_VERSION) || '' }}
+            
+            This PR was automatically created by the version bump workflow.
+          branch: chore/bump-version-${{ github.run_number }}
+          delete-branch: true
+
+      - name: Commit directly to develop (alternative)
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          git add mobile-app/package.json mobile-app/app.json web-app/package.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          
+          git commit -m "chore: bump version(s) - ${{ github.event.inputs.version_type }}"
+          git push origin develop

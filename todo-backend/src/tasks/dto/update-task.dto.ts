@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsBoolean,
   IsDate,
   IsInt,
@@ -6,9 +7,12 @@ import {
   IsString,
   Min,
   Max,
+  ValidateIf,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ReminderConfigItemDto } from './reminder-config-item.dto';
 
 export class UpdateTaskDto {
   @ApiPropertyOptional({
@@ -20,27 +24,32 @@ export class UpdateTaskDto {
   description?: string;
 
   @ApiPropertyOptional({
-    description: 'Due date for the task',
+    description: 'Due date for the task. Set to null to clear.',
     example: '2024-12-31T23:59:59Z',
     type: String,
     format: 'date-time',
+    nullable: true,
   })
   @IsOptional()
+  @ValidateIf((o) => o.dueDate !== null)
   @IsDate()
   @Type(() => Date)
-  dueDate?: Date;
+  dueDate?: Date | null;
 
   @ApiPropertyOptional({
-    description: 'Specific day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)',
+    description:
+      'Specific day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday). Set to null to clear.',
     example: 1,
     minimum: 0,
     maximum: 6,
+    nullable: true,
   })
   @IsOptional()
+  @ValidateIf((o) => o.specificDayOfWeek !== null)
   @IsInt()
   @Min(0)
   @Max(6)
-  specificDayOfWeek?: number;
+  specificDayOfWeek?: number | null;
 
   @ApiPropertyOptional({
     description:
@@ -54,10 +63,30 @@ export class UpdateTaskDto {
   reminderDaysBefore?: number[];
 
   @ApiPropertyOptional({
+    description: 'Reminder configurations (every day, week, etc.)',
+    type: [ReminderConfigItemDto],
+    example: [{ timeframe: 'EVERY_DAY', time: '09:00', hasAlarm: true }],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ReminderConfigItemDto)
+  reminderConfig?: ReminderConfigItemDto[];
+
+  @ApiPropertyOptional({
     description: 'Whether the task is completed',
     example: true,
   })
   @IsOptional()
   @IsBoolean()
   completed?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Order/position of the task in the list',
+    example: 1,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  order?: number;
 }

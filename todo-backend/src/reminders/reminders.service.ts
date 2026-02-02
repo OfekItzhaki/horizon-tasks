@@ -14,6 +14,15 @@ export interface ReminderNotification {
   listType: string;
 }
 
+type TaskWithList = {
+  id: number;
+  description: string;
+  dueDate: Date | string | null;
+  specificDayOfWeek: number | null;
+  reminderDaysBefore: number[] | number | null | undefined;
+  todoList: { name: string; type: string };
+};
+
 @Injectable()
 export class RemindersService {
   constructor(
@@ -29,12 +38,14 @@ export class RemindersService {
     ownerId: number,
     date: Date = new Date(),
   ): Promise<ReminderNotification[]> {
-    const tasksWithReminders =
-      await this.tasksService.getTasksWithReminders(ownerId, date);
+    const tasksWithReminders = await this.tasksService.getTasksWithReminders(
+      ownerId,
+      date,
+    );
 
     const notifications: ReminderNotification[] = [];
 
-    tasksWithReminders.forEach((task) => {
+    tasksWithReminders.forEach((task: TaskWithList) => {
       // Support both old single value and new array format
       const reminderDaysArray = Array.isArray(task.reminderDaysBefore)
         ? task.reminderDaysBefore
@@ -60,7 +71,7 @@ export class RemindersService {
             dueDate,
             reminderDate: new Date(date),
             reminderDaysBefore: reminderDays,
-            message: this.formatReminderMessage(task, dueDate, reminderDays),
+            message: this.formatReminderMessage(task, dueDate),
             title: this.formatReminderTitle(task),
             listName: task.todoList.name,
             listType: task.todoList.type,
@@ -110,7 +121,10 @@ export class RemindersService {
     return Array.from(uniqueReminders.values());
   }
 
-  private calculateTaskDueDate(task: any, currentDate: Date): Date | null {
+  private calculateTaskDueDate(
+    task: TaskWithList,
+    currentDate: Date,
+  ): Date | null {
     if (task.dueDate) {
       const dueDate = new Date(task.dueDate);
       dueDate.setHours(0, 0, 0, 0);
@@ -118,8 +132,7 @@ export class RemindersService {
     }
 
     if (task.specificDayOfWeek !== null) {
-      const daysUntil =
-        (task.specificDayOfWeek - currentDate.getDay() + 7) % 7;
+      const daysUntil = (task.specificDayOfWeek - currentDate.getDay() + 7) % 7;
       const dueDate = new Date(currentDate);
       dueDate.setDate(dueDate.getDate() + (daysUntil || 7));
       dueDate.setHours(0, 0, 0, 0);
@@ -129,13 +142,14 @@ export class RemindersService {
     // For list-based tasks
     const list = task.todoList;
     switch (list.type) {
-      case 'WEEKLY':
+      case 'WEEKLY': {
         const daysUntilSunday = (7 - currentDate.getDay()) % 7 || 7;
         const weeklyDue = new Date(currentDate);
         weeklyDue.setDate(weeklyDue.getDate() + daysUntilSunday);
         weeklyDue.setHours(0, 0, 0, 0);
         return weeklyDue;
-      case 'MONTHLY':
+      }
+      case 'MONTHLY': {
         const monthlyDue = new Date(
           currentDate.getFullYear(),
           currentDate.getMonth() + 1,
@@ -143,23 +157,24 @@ export class RemindersService {
         );
         monthlyDue.setHours(0, 0, 0, 0);
         return monthlyDue;
-      case 'YEARLY':
+      }
+      case 'YEARLY': {
         const yearlyDue = new Date(currentDate.getFullYear() + 1, 0, 1);
         yearlyDue.setHours(0, 0, 0, 0);
         return yearlyDue;
+      }
       default:
         return null;
     }
   }
 
-  private formatReminderTitle(task: any): string {
+  private formatReminderTitle(task: TaskWithList): string {
     return `Reminder: ${task.description}`;
   }
 
   private formatReminderMessage(
-    task: any,
+    task: TaskWithList,
     dueDate: Date | null,
-    reminderDays: number,
   ): string {
     const listName = task.todoList.name;
     const taskDesc = task.description;
@@ -182,4 +197,3 @@ export class RemindersService {
     return `Reminder: "${taskDesc}" from ${listName}`;
   }
 }
-

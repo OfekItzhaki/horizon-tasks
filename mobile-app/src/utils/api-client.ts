@@ -36,6 +36,10 @@ const createApiClient = (): AxiosInstance => {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+      // Don't set Content-Type for FormData - let axios set it with boundary
+      if (config.data instanceof FormData) {
+        delete config.headers['Content-Type'];
+      }
       return config;
     },
     (error) => {
@@ -63,7 +67,9 @@ const createApiClient = (): AxiosInstance => {
           await TokenStorage.removeToken();
           await UserStorage.removeUser();
           // The AuthContext will detect the user is null and redirect to login
-          console.log('Unauthorized - cleared token and user storage');
+          if (__DEV__) {
+            console.log('Unauthorized - cleared token and user storage');
+          }
         }
         
         // Provide user-friendly messages for common HTTP errors

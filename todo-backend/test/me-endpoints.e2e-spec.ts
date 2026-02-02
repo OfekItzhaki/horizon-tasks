@@ -122,4 +122,3 @@ describe('Me Endpoints (e2e)', () => {
     });
   });
 });
-

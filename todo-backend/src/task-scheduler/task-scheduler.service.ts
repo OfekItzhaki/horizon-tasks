@@ -6,10 +6,10 @@ import { ListType } from '@prisma/client';
 @Injectable()
 export class TaskSchedulerService implements OnModuleInit {
   private readonly logger = new Logger(TaskSchedulerService.name);
-  
+
   // Archive delay in minutes - how long to wait after task completion before moving to Finished list
   private readonly ARCHIVE_DELAY_MINUTES = 5;
-  
+
   // System list name for finished tasks
   private readonly FINISHED_LIST_NAME = 'Finished Tasks';
 
@@ -140,18 +140,23 @@ export class TaskSchedulerService implements OnModuleInit {
       this.logger.log(`Found ${tasksToArchive.length} tasks to archive`);
 
       // Group tasks by owner
-      const tasksByOwner = tasksToArchive.reduce((acc, task) => {
-        const ownerId = task.todoList.ownerId;
-        if (!acc[ownerId]) {
-          acc[ownerId] = [];
-        }
-        acc[ownerId].push(task);
-        return acc;
-      }, {} as Record<number, typeof tasksToArchive>);
+      const tasksByOwner = tasksToArchive.reduce(
+        (acc, task) => {
+          const ownerId = task.todoList.ownerId;
+          if (!acc[ownerId]) {
+            acc[ownerId] = [];
+          }
+          acc[ownerId].push(task);
+          return acc;
+        },
+        {} as Record<number, typeof tasksToArchive>,
+      );
 
       // Move tasks to their owner's Finished list
       for (const [ownerId, tasks] of Object.entries(tasksByOwner)) {
-        const finishedList = await this.getOrCreateFinishedList(Number(ownerId));
+        const finishedList = await this.getOrCreateFinishedList(
+          Number(ownerId),
+        );
 
         // Update each task individually to preserve originalListId
         for (const task of tasks) {
@@ -241,7 +246,7 @@ export class TaskSchedulerService implements OnModuleInit {
       return;
     }
 
-    const taskIds = completedDailyTasks.map(t => t.id);
+    const taskIds = completedDailyTasks.map((t) => t.id);
 
     // First, increment completion count for all completed daily tasks
     await this.prisma.$executeRaw`
@@ -262,7 +267,9 @@ export class TaskSchedulerService implements OnModuleInit {
     });
 
     if (result.count > 0) {
-      this.logger.log(`Reset ${result.count} daily tasks (completion counts incremented)`);
+      this.logger.log(
+        `Reset ${result.count} daily tasks (completion counts incremented)`,
+      );
     }
 
     // Reset steps for these specific tasks (more reliable than nested relation query)

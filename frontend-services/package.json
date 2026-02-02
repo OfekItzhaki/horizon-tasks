@@ -5,28 +5,25 @@
   "description": "Front-end services for Tasks Management API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./i18n": {
-      "types": "./dist/i18n/index.d.ts",
-      "default": "./dist/i18n/index.js"
-    }
-  },
+  "react-native": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "prepare": "npm run build",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "postinstall": "node scripts/build-if-needed.js"
   },
-  "keywords": ["tasks", "todo", "api", "client"],
+  "keywords": [
+    "tasks",
+    "todo",
+    "api",
+    "client"
+  ],
   "author": "",
   "license": "UNLICENSED",
   "devDependencies": {
     "@types/node": "^22.19.0",
     "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
   }
 }
-
-

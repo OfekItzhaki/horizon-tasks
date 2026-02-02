@@ -1,0 +1,18 @@
+# Exclude other monorepo apps
+/todo-backend/
+/web-app/
+/mobile-build-isolated/
+
+# Exclude root level overhead
+/.github/
+/.husky/
+/scripts/
+/instructions/
+
+# Standard build artifacts (exclude everywhere)
+node_modules/
+android/
+ios/
+.expo/
+dist/
+build/

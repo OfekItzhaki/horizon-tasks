@@ -8,13 +8,19 @@ import {
   Patch,
   Post,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import UsersService from './users.service';
@@ -23,11 +29,13 @@ import {
   CurrentUser,
   CurrentUserPayload,
 } from '../auth/current-user.decorator';
+import { fileStorageConfig } from './utils/file-storage.config';
+import { FileUploadInterceptor } from './interceptors/file-upload.interceptor';
 
 @ApiTags('Users')
 @Controller('users')
 class UsersController {
-  constructor(private userService: UsersService) {}
+  constructor(private userService: UsersService) { }
 
   @Post()
   @ApiOperation({ summary: 'Register a new user' })
@@ -42,7 +50,7 @@ class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  @ApiBearerAuth('JWT-auth')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get authenticated user' })
   @ApiResponse({ status: 200, description: 'Returns current user' })
   async getUsers(@CurrentUser() user: CurrentUserPayload) {
@@ -51,10 +59,13 @@ class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  @ApiBearerAuth('JWT-auth')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiResponse({ status: 200, description: 'Returns user data' })
-  @ApiResponse({ status: 403, description: 'Forbidden - can only access own profile' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - can only access own profile',
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   async getUser(
     @Param('id', ParseIntPipe) id: number,
@@ -65,10 +76,13 @@ class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  @ApiBearerAuth('JWT-auth')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user profile' })
   @ApiResponse({ status: 200, description: 'User updated successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - can only update own profile' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - can only update own profile',
+  })
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: UpdateUserDto,
@@ -78,11 +92,65 @@ class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post(':id/upload-avatar')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upload profile picture' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Profile picture uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid file or file too large' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - can only upload to own profile',
+  })
+  @UseInterceptors(
+    FileInterceptor('file', fileStorageConfig),
+    FileUploadInterceptor,
+  )
+  async uploadAvatar(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: CurrentUserPayload,
+  ) {
+    if (id !== user.userId) {
+      throw new BadRequestException('You can only upload to your own profile');
+    }
+
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    // Generate relative path for the uploaded file
+    // Storing relative paths is better for multi-platform (web/mobile) and environments (dev/prod)
+    const fileUrl = `/uploads/${file.filename}`;
+
+    // Update user profile with new picture relative path
+    return this.userService.updateUser(
+      id,
+      { profilePicture: fileUrl },
+      user.userId,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  @ApiBearerAuth('JWT-auth')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Soft delete user account' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - can only delete own account' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - can only delete own account',
+  })
   async deleteUser(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: CurrentUserPayload,

@@ -7,7 +7,6 @@ import { TaskSchedulerService } from '../task-scheduler/task-scheduler.service';
 
 describe('TasksService', () => {
   let service: TasksService;
-  let prisma: PrismaService;
 
   const mockPrismaService = {
     task: {
@@ -42,7 +41,6 @@ describe('TasksService', () => {
     }).compile();
 
     service = module.get<TasksService>(TasksService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -157,6 +155,105 @@ describe('TasksService', () => {
       expect(result).toEqual(mockTask);
     });
 
+    it('should create a task with reminderConfig', async () => {
+      const reminderConfig = [
+        {
+          id: 'reminder-1',
+          timeframe: 'EVERY_DAY',
+          time: '09:00',
+          hasAlarm: true,
+        },
+      ];
+      const createDto = {
+        description: 'Task with reminder',
+        reminderConfig,
+      };
+      const mockTask = {
+        id: 1,
+        ...createDto,
+        reminderDaysBefore: [],
+        specificDayOfWeek: null,
+        todoListId,
+      };
+
+      mockPrismaService.toDoList.findFirst.mockResolvedValue({
+        id: todoListId,
+        ownerId,
+        deletedAt: null,
+      });
+      mockPrismaService.task.create.mockResolvedValue(mockTask);
+
+      const result = await service.create(todoListId, createDto, ownerId);
+
+      expect(mockPrismaService.task.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          reminderConfig,
+        }),
+      });
+      expect(result.reminderConfig).toEqual(reminderConfig);
+    });
+
+    it('should create a task with reminderDaysBefore', async () => {
+      const createDto = {
+        description: 'Task with days before reminder',
+        reminderDaysBefore: [7, 1],
+        dueDate: new Date('2026-01-30'),
+      };
+      const mockTask = {
+        id: 1,
+        ...createDto,
+        specificDayOfWeek: null,
+        reminderConfig: null,
+        todoListId,
+      };
+
+      mockPrismaService.toDoList.findFirst.mockResolvedValue({
+        id: todoListId,
+        ownerId,
+        deletedAt: null,
+      });
+      mockPrismaService.task.create.mockResolvedValue(mockTask);
+
+      const result = await service.create(todoListId, createDto, ownerId);
+
+      expect(mockPrismaService.task.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          reminderDaysBefore: [7, 1],
+        }),
+      });
+      expect(result.reminderDaysBefore).toEqual([7, 1]);
+    });
+
+    it('should create a task with specificDayOfWeek', async () => {
+      const createDto = {
+        description: 'Weekly task',
+        specificDayOfWeek: 1, // Monday
+      };
+      const mockTask = {
+        id: 1,
+        ...createDto,
+        reminderDaysBefore: [],
+        reminderConfig: null,
+        todoListId,
+      };
+
+      mockPrismaService.toDoList.findFirst.mockResolvedValue({
+        id: todoListId,
+        ownerId,
+        deletedAt: null,
+      });
+      mockPrismaService.task.create.mockResolvedValue(mockTask);
+
+      const result = await service.create(todoListId, createDto, ownerId);
+
+      expect(mockPrismaService.task.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          specificDayOfWeek: 1,
+        }),
+      });
+      expect(result.specificDayOfWeek).toBe(1);
+    });
+
     it('should throw error if list does not exist', async () => {
       mockPrismaService.toDoList.findFirst.mockResolvedValue(null);
 
@@ -260,6 +357,165 @@ describe('TasksService', () => {
       expect(result.description).toBe('New description');
       expect(result.completed).toBe(true);
     });
+
+    it('should update task with reminderConfig', async () => {
+      const mockTask = {
+        id: taskId,
+        description: 'Task',
+        reminderConfig: null,
+        reminderDaysBefore: [],
+        specificDayOfWeek: null,
+        deletedAt: null,
+        todoList: {
+          ownerId,
+          deletedAt: null,
+        },
+        steps: [],
+      };
+
+      const reminderConfig = [
+        {
+          id: 'reminder-1',
+          timeframe: 'EVERY_DAY',
+          time: '09:00',
+        },
+      ];
+      const updateDto = {
+        reminderConfig,
+      };
+
+      mockPrismaService.task.findFirst
+        .mockResolvedValueOnce(mockTask)
+        .mockResolvedValueOnce(mockTask);
+      mockPrismaService.task.update.mockResolvedValue({
+        ...mockTask,
+        reminderConfig,
+      });
+
+      const result = await service.update(taskId, updateDto, ownerId);
+
+      expect(mockPrismaService.task.update).toHaveBeenCalledWith({
+        where: { id: taskId },
+        data: expect.objectContaining({
+          reminderConfig,
+        }),
+      });
+      expect(result.reminderConfig).toEqual(reminderConfig);
+    });
+
+    it('should update task with reminderDaysBefore', async () => {
+      const mockTask = {
+        id: taskId,
+        description: 'Task',
+        reminderConfig: null,
+        reminderDaysBefore: [],
+        specificDayOfWeek: null,
+        deletedAt: null,
+        todoList: {
+          ownerId,
+          deletedAt: null,
+        },
+        steps: [],
+      };
+
+      const updateDto = {
+        reminderDaysBefore: [7, 1],
+      };
+
+      mockPrismaService.task.findFirst
+        .mockResolvedValueOnce(mockTask)
+        .mockResolvedValueOnce(mockTask);
+      mockPrismaService.task.update.mockResolvedValue({
+        ...mockTask,
+        reminderDaysBefore: [7, 1],
+      });
+
+      const result = await service.update(taskId, updateDto, ownerId);
+
+      expect(mockPrismaService.task.update).toHaveBeenCalledWith({
+        where: { id: taskId },
+        data: expect.objectContaining({
+          reminderDaysBefore: [7, 1],
+        }),
+      });
+      expect(result.reminderDaysBefore).toEqual([7, 1]);
+    });
+
+    it('should update task with specificDayOfWeek', async () => {
+      const mockTask = {
+        id: taskId,
+        description: 'Task',
+        reminderConfig: null,
+        reminderDaysBefore: [],
+        specificDayOfWeek: null,
+        deletedAt: null,
+        todoList: {
+          ownerId,
+          deletedAt: null,
+        },
+        steps: [],
+      };
+
+      const updateDto = {
+        specificDayOfWeek: 2, // Tuesday
+      };
+
+      mockPrismaService.task.findFirst
+        .mockResolvedValueOnce(mockTask)
+        .mockResolvedValueOnce(mockTask);
+      mockPrismaService.task.update.mockResolvedValue({
+        ...mockTask,
+        specificDayOfWeek: 2,
+      });
+
+      const result = await service.update(taskId, updateDto, ownerId);
+
+      expect(mockPrismaService.task.update).toHaveBeenCalledWith({
+        where: { id: taskId },
+        data: expect.objectContaining({
+          specificDayOfWeek: 2,
+        }),
+      });
+      expect(result.specificDayOfWeek).toBe(2);
+    });
+
+    it('should clear reminderConfig when set to null', async () => {
+      const mockTask = {
+        id: taskId,
+        description: 'Task',
+        reminderConfig: [{ id: 'old', timeframe: 'EVERY_DAY' }],
+        reminderDaysBefore: [],
+        specificDayOfWeek: null,
+        deletedAt: null,
+        todoList: {
+          ownerId,
+          deletedAt: null,
+        },
+        steps: [],
+      };
+
+      const updateDto = {
+        reminderConfig: null,
+      };
+
+      mockPrismaService.task.findFirst
+        .mockResolvedValueOnce(mockTask)
+        .mockResolvedValueOnce(mockTask);
+      mockPrismaService.task.update.mockResolvedValue({
+        ...mockTask,
+        reminderConfig: null,
+      });
+
+      const result = await service.update(taskId, updateDto, ownerId);
+
+      expect(mockPrismaService.task.update).toHaveBeenCalledWith({
+        where: { id: taskId },
+        data: expect.objectContaining({
+          reminderConfig: null,
+        }),
+      });
+      expect(result.reminderConfig).toBeNull();
+    });
   });
 
   describe('remove', () => {
@@ -354,4 +610,3 @@ describe('TasksService', () => {
     });
   });
 });
-

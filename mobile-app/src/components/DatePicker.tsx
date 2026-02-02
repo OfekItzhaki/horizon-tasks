@@ -1,28 +1,32 @@
 import React, { useState } from 'react';
 import {
+  Modal,
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  Modal,
+  ScrollView,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { createTaskDetailsStyles } from '../screens/styles/TaskDetailsScreen.styles';
+import { useThemedStyles } from '../utils/useThemedStyles';
 
 interface DatePickerProps {
   value?: string; // ISO date string or YYYY-MM-DD format
   onChange: (date: string) => void;
   placeholder?: string;
-  minimumDate?: Date;
-  maximumDate?: Date;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
 export default function DatePicker({
   value,
   onChange,
   placeholder = 'Select date',
-  minimumDate,
-  maximumDate,
+  minDate,
+  maxDate,
 }: DatePickerProps) {
+  const styles = useThemedStyles(createTaskDetailsStyles);
   const [showPicker, setShowPicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(
     value ? new Date(value) : null,
@@ -35,22 +39,14 @@ export default function DatePicker({
     return `${year}-${month}-${day}`;
   };
 
-  const formatDisplayDate = (date: Date): string => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
   const handleDateSelect = (year: number, month: number, day: number) => {
     const date = new Date(year, month - 1, day);
-    
+
     // Validate date
-    if (minimumDate && date < minimumDate) {
+    if (minDate && date < minDate) {
       return;
     }
-    if (maximumDate && date > maximumDate) {
+    if (maxDate && date > maxDate) {
       return;
     }
 
@@ -88,18 +84,8 @@ export default function DatePicker({
     }
 
     const monthNames = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
     ];
 
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -125,8 +111,8 @@ export default function DatePicker({
     const isDisabled = (day: number | null): boolean => {
       if (!day) return false;
       const date = new Date(currentYear, currentMonth, day);
-      if (minimumDate && date < minimumDate) return true;
-      if (maximumDate && date > maximumDate) return true;
+      if (minDate && date < minDate) return true;
+      if (maxDate && date > maxDate) return true;
       return false;
     };
 
@@ -135,61 +121,51 @@ export default function DatePicker({
       const firstDayOfTarget = new Date(currentYear, targetMonth, 1);
       const lastDayOfTarget = new Date(currentYear, targetMonth + 1, 0);
 
-      // Block if target month has no valid dates
-      // For minimumDate: last day of target month must be >= minimumDate
-      // For maximumDate: first day of target month must be <= maximumDate
-      if (minimumDate && lastDayOfTarget < minimumDate) return;
-      if (maximumDate && firstDayOfTarget > maximumDate) return;
+      if (minDate && lastDayOfTarget < minDate) return;
+      if (maxDate && firstDayOfTarget > maxDate) return;
 
-      // Update selectedDate to navigate to the new month
       setSelectedDate(firstDayOfTarget);
     };
 
     return (
-      <View style={styles.calendar}>
-        <View style={styles.calendarHeader}>
+      <View style={{ padding: 20 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <TouchableOpacity
-            style={styles.monthNavButton}
+            style={styles.closeButton}
             onPress={() => changeMonth(-1)}
-            disabled={
-              minimumDate &&
-              new Date(currentYear, currentMonth, 0) < minimumDate
-            }
+            disabled={minDate && new Date(currentYear, currentMonth, 0) < minDate}
           >
-            <Text style={styles.monthNavText}>‹</Text>
+            <Ionicons name="chevron-back" size={24} color="#6366f1" />
           </TouchableOpacity>
-          <Text style={styles.monthYear}>
+          <Text style={{ fontSize: 18, fontWeight: '800', color: '#1e293b' }}>
             {monthNames[currentMonth]} {currentYear}
           </Text>
           <TouchableOpacity
-            style={styles.monthNavButton}
+            style={styles.closeButton}
             onPress={() => changeMonth(1)}
-            disabled={
-              maximumDate &&
-              new Date(currentYear, currentMonth + 1, 1) > maximumDate
-            }
+            disabled={maxDate && new Date(currentYear, currentMonth + 1, 1) > maxDate}
           >
-            <Text style={styles.monthNavText}>›</Text>
+            <Ionicons name="chevron-forward" size={24} color="#6366f1" />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.weekDays}>
+        <View style={{ flexDirection: 'row', marginBottom: 10 }}>
           {weekDays.map((day) => (
-            <View key={day} style={styles.weekDay}>
-              <Text style={styles.weekDayText}>{day}</Text>
+            <View key={day} style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748b' }}>{day}</Text>
             </View>
           ))}
         </View>
 
-        <View style={styles.daysGrid}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
           {days.map((day, index) => (
             <TouchableOpacity
               key={index}
               style={[
-                styles.dayCell,
-                isSelected(day) && styles.dayCellSelected,
-                isToday(day) && styles.dayCellToday,
-                isDisabled(day) && styles.dayCellDisabled,
+                { width: '14.28%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 12, marginVertical: 2 },
+                isSelected(day) && { backgroundColor: '#6366f1' },
+                isToday(day) && !isSelected(day) && { backgroundColor: '#f1f5f9' },
+                isDisabled(day) && { opacity: 0.3 },
               ]}
               onPress={() => {
                 if (day && !isDisabled(day)) {
@@ -200,10 +176,10 @@ export default function DatePicker({
             >
               <Text
                 style={[
-                  styles.dayText,
-                  isSelected(day) && styles.dayTextSelected,
-                  isToday(day) && !isSelected(day) && styles.dayTextToday,
-                  isDisabled(day) && styles.dayTextDisabled,
+                  { fontSize: 16, color: '#1e293b', fontWeight: '600' },
+                  isSelected(day) && { color: '#fff', fontWeight: '800' },
+                  isToday(day) && !isSelected(day) && { color: '#6366f1' },
+                  isDisabled(day) && { color: '#94a3b8' },
                 ]}
               >
                 {day || ''}
@@ -212,33 +188,27 @@ export default function DatePicker({
           ))}
         </View>
 
-        <View style={styles.calendarActions}>
+        <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
           <TouchableOpacity
-            style={styles.todayButton}
+            style={[styles.modalButton, { backgroundColor: '#f1f5f9' }]}
             onPress={() => {
               const today = new Date();
-              if (!minimumDate || today >= minimumDate) {
-                if (!maximumDate || today <= maximumDate) {
-                  handleDateSelect(
-                    today.getFullYear(),
-                    today.getMonth() + 1,
-                    today.getDate(),
-                  );
-                }
+              if ((!minDate || today >= minDate) && (!maxDate || today <= maxDate)) {
+                handleDateSelect(today.getFullYear(), today.getMonth() + 1, today.getDate());
               }
             }}
           >
-            <Text style={styles.todayButtonText}>Today</Text>
+            <Text style={{ color: '#1e293b', fontWeight: '700' }}>Today</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.clearButton}
+            style={[styles.modalButton, { backgroundColor: '#fee2e2' }]}
             onPress={() => {
               setSelectedDate(null);
               onChange('');
               setShowPicker(false);
             }}
           >
-            <Text style={styles.clearButtonText}>Clear</Text>
+            <Text style={{ color: '#ef4444', fontWeight: '700' }}>Clear</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -248,18 +218,22 @@ export default function DatePicker({
   return (
     <View>
       <TouchableOpacity
-        style={styles.input}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          padding: 14,
+          borderWidth: 2,
+          borderColor: '#e2e8f0',
+          borderRadius: 12,
+          backgroundColor: '#f8fafc',
+        }}
         onPress={() => setShowPicker(true)}
+        activeOpacity={0.7}
       >
-        <Text
-          style={[
-            styles.inputText,
-            !selectedDate && styles.inputTextPlaceholder,
-          ]}
-        >
-          {selectedDate ? formatDisplayDate(selectedDate) : placeholder}
+        <Ionicons name="calendar-outline" size={20} color="#6366f1" style={{ marginRight: 10 }} />
+        <Text style={{ color: value ? '#1e293b' : '#94a3b8', fontSize: 16, fontWeight: '600' }}>
+          {value || placeholder}
         </Text>
-        <Text style={styles.inputIcon}>📅</Text>
       </TouchableOpacity>
 
       <Modal
@@ -269,187 +243,21 @@ export default function DatePicker({
         onRequestClose={() => setShowPicker(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { height: 'auto', maxHeight: '90%' }]}>
+            <View style={styles.dragHandle} />
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Date</Text>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setShowPicker(false)}
               >
-                <Text style={styles.closeButtonText}>✕</Text>
+                <Ionicons name="close" size={24} color="#64748b" />
               </TouchableOpacity>
             </View>
-            {renderCalendar()}
+            <ScrollView>{renderCalendar()}</ScrollView>
           </View>
         </View>
       </Modal>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  input: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: '#f9f9f9',
-    marginBottom: 10,
-  },
-  inputText: {
-    fontSize: 16,
-    color: '#333',
-    flex: 1,
-  },
-  inputTextPlaceholder: {
-    color: '#999',
-  },
-  inputIcon: {
-    fontSize: 20,
-    marginLeft: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    fontSize: 18,
-    color: '#666',
-  },
-  calendar: {
-    width: '100%',
-  },
-  calendarHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  monthNavButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  monthNavText: {
-    fontSize: 24,
-    color: '#007AFF',
-    fontWeight: 'bold',
-  },
-  monthYear: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  weekDays: {
-    flexDirection: 'row',
-    marginBottom: 10,
-  },
-  weekDay: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  weekDayText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#666',
-  },
-  daysGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  dayCell: {
-    width: '14.28%',
-    aspectRatio: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 8,
-    margin: 2,
-  },
-  dayCellSelected: {
-    backgroundColor: '#007AFF',
-  },
-  dayCellToday: {
-    backgroundColor: '#f0f0f0',
-  },
-  dayCellDisabled: {
-    opacity: 0.3,
-  },
-  dayText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  dayTextSelected: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  dayTextToday: {
-    color: '#007AFF',
-    fontWeight: '600',
-  },
-  dayTextDisabled: {
-    color: '#999',
-  },
-  calendarActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-    gap: 12,
-  },
-  todayButton: {
-    flex: 1,
-    paddingVertical: 12,
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  todayButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  clearButton: {
-    flex: 1,
-    paddingVertical: 12,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  clearButtonText: {
-    color: '#666',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

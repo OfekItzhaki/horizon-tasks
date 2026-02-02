@@ -15,7 +15,7 @@ import {
 import { GetTasksByDateDto } from '../tasks/dto/get-tasks-by-date.dto';
 
 @ApiTags('Reminders')
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('reminders')
 export class RemindersController {
@@ -43,7 +43,7 @@ export class RemindersController {
             type: 'string',
             example: '"Complete project" from Daily is due tomorrow.',
           },
-          title: {
+          summary: {
             type: 'string',
             example: 'Reminder: Complete project',
           },
@@ -120,4 +120,3 @@ export class RemindersController {
     );
   }
 }
-

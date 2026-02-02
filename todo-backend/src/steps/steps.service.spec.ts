@@ -5,7 +5,6 @@ import { PrismaService } from '../prisma/prisma.service';
 
 describe('StepsService', () => {
   let service: StepsService;
-  let prisma: PrismaService;
 
   const mockPrismaService = {
     step: {
@@ -32,7 +31,6 @@ describe('StepsService', () => {
     }).compile();
 
     service = module.get<StepsService>(StepsService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -54,11 +52,7 @@ describe('StepsService', () => {
     });
 
     it('should successfully reorder steps', async () => {
-      const existingSteps = [
-        { id: 1 },
-        { id: 2 },
-        { id: 3 },
-      ];
+      const existingSteps = [{ id: 1 }, { id: 2 }, { id: 3 }];
       const stepIds = [3, 1, 2]; // New order
 
       mockPrismaService.step.findMany.mockResolvedValue(existingSteps);
@@ -89,12 +83,12 @@ describe('StepsService', () => {
 
       mockPrismaService.step.findMany.mockResolvedValue(existingSteps);
 
-      await expect(
-        service.reorder(taskId, ownerId, stepIds),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.reorder(taskId, ownerId, stepIds),
-      ).rejects.toThrow('All steps must be included when reordering');
+      await expect(service.reorder(taskId, ownerId, stepIds)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.reorder(taskId, ownerId, stepIds)).rejects.toThrow(
+        'All steps must be included when reordering',
+      );
     });
 
     it('should throw BadRequestException if stepIds contain duplicates', async () => {
@@ -103,12 +97,12 @@ describe('StepsService', () => {
 
       mockPrismaService.step.findMany.mockResolvedValue(existingSteps);
 
-      await expect(
-        service.reorder(taskId, ownerId, stepIds),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.reorder(taskId, ownerId, stepIds),
-      ).rejects.toThrow('Duplicate step IDs are not allowed when reordering');
+      await expect(service.reorder(taskId, ownerId, stepIds)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.reorder(taskId, ownerId, stepIds)).rejects.toThrow(
+        'Duplicate step IDs are not allowed when reordering',
+      );
     });
 
     it('should throw BadRequestException if stepId does not belong to task', async () => {
@@ -117,23 +111,23 @@ describe('StepsService', () => {
 
       mockPrismaService.step.findMany.mockResolvedValue(existingSteps);
 
-      await expect(
-        service.reorder(taskId, ownerId, stepIds),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.reorder(taskId, ownerId, stepIds),
-      ).rejects.toThrow('Step ID 99 does not belong to task');
+      await expect(service.reorder(taskId, ownerId, stepIds)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.reorder(taskId, ownerId, stepIds)).rejects.toThrow(
+        'Step ID 99 does not belong to task',
+      );
     });
 
     it('should throw NotFoundException if task does not exist', async () => {
       mockPrismaService.task.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.reorder(taskId, ownerId, [1, 2, 3]),
-      ).rejects.toThrow(NotFoundException);
-      await expect(
-        service.reorder(taskId, ownerId, [1, 2, 3]),
-      ).rejects.toThrow(`Task with ID ${taskId} not found`);
+      await expect(service.reorder(taskId, ownerId, [1, 2, 3])).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.reorder(taskId, ownerId, [1, 2, 3])).rejects.toThrow(
+        `Task with ID ${taskId} not found`,
+      );
     });
   });
 
@@ -217,7 +211,7 @@ describe('StepsService', () => {
       mockPrismaService.step.findFirst.mockResolvedValue(null);
       mockPrismaService.step.create.mockResolvedValue(mockStep);
 
-      const result = await service.create(taskId, createDto, ownerId);
+      await service.create(taskId, createDto, ownerId);
 
       expect(mockPrismaService.step.create).toHaveBeenCalledWith({
         data: {
@@ -349,4 +343,3 @@ describe('StepsService', () => {
     });
   });
 });
-

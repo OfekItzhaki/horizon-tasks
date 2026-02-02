@@ -13,10 +13,26 @@ export { apiClient, ApiClient } from './utils/api-client';
 // Export types
 export * from './types';
 
+// Re-export i18n utilities for easier importing (Metro compatibility)
+export * from './i18n';
+
 // Export config
-export { API_CONFIG, getApiUrl } from './config';
+export { API_CONFIG, getApiUrl, getAssetUrl } from './config';
 
 // Export storage utilities
 export { TokenStorage } from './utils/storage';
 
+// Export shared reminder types and helpers (web + mobile)
+export * from './reminders';
+// Explicit named re-exports so bundlers (Vite pre-bundle) pick them up
+export {
+  formatReminderDisplay,
+  formatTimeForDisplay,
+  type FormatReminderOptions,
+} from './reminders';
+
+// Export validation, error and task utilities
+export * from './utils/dateTimeValidation';
+export * from './utils/error-extraction';
+export * from './utils/task-utils';
 

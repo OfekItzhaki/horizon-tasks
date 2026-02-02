@@ -9,5 +9,3 @@ export class ResendVerificationDto {
   @IsEmail()
   email: string;
 }
-
-

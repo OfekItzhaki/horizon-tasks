@@ -1,27 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   TextInput,
-  Modal,
   RefreshControl,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { tasksService } from '../services/tasks.service';
-import { stepsService } from '../services/steps.service';
-import { Task, Step, UpdateTaskDto, ReminderConfig, ReminderTimeframe, ReminderSpecificDate } from '../types';
+
+import {
+  type ReminderConfig,
+  convertBackendToReminders,
+} from '@tasks-management/frontend-services';
+
+import { useTaskDetails } from '../hooks/useTaskDetails';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedStyles } from '../utils/useThemedStyles';
+import { createTaskDetailsStyles } from './styles/TaskDetailsScreen.styles';
+
 import ReminderConfigComponent from '../components/ReminderConfig';
 import DatePicker from '../components/DatePicker';
-import { scheduleTaskReminders, cancelAllTaskNotifications } from '../services/notifications.service';
-import { EveryDayRemindersStorage, ReminderAlarmsStorage, ReminderTimesStorage } from '../utils/storage';
-import { convertRemindersToBackend, formatDate, formatReminderDisplay } from '../utils/helpers';
-import { styles } from './styles/TaskDetailsScreen.styles';
+import { TaskHeader } from '../components/task/TaskHeader';
+import { TaskInfoSection } from '../components/task/TaskInfoSection';
+import { StepsList } from '../components/task/StepsList';
+import AddStepModal from '../components/task/AddStepModal';
+import { isRepeatingTask as checkIsRepeatingTask } from '../utils/taskHelpers';
 
 type TaskDetailsRouteProp = RouteProp<RootStackParamList, 'TaskDetails'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -30,473 +39,68 @@ export default function TaskDetailsScreen() {
   const route = useRoute<TaskDetailsRouteProp>();
   const navigation = useNavigation<NavigationProp>();
   const { taskId } = route.params;
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createTaskDetailsStyles);
 
-  const [task, setTask] = useState<Task | null>(null);
-  const [steps, setSteps] = useState<Step[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [displayEveryDayReminders, setDisplayEveryDayReminders] = useState<ReminderConfig[]>([]);
-  const [reminderAlarmStates, setReminderAlarmStates] = useState<Record<string, boolean>>({});
+  const {
+    task,
+    steps,
+    loading,
+    refreshing,
+    isEditing,
+    isSubmitting,
+    editDescription,
+    editDueDate,
+    editReminders,
+    reminderAlarmStates,
+    setEditDescription,
+    setEditDueDate,
+    setEditReminders,
+    setIsEditing,
+    onRefresh,
+    handleToggleTask,
+    handleSaveEdit,
+    handleCancelEdit,
+    handleToggleStep,
+    handleAddStep,
+    handleDeleteStep,
+    updateStep,
+    handleToggleReminderAlarm,
+  } = useTaskDetails(taskId);
 
-  // Edit form state
-  const [editDescription, setEditDescription] = useState('');
-  const [editDueDate, setEditDueDate] = useState('');
-  const [editReminders, setEditReminders] = useState<ReminderConfig[]>([]);
-
-  // Step management
+  // Local UI state
   const [showAddStepModal, setShowAddStepModal] = useState(false);
-  const [newStepDescription, setNewStepDescription] = useState('');
   const [editingStepId, setEditingStepId] = useState<number | null>(null);
   const [editingStepDescription, setEditingStepDescription] = useState('');
 
-  useEffect(() => {
-    loadTaskData();
-  }, [taskId]);
+  // Computed values
+  const displayReminders = useMemo(() => {
+    if (!task || isEditing) return [];
+    const raw = convertBackendToReminders(
+      task.reminderDaysBefore,
+      task.specificDayOfWeek,
+      task.dueDate || undefined,
+      task.reminderConfig
+    ) as ReminderConfig[];
 
-  // Sync editReminders with alarm states when they change (for edit mode sync)
-  useEffect(() => {
-    if (Object.keys(reminderAlarmStates).length > 0) {
-      setEditReminders(prev => 
-        prev.map(r => ({
-          ...r,
-          hasAlarm: reminderAlarmStates[r.id] !== undefined ? reminderAlarmStates[r.id] : r.hasAlarm,
-        }))
-      );
-    }
-  }, [reminderAlarmStates]);
+    return raw.map(r => ({
+      ...r,
+      hasAlarm: reminderAlarmStates[r.id] ?? r.hasAlarm ?? false,
+      time: editReminders.find(er => er.id === r.id)?.time ?? r.time ?? '09:00',
+    }));
+  }, [task, isEditing, reminderAlarmStates, editReminders]);
 
-  // Convert backend format to ReminderConfig format
-  const convertBackendToReminders = (
-    reminderDaysBefore: number[] | undefined,
-    specificDayOfWeek: number | null | undefined,
-    dueDate: string | null | undefined,
-  ): ReminderConfig[] => {
-    const reminders: ReminderConfig[] = [];
-
-    // Convert reminderDaysBefore array to ReminderConfig
-    // Only show these if there's a due date, since they're relative to due date
-    if (reminderDaysBefore && reminderDaysBefore.length > 0 && dueDate) {
-      reminderDaysBefore.forEach((days) => {
-        reminders.push({
-          id: `days-before-${days}`,
-          timeframe: ReminderTimeframe.SPECIFIC_DATE,
-          time: '09:00', // Default time, user can edit
-          daysBefore: days,
-        });
-      });
-    }
-
-    // Convert specificDayOfWeek to ReminderConfig
-    // Note: Backend only supports 0-6 (weekly reminders), so "every day" reminders
-    // are handled client-side only via notifications
-    if (specificDayOfWeek !== null && specificDayOfWeek !== undefined && specificDayOfWeek >= 0 && specificDayOfWeek <= 6) {
-      reminders.push({
-        id: `day-of-week-${specificDayOfWeek}`,
-        timeframe: ReminderTimeframe.EVERY_WEEK,
-        time: '09:00', // Default time, user can edit
-        dayOfWeek: specificDayOfWeek,
-      });
-    }
-    
-    // Note: EVERY_DAY reminders are stored client-side only (not in backend)
-    // They're handled via the notification system but won't persist in task details
-
-    return reminders;
-  };
-
-  const loadTaskData = async () => {
-    try {
-      const [taskData, stepsData] = await Promise.all([
-        tasksService.getById(taskId),
-        stepsService.getByTask(taskId),
-      ]);
-
-      setTask(taskData);
-      setSteps(stepsData);
-
-      // Initialize edit form
-      setEditDescription(taskData.description);
-      setEditDueDate(taskData.dueDate ? taskData.dueDate.split('T')[0] : '');
-      // Convert reminderDaysBefore to ReminderConfig format
-      let convertedReminders = convertBackendToReminders(
-        taskData.reminderDaysBefore,
-        taskData.specificDayOfWeek,
-        taskData.dueDate || undefined,
-      );
-      
-      console.log('Loaded backend reminders:', {
-        reminderDaysBefore: taskData.reminderDaysBefore,
-        specificDayOfWeek: taskData.specificDayOfWeek,
-        convertedCount: convertedReminders.length,
-        converted: convertedReminders.map(r => ({
-          id: r.id,
-          timeframe: r.timeframe,
-          daysBefore: r.daysBefore,
-        })),
-      });
-      
-      // Load client-side stored "every day" reminders
-      const everyDayReminders = await EveryDayRemindersStorage.getRemindersForTask(taskId);
-      setDisplayEveryDayReminders(everyDayReminders || []);
-      
-      if (everyDayReminders && everyDayReminders.length > 0) {
-        convertedReminders = [...convertedReminders, ...everyDayReminders];
-        console.log('Added EVERY_DAY reminders:', everyDayReminders.length);
-      }
-      
-      console.log('Final editReminders after load:', convertedReminders.map(r => ({
-        id: r.id,
-        timeframe: r.timeframe,
-        daysBefore: r.daysBefore,
-      })));
-      
-      // Load alarm states for all reminders
-      const alarmStates = await ReminderAlarmsStorage.getAlarmsForTask(taskId);
-      setReminderAlarmStates(alarmStates || {});
-      
-      // Load saved times for all reminders
-      const savedTimes = await ReminderTimesStorage.getTimesForTask(taskId);
-      
-      // Apply alarm states and saved times to all reminders
-      if (alarmStates || savedTimes) {
-        convertedReminders = convertedReminders.map(r => ({
-          ...r,
-          hasAlarm: alarmStates?.[r.id] !== undefined ? alarmStates[r.id] : r.hasAlarm,
-          // Use saved time if available, otherwise keep the default/current time
-          time: savedTimes?.[r.id] || r.time || '09:00',
-        }));
-      }
-      
-      setEditReminders(convertedReminders);
-    } catch (error: any) {
-      // Silently ignore auth errors - the navigation will handle redirect to login
-      const isAuthError = error?.response?.status === 401 || 
-                          error?.message?.toLowerCase()?.includes('unauthorized');
-      if (!isAuthError) {
-        const errorMessage = error?.response?.data?.message || error?.message || 'Unable to load task. Please try again.';
-        Alert.alert('Error Loading Task', errorMessage);
-      }
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadTaskData();
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editDescription.trim()) {
-      Alert.alert('Validation Error', 'Please enter a task description before saving.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const updateData: UpdateTaskDto = {
-        description: editDescription.trim(),
-      };
-
-      let dueDateStr: string | undefined;
-      if (editDueDate.trim()) {
-        const date = new Date(editDueDate);
-        if (!isNaN(date.getTime())) {
-          dueDateStr = date.toISOString();
-          updateData.dueDate = dueDateStr;
-        }
-      } else {
-        updateData.dueDate = null;
-      }
-
-      // Use existing task due date for reminder conversion if no new due date is being set
-      // This ensures reminders that reference due date are properly converted
-      const dueDateForConversion = dueDateStr || (task?.dueDate || undefined);
-
-      // Debug: Log reminders before conversion
-      console.log('Saving reminders:', {
-        editRemindersCount: editReminders.length,
-        editReminders: editReminders.map(r => ({
-          id: r.id,
-          timeframe: r.timeframe,
-          daysBefore: r.daysBefore,
-          dayOfWeek: r.dayOfWeek,
-          hasAlarm: r.hasAlarm,
-        })),
-        dueDateForConversion,
-      });
-      
-      // Convert reminders to backend format
-      const reminderData = convertRemindersToBackend(editReminders, dueDateForConversion);
-      
-      console.log('Converted reminder data:', reminderData);
-      
-      // Always set reminderDaysBefore based on conversion result
-      // convertRemindersToBackend returns empty array if no valid reminders or no due date
-      updateData.reminderDaysBefore = reminderData.reminderDaysBefore || [];
-      
-      // Always set specificDayOfWeek (weekly reminders don't require due date)
-      // Only set to null if we explicitly want to clear it (when undefined means "don't change")
-      // But since we're always sending the full update, we should set it based on conversion result
-      if (reminderData.specificDayOfWeek !== undefined) {
-        updateData.specificDayOfWeek = reminderData.specificDayOfWeek;
-        console.log(`Setting specificDayOfWeek in update: ${reminderData.specificDayOfWeek}`);
-      } else {
-        // If no weekly reminder in conversion result, set to null to clear any existing one
-        updateData.specificDayOfWeek = null;
-        console.log('Setting specificDayOfWeek to null (no weekly reminder)');
-      }
-
-      const updatedTask = await tasksService.update(taskId, updateData);
-      
-      // Separate EVERY_DAY reminders (client-side storage) from others
-      const everyDayReminders = editReminders.filter(r => r.timeframe === ReminderTimeframe.EVERY_DAY);
-      const otherReminders = editReminders.filter(r => r.timeframe !== ReminderTimeframe.EVERY_DAY);
-      
-      // Store EVERY_DAY reminders client-side
-      if (everyDayReminders.length > 0) {
-        await EveryDayRemindersStorage.setRemindersForTask(taskId, everyDayReminders);
-      } else {
-        await EveryDayRemindersStorage.removeRemindersForTask(taskId);
-      }
-      
-      // Store reminder times for all reminders (backend doesn't store times)
-      // Use normalized IDs that will match after reload from backend
-      const reminderTimes: Record<string, string> = {};
-      editReminders.forEach(reminder => {
-        if (reminder.time) {
-          // Generate normalized ID based on reminder properties (same as convertBackendToReminders)
-          let normalizedId = reminder.id;
-          if (reminder.daysBefore !== undefined && reminder.daysBefore > 0) {
-            normalizedId = `days-before-${reminder.daysBefore}`;
-          } else if (reminder.timeframe === ReminderTimeframe.EVERY_WEEK && reminder.dayOfWeek !== undefined) {
-            normalizedId = `day-of-week-${reminder.dayOfWeek}`;
-          } else if (reminder.timeframe === ReminderTimeframe.EVERY_DAY) {
-            normalizedId = reminder.id; // Keep the original ID for EVERY_DAY reminders
-          }
-          // Store the time with normalized ID
-          reminderTimes[normalizedId] = reminder.time;
-        }
-      });
-      
-      if (Object.keys(reminderTimes).length > 0) {
-        await ReminderTimesStorage.setTimesForTask(taskId, reminderTimes);
-      } else {
-        await ReminderTimesStorage.removeTimesForTask(taskId);
-      }
-      
-      setIsEditing(false);
-      
-      // Update scheduled notifications (include all reminders)
-      if (editReminders.length > 0) {
-        await scheduleTaskReminders(
-          taskId,
-          updatedTask.description,
-          editReminders,
-          dueDateStr || null,
-        );
-      } else {
-        // Cancel all notifications if no reminders
-        await cancelAllTaskNotifications(taskId);
-      }
-      
-      loadTaskData();
-      // Success feedback - UI update is visible, no alert needed
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to update task. Please try again.';
-      Alert.alert('Update Failed', errorMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    if (task) {
-      setEditDescription(task.description);
-      setEditDueDate(task.dueDate ? task.dueDate.split('T')[0] : '');
-      // Reset reminders to original task reminders
-      const convertedReminders = convertBackendToReminders(
-        task.reminderDaysBefore,
-        task.specificDayOfWeek,
-        task.dueDate || undefined,
-      );
-      setEditReminders(convertedReminders);
-    }
-    setIsEditing(false);
-  };
-
-  const handleToggleTask = async () => {
-    if (!task) return;
-
-    const currentCompleted = Boolean(task.completed);
-    const newCompleted = !currentCompleted;
-    
-    // Optimistic update - update UI immediately
-    setTask(prev => prev ? { ...prev, completed: newCompleted } : prev);
-
-    try {
-      await tasksService.update(taskId, { completed: newCompleted });
-      // No need to reload - optimistic update already applied
-    } catch (error: any) {
-      // Revert on error
-      setTask(prev => prev ? { ...prev, completed: currentCompleted } : prev);
-      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to toggle task completion. Please try again.';
-      Alert.alert('Update Failed', errorMessage);
-    }
-  };
-
-  const handleAddStep = async () => {
-    if (!newStepDescription.trim()) {
-      Alert.alert('Validation Error', 'Please enter a step description before adding.');
-      return;
-    }
-
-    try {
-      await stepsService.create(taskId, { description: newStepDescription.trim() });
-      setNewStepDescription('');
-      setShowAddStepModal(false);
-      loadTaskData();
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to add step. Please try again.';
-      Alert.alert('Add Step Failed', errorMessage);
-    }
-  };
-
-  const handleToggleStep = async (step: Step) => {
-    const currentCompleted = Boolean(step.completed);
-    const newCompleted = !currentCompleted;
-    
-    // Optimistic update - update UI immediately
-    setSteps(prevSteps => 
-      prevSteps.map(s => 
-        s.id === step.id ? { ...s, completed: newCompleted } : s
-      )
-    );
-
-    try {
-      await stepsService.update(step.id, { completed: newCompleted });
-      // No need to reload - optimistic update already applied
-    } catch (error: any) {
-      // Revert on error
-      setSteps(prevSteps => 
-        prevSteps.map(s => 
-          s.id === step.id ? { ...s, completed: currentCompleted } : s
-        )
-      );
-      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to update step. Please try again.';
-      Alert.alert('Update Failed', errorMessage);
-    }
-  };
-
-  const handleToggleReminderAlarm = async (reminderId: string) => {
-    if (!task) return;
-
-    try {
-      // Get current alarm state from storage
-      const currentAlarmState = reminderAlarmStates[reminderId] !== undefined 
-        ? reminderAlarmStates[reminderId] 
-        : false;
-      const newAlarmState = !currentAlarmState;
-
-      // Save new alarm state to storage
-      await ReminderAlarmsStorage.setAlarmForReminder(taskId, reminderId, newAlarmState);
-
-      // Update local state immediately for instant visual feedback
-      setReminderAlarmStates(prev => ({
-        ...prev,
-        [reminderId]: newAlarmState,
-      }));
-
-      // Get all reminders to update notifications
-      const backendReminders = convertBackendToReminders(
-        task.reminderDaysBefore,
-        task.specificDayOfWeek,
-        task.dueDate || undefined,
-      );
-      const everyDayReminders = await EveryDayRemindersStorage.getRemindersForTask(taskId) || [];
-      const allReminders = [...backendReminders, ...everyDayReminders];
-
-      // Apply updated alarm states to all reminders
-      const updatedAlarmStates = { ...reminderAlarmStates, [reminderId]: newAlarmState };
-      const updatedReminders = allReminders.map((r) => ({
-        ...r,
-        hasAlarm: updatedAlarmStates[r.id] !== undefined ? updatedAlarmStates[r.id] : false,
-      }));
-
-      // Reschedule notifications with updated alarm settings
-      await scheduleTaskReminders(
-        taskId,
-        task.description,
-        updatedReminders,
-        task.dueDate || null,
-      );
-      
-      // No need to reload - state is already updated for immediate visual feedback
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to update reminder alarm. Please try again.';
-      Alert.alert('Update Failed', errorMessage);
-      // Reload to restore correct state on error
-      loadTaskData();
-    }
-  };
-
-  const handleEditStep = (step: Step) => {
-    setEditingStepId(step.id);
-    setEditingStepDescription(step.description);
-  };
-
-  const handleSaveStepEdit = async () => {
-    if (!editingStepId || !editingStepDescription.trim()) {
-      setEditingStepId(null);
-      return;
-    }
-
-    try {
-      await stepsService.update(editingStepId, { description: editingStepDescription.trim() });
-      setEditingStepId(null);
-      setEditingStepDescription('');
-      loadTaskData();
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || 'Unable to update step. Please try again.';
-      Alert.alert('Update Failed', errorMessage);
-    }
-  };
-
-  const handleCancelStepEdit = () => {
-    setEditingStepId(null);
-    setEditingStepDescription('');
-  };
-
-  const handleDeleteStep = (step: Step) => {
-    Alert.alert(
-      'Delete Step',
-      `Are you sure you want to delete "${step.description}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await stepsService.delete(step.id);
-              loadTaskData();
-            } catch (error: any) {
-              const errorMessage = error?.response?.data?.message || error?.message || 'Unable to delete step. Please try again.';
-              Alert.alert('Delete Failed', errorMessage);
-            }
-          },
-        },
-      ],
-    );
-  };
+  const isRepeating = useMemo(() => {
+    if (!task) return false;
+    // Check for every-day reminders in displayReminders
+    const hasEveryDay = displayReminders.some(r => r.timeframe === 'EVERY_DAY');
+    return checkIsRepeatingTask(task as any, hasEveryDay ? [{ timeframe: 'EVERY_DAY' }] : []);
+  }, [task, displayReminders]);
 
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -509,27 +113,16 @@ export default function TaskDetailsScreen() {
     );
   }
 
-  const isCompleted = Boolean(task.completed);
-  const completedSteps = steps.filter((s) => s.completed).length;
-  const totalSteps = steps.length;
-  const stepsProgress = totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0;
-  
-  // Check if task has repeating reminders (based on task properties, not list type)
-  // A task is repeating if it has weekly reminders (specificDayOfWeek) or daily reminders (client-side)
-  const isRepeatingTask = (
-    (task.specificDayOfWeek !== null && task.specificDayOfWeek !== undefined) ||
-    displayEveryDayReminders.length > 0
-  );
-
   return (
     <View style={styles.container}>
-      {/* Screen Header */}
       <View style={styles.screenHeader}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>← Back</Text>
+        <LinearGradient
+          colors={[colors.primary, colors.purple]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        />
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
         <Text style={styles.screenTitle}>Task Details</Text>
         <View style={styles.headerSpacer} />
@@ -539,263 +132,86 @@ export default function TaskDetailsScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        showsVerticalScrollIndicator={true}
       >
-        {/* Task Header */}
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <TouchableOpacity
-              style={[styles.checkbox, isCompleted && styles.checkboxCompleted]}
-              onPress={handleToggleTask}
-            >
-              {isCompleted && <Text style={styles.checkmark}>✓</Text>}
-            </TouchableOpacity>
-            <View style={styles.headerText}>
-              {isEditing ? (
-                <TextInput
-                  style={styles.editInput}
-                  value={editDescription}
-                  onChangeText={setEditDescription}
-                  multiline
-                  autoFocus
-                />
-              ) : (
-                <Text style={[styles.title, isCompleted && styles.titleCompleted]}>
-                  {task.description}
-                </Text>
-              )}
-              {/* Show completion count for repeating tasks */}
-              {!isEditing && isRepeatingTask && task.completionCount > 0 && (
-                <Text style={styles.completionCountBadge}>
-                  🔄 Completed {task.completionCount} time{task.completionCount !== 1 ? 's' : ''}
-                </Text>
-              )}
+        {!isEditing ? (
+          <TaskHeader
+            task={task}
+            isEditing={false}
+            editDescription={editDescription}
+            onEditDescriptionChange={setEditDescription}
+            onToggleTask={handleToggleTask}
+            onEditPress={() => setIsEditing(true)}
+            completionCount={task.completionCount || 0}
+            isRepeatingTask={isRepeating}
+          />
+        ) : (
+          <View style={styles.header}>
+            <View style={styles.headerTop}>
+              <TouchableOpacity
+                style={[styles.checkbox, task.completed && styles.checkboxCompleted]}
+                onPress={handleToggleTask}
+              >
+                {task.completed && <Text style={styles.checkmark}>✓</Text>}
+              </TouchableOpacity>
+              <TextInput
+                style={styles.editInput}
+                value={editDescription}
+                onChangeText={setEditDescription}
+                multiline
+                autoFocus
+              />
             </View>
-          </View>
-
-          {!isEditing && (
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => setIsEditing(true)}
-            >
-              <Text style={styles.editButtonText}>Edit</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Task Info */}
-        <View style={styles.section}>
-              <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Due Date:</Text>
-              {isEditing ? (
-                <View style={styles.datePickerContainer}>
-                  <DatePicker
-                    value={editDueDate}
-                    onChange={setEditDueDate}
-                    placeholder="No due date"
-                  />
-                </View>
-              ) : (
-                <Text style={styles.infoValue}>
-                  {task.dueDate ? formatDate(task.dueDate) : 'No due date'}
-                </Text>
-              )}
-            </View>
-
-          {/* Display Reminders - only show when NOT editing (editing uses ReminderConfigComponent) */}
-          {!isEditing && (() => {
-            const displayReminders = convertBackendToReminders(
-              task.reminderDaysBefore,
-              task.specificDayOfWeek,
-              task.dueDate || undefined,
-            );
-            
-            // Add client-side stored EVERY_DAY reminders for display
-            let allDisplayReminders = [...displayReminders, ...displayEveryDayReminders];
-            
-            // Apply alarm states and saved times from state
-            allDisplayReminders = allDisplayReminders.map(r => {
-              // Find matching reminder in editReminders to get the correct time
-              const matchingReminder = editReminders.find(er => er.id === r.id);
-              return {
-                ...r,
-                hasAlarm: reminderAlarmStates[r.id] !== undefined ? reminderAlarmStates[r.id] : (r.hasAlarm || false),
-                time: matchingReminder?.time || r.time || '09:00',
-              };
-            });
-            
-            if (allDisplayReminders.length > 0) {
-              return (
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Reminders:</Text>
-                  <View style={styles.remindersList}>
-                    {allDisplayReminders.map((reminder) => (
-                      <View key={reminder.id} style={styles.reminderDisplayItem}>
-                        <Text style={styles.reminderDisplayText}>
-                          {formatReminderDisplay(reminder)}
-                        </Text>
-                        <TouchableOpacity
-                          style={[
-                            styles.alarmToggleButton,
-                            reminder.hasAlarm && styles.alarmToggleButtonActive
-                          ]}
-                          onPress={() => handleToggleReminderAlarm(reminder.id)}
-                          activeOpacity={0.7}
-                        >
-                          <Text style={[
-                            styles.alarmToggleIcon,
-                            reminder.hasAlarm && styles.alarmToggleIconActive
-                          ]}>
-                            {reminder.hasAlarm ? '🔔' : '🔕'}
-                          </Text>
-                          <Text style={[
-                            styles.alarmToggleText,
-                            reminder.hasAlarm && styles.alarmToggleTextActive
-                          ]}>
-                            {reminder.hasAlarm ? 'ON' : 'OFF'}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              );
-            }
-            return null;
-          })()}
-        </View>
-
-        {/* Reminders Section (when editing) */}
-        {isEditing && (
-          <View style={styles.section}>
-            <ReminderConfigComponent
-              reminders={editReminders}
-              onRemindersChange={setEditReminders}
-            />
           </View>
         )}
 
-        {/* Steps Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Steps</Text>
-            {totalSteps > 0 && (
-              <Text style={styles.progressText}>
-                {completedSteps}/{totalSteps} completed
-              </Text>
-            )}
+        {!isEditing ? (
+          <TaskInfoSection
+            task={task}
+            isEditing={false}
+            editDueDate={editDueDate}
+            onEditDueDateChange={setEditDueDate}
+            displayReminders={displayReminders}
+            reminderAlarmStates={reminderAlarmStates}
+            onToggleReminderAlarm={handleToggleReminderAlarm}
+          />
+        ) : (
+          <View style={styles.section}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Due Date:</Text>
+              <View style={styles.datePickerContainer}>
+                <DatePicker value={editDueDate} onChange={setEditDueDate} placeholder="No due date" />
+              </View>
+            </View>
           </View>
+        )}
 
-          {totalSteps > 0 && (
-            <View style={styles.progressBar}>
-              <View
-                style={[styles.progressFill, { width: `${stepsProgress}%` }]}
-              />
-            </View>
-          )}
+        {isEditing && (
+          <View style={styles.section}>
+            <ReminderConfigComponent reminders={editReminders} onRemindersChange={setEditReminders} />
+          </View>
+        )}
 
-          {steps.length === 0 ? (
-            <View style={styles.emptyStepsContainer}>
-              <Text style={styles.emptyStepsIcon}>✓</Text>
-              <Text style={styles.emptyStepsText}>No steps yet</Text>
-              <Text style={styles.emptyStepsSubtext}>
-                Break down your task into smaller steps
-              </Text>
-            </View>
-          ) : (
-            steps.map((step) => {
-              const stepCompleted = Boolean(step.completed);
-              const isEditingStep = editingStepId === step.id;
-              
-              return (
-                <View
-                  key={step.id}
-                  style={[
-                    styles.stepItem,
-                    stepCompleted && styles.stepItemCompleted,
-                  ]}
-                >
-                  <TouchableOpacity
-                    style={styles.stepCheckbox}
-                    onPress={() => handleToggleStep(step)}
-                  >
-                    {stepCompleted && <Text style={styles.checkmark}>✓</Text>}
-                  </TouchableOpacity>
-                  
-                  {isEditingStep ? (
-                    <View style={styles.stepEditContainer}>
-                      <TextInput
-                        style={styles.stepEditInput}
-                        value={editingStepDescription}
-                        onChangeText={setEditingStepDescription}
-                        autoFocus
-                        onSubmitEditing={handleSaveStepEdit}
-                        blurOnSubmit={false}
-                      />
-                      <TouchableOpacity
-                        style={styles.stepEditSaveButton}
-                        onPress={handleSaveStepEdit}
-                      >
-                        <Text style={styles.stepEditSaveText}>✓</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.stepEditCancelButton}
-                        onPress={handleCancelStepEdit}
-                      >
-                        <Text style={styles.stepEditCancelText}>✕</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <>
-                      <TouchableOpacity
-                        style={styles.stepContent}
-                        onPress={() => handleToggleStep(step)}
-                      >
-                        <Text
-                          style={[
-                            styles.stepText,
-                            stepCompleted && styles.stepTextCompleted,
-                          ]}
-                        >
-                          {step.description}
-                        </Text>
-                      </TouchableOpacity>
-                      <View style={styles.stepActions}>
-                        <TouchableOpacity
-                          style={styles.stepEditButton}
-                          onPress={() => handleEditStep(step)}
-                        >
-                          <Text style={styles.stepEditButtonText}>✏️</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.stepDeleteButton}
-                          onPress={() => handleDeleteStep(step)}
-                        >
-                          <Text style={styles.stepDeleteButtonText}>🗑️</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </>
-                  )}
-                </View>
-              );
-            })
-          )}
+        <StepsList
+          steps={steps}
+          editingStepId={editingStepId}
+          editingStepDescription={editingStepDescription}
+          onEditingStepDescriptionChange={setEditingStepDescription}
+          onToggleStep={handleToggleStep}
+          onEditStep={(step) => { setEditingStepId(step.id); setEditingStepDescription(step.description); }}
+          onSaveStepEdit={async () => {
+            if (editingStepId) {
+              await updateStep(editingStepId, editingStepDescription);
+              setEditingStepId(null);
+            }
+          }}
+          onCancelStepEdit={() => setEditingStepId(null)}
+          onDeleteStep={(step) => handleDeleteStep(step.id)}
+          onAddStepPress={() => setShowAddStepModal(true)}
+        />
 
-          <TouchableOpacity
-            style={styles.addStepButton}
-            onPress={() => setShowAddStepModal(true)}
-          >
-            <Text style={styles.addStepButtonText}>+ Add Step</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Edit Actions */}
         {isEditing && (
           <View style={styles.editActions}>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.cancelButton]}
-              onPress={handleCancelEdit}
-            >
+            <TouchableOpacity style={[styles.actionButton, styles.cancelButton]} onPress={handleCancelEdit}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -803,54 +219,18 @@ export default function TaskDetailsScreen() {
               onPress={handleSaveEdit}
               disabled={isSubmitting}
             >
-              {isSubmitting ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.saveButtonText}>Save</Text>
-              )}
+              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveButtonText}>Save</Text>}
             </TouchableOpacity>
           </View>
         )}
       </ScrollView>
 
-      {/* Add Step Modal */}
-      <Modal
+      <AddStepModal
         visible={showAddStepModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowAddStepModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Step</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Step description"
-              value={newStepDescription}
-              onChangeText={setNewStepDescription}
-              multiline
-              autoFocus
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => {
-                  setShowAddStepModal(false);
-                  setNewStepDescription('');
-                }}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.submitButton]}
-                onPress={handleAddStep}
-              >
-                <Text style={styles.submitButtonText}>Add</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowAddStepModal(false)}
+        onAdd={handleAddStep}
+        styles={styles}
+      />
     </View>
   );
 }

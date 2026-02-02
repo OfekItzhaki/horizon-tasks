@@ -1,15 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { NotFoundException, ConflictException } from '@nestjs/common';
 import { ListSharesService } from './list-shares.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ShareListDto } from './dto/share-list.dto';
 
 describe('ListSharesService', () => {
   let service: ListSharesService;
-  let prisma: PrismaService;
 
   const mockPrismaService = {
     toDoList: {
@@ -38,7 +34,6 @@ describe('ListSharesService', () => {
     }).compile();
 
     service = module.get<ListSharesService>(ListSharesService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -194,4 +189,3 @@ describe('ListSharesService', () => {
     });
   });
 });
-

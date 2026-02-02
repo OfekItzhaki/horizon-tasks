@@ -42,6 +42,20 @@ export class UsersService {
   async delete(id: number): Promise<User> {
     return apiClient.delete<User>(`/users/${id}`);
   }
+
+  /**
+   * Upload profile picture
+   */
+  async uploadAvatar(id: number, file: File): Promise<User> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return apiClient.post<User>(`/users/${id}/upload-avatar`, formData, {
+      headers: {
+        // Don't set Content-Type header - browser will set it with boundary for multipart/form-data
+      },
+    });
+  }
 }
 
 export const usersService = new UsersService();

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import UsersService from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ListType } from '@prisma/client';
@@ -15,9 +16,12 @@ import * as crypto from 'crypto';
 jest.mock('bcrypt');
 jest.mock('crypto');
 
+const mockEmailService = {
+  sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('UsersService', () => {
   let service: UsersService;
-  let prisma: PrismaService;
 
   const mockPrismaService = {
     user: {
@@ -31,22 +35,19 @@ describe('UsersService', () => {
   };
 
   beforeEach(async () => {
+    mockEmailService.sendVerificationEmail.mockResolvedValue(undefined);
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
-        {
-          provide: PrismaService,
-          useValue: mockPrismaService,
-        },
+        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: EmailService, useValue: mockEmailService },
       ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
-    // Reset mock implementations between tests (clearAllMocks leaves mockResolvedValueOnce queues).
     jest.resetAllMocks();
   });
 
@@ -84,10 +85,26 @@ describe('UsersService', () => {
       expect(mockPrismaService.user.create).toHaveBeenCalled();
       expect(mockPrismaService.toDoList.createMany).toHaveBeenCalledWith({
         data: expect.arrayContaining([
-          expect.objectContaining({ name: 'Daily', type: ListType.DAILY, ownerId: 1 }),
-          expect.objectContaining({ name: 'Weekly', type: ListType.WEEKLY, ownerId: 1 }),
-          expect.objectContaining({ name: 'Monthly', type: ListType.MONTHLY, ownerId: 1 }),
-          expect.objectContaining({ name: 'Yearly', type: ListType.YEARLY, ownerId: 1 }),
+          expect.objectContaining({
+            name: 'Daily',
+            type: ListType.DAILY,
+            ownerId: 1,
+          }),
+          expect.objectContaining({
+            name: 'Weekly',
+            type: ListType.WEEKLY,
+            ownerId: 1,
+          }),
+          expect.objectContaining({
+            name: 'Monthly',
+            type: ListType.MONTHLY,
+            ownerId: 1,
+          }),
+          expect.objectContaining({
+            name: 'Yearly',
+            type: ListType.YEARLY,
+            ownerId: 1,
+          }),
           expect.objectContaining({
             name: 'Finished Tasks',
             type: ListType.FINISHED,
@@ -155,9 +172,7 @@ describe('UsersService', () => {
     });
 
     it('should throw ForbiddenException if accessing another user', async () => {
-      await expect(service.getUser(1, 2)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(service.getUser(1, 2)).rejects.toThrow(ForbiddenException);
       await expect(service.getUser(1, 2)).rejects.toThrow(
         'You can only access your own profile',
       );
@@ -202,7 +217,11 @@ describe('UsersService', () => {
         name: 'New Name',
       });
 
-      const result = await service.updateUser(userId, updateDto, requestingUserId);
+      const result = await service.updateUser(
+        userId,
+        updateDto,
+        requestingUserId,
+      );
 
       expect(mockPrismaService.user.update).toHaveBeenCalled();
       expect(result.name).toBe('New Name');
@@ -351,4 +370,3 @@ describe('UsersService', () => {
     });
   });
 });
-

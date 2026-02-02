@@ -2,7 +2,9 @@
   "expo": {
     "name": "Tasks Management",
     "slug": "tasks-management",
+    "scheme": "tasks-management",
     "version": "1.2.1",
+    "description": "Organize your life with Tasks Management - the intuitive to-do list app that helps you stay on top of your daily, weekly, monthly, and yearly tasks. Create custom lists, set reminders, track sub-tasks, and share lists with others. Available in English and Hebrew.",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,22 +15,28 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tasksmanagement.app",
+      "infoPlist": {
+        "NSUserTrackingUsageDescription": "This app uses tracking to provide personalized reminders and improve your experience."
+      }
     },
     "android": {
       "package": "com.tasksmanagement.app",
       "versionCode": 3,
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
         "POST_NOTIFICATIONS"
-      ]
+      ],
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.tasksmanagement.app"
     },
     "plugins": [
       [
@@ -37,7 +45,9 @@
           "icon": "./assets/icon.png",
           "color": "#ffffff"
         }
-      ]
+      ],
+      "@sentry/react-native",
+      "expo-asset"
     ],
     "web": {
       "favicon": "./assets/favicon.png"

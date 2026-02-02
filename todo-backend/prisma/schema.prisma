@@ -67,6 +67,7 @@ model Task {
   dueDate            DateTime?
   reminderDaysBefore Int[]     @default([1])
   specificDayOfWeek  Int?
+  reminderConfig     Json?     // Store reminder configurations including "every day" reminders
   steps              Step[]
   todoList           ToDoList  @relation(fields: [todoListId], references: [id])
 }
