@@ -1,4 +1,5 @@
-import { useTheme, lightColors, darkColors } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
+import { lightColors, darkColors } from '../store/useThemeStore';
 import { StyleSheet, ViewStyle, TextStyle, ImageStyle } from 'react-native';
 
 type NamedStyles<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };

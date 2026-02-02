@@ -1,5 +1,6 @@
 import React, { createContext, useContext } from 'react';
-import { useThemeStore } from '../store/useThemeStore';
+import { useThemeStore, lightColors, darkColors } from '../store/useThemeStore';
+export { lightColors, darkColors };
 
 type ThemeMode = 'light' | 'dark' | 'auto';
 
