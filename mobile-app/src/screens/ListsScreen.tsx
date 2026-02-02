@@ -50,7 +50,7 @@ export default function ListsScreen() {
       shadowRadius: 16,
       elevation: 8,
       position: 'relative',
-      overflow: 'hidden',
+      zIndex: 10,
     },
     headerGradient: {
       position: 'absolute',
@@ -157,8 +157,8 @@ export default function ListsScreen() {
       shadowOpacity: 0.5,
       shadowRadius: 16,
       elevation: 12,
-      borderWidth: 3,
       borderColor: 'rgba(255, 255, 255, 0.4)',
+      zIndex: 999,
     },
     fabText: {
       fontSize: 38,
@@ -303,7 +303,7 @@ export default function ListsScreen() {
   useFocusEffect(
     React.useCallback(() => {
       loadLists();
-      
+
       // Reschedule all reminders to sync with backend (including web-app changes)
       // This runs in the background and doesn't block the UI
       rescheduleAllReminders().catch((error) => {
@@ -500,6 +500,7 @@ export default function ListsScreen() {
 
       {/* Floating Action Button */}
       <TouchableOpacity
+        style={styles.fab}
         onPress={() => setShowAddModal(true)}
         activeOpacity={0.8}
       >
@@ -507,7 +508,7 @@ export default function ListsScreen() {
           colors={['#6366f1', '#a855f7']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.fab}
+          style={{ width: '100%', height: '100%', borderRadius: 34, justifyContent: 'center', alignItems: 'center' }}
         >
           <Text style={styles.fabText}>+</Text>
         </LinearGradient>

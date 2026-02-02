@@ -404,6 +404,7 @@ export default function TasksScreen() {
 
       {/* Floating Action Button */}
       <TouchableOpacity
+        style={styles.fab}
         onPress={() => setShowAddModal(true)}
         activeOpacity={0.8}
       >
@@ -411,7 +412,7 @@ export default function TasksScreen() {
           colors={['#6366f1', '#a855f7']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.fab}
+          style={{ width: '100%', height: '100%', borderRadius: 24, justifyContent: 'center', alignItems: 'center' }}
         >
           <Text style={styles.fabText}>+</Text>
         </LinearGradient>

@@ -22,7 +22,7 @@ export const createTasksStyles = (colors: typeof lightColors) => StyleSheet.crea
     shadowRadius: 16,
     elevation: 8,
     position: 'relative',
-    overflow: 'hidden',
+    zIndex: 10, // Ensure header sits above content
   },
   headerGradient: {
     position: 'absolute',
@@ -116,6 +116,7 @@ export const createTasksStyles = (colors: typeof lightColors) => StyleSheet.crea
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'flex-end',
+    zIndex: 1000,
   },
   sortMenuContent: {
     backgroundColor: colors.card,
@@ -297,6 +298,7 @@ export const createTasksStyles = (colors: typeof lightColors) => StyleSheet.crea
     elevation: 12,
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.4)',
+    zIndex: 999, // Ensure FAB is above all content
   },
   fabText: {
     fontSize: 38,
