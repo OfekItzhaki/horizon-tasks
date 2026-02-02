@@ -13,8 +13,8 @@ import { ENV } from './env';
 export const API_CONFIG = {
   // Set EXPO_PUBLIC_API_URL in .env. Never use localhost for physical device / Android emulator.
   baseURL: ENV.EXPO_PUBLIC_API_URL || (__DEV__
-    ? 'http://192.168.68.54:3000'  // Dev fallback: use your machine's IP (ipconfig / ifconfig)
-    : 'https://tasksmanagement-lv54.onrender.com'),
+    ? 'http://192.168.68.54:3000/api/v1'  // Dev fallback: use your machine's IP (ipconfig / ifconfig)
+    : 'https://tasksmanagement-lv54.onrender.com/api/v1'),
 };
 
 /**
