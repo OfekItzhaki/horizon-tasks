@@ -43,7 +43,18 @@ pnpm-lock.yaml  # Optional: remove if not using pnpm
 # Expo
 .expo/
 .expo-shared/
+web-build/
+dist/
+dist-mobile/
+
+# Native Folders (Managed by EAS)
+mobile-app/android/
+mobile-app/ios/
 
 # Development instructions and utility scripts (not needed in repository)
 instructions/
 *.ps1
+
+# Ignore experimental local easignore
+.easignore
+mobile-app/.easignore
