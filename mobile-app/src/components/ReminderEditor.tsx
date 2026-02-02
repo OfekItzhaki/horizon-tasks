@@ -80,15 +80,14 @@ export default function ReminderEditor({
     // Limit to 4 digits (HHMM)
     const limited = numbersOnly.slice(0, 4);
 
-    // Only auto-format when user has entered exactly 4 digits (complete time)
-    // This allows easy editing without the colon interfering
+    // Auto-format to HH:MM as user types
     let formatted = limited;
-    if (limited.length === 4) {
-      // Auto-format to HH:MM only when complete
+    if (limited.length >= 3) {
+      // Format as HH:MM when we have at least 3 digits
       formatted = limited.slice(0, 2) + ':' + limited.slice(2);
-    } else if (limited.length > 0) {
-      // While typing, keep as numbers only (no colon) for easier editing
-      formatted = limited;
+    } else if (limited.length === 2) {
+      // After 2 digits, add colon automatically
+      formatted = limited + ':';
     }
 
     // Update the config with the formatted time
@@ -301,22 +300,12 @@ export default function ReminderEditor({
                   keyboardType="numeric"
                 />
                 <Text style={styles.helperText}>
-                  {config.timeframe === ReminderTimeframe.EVERY_DAY
-                    ? 'Note: Daily reminders will repeat on the same day each week. Leave empty to remind on the due date itself.'
-                    : 'Leave empty if this reminder is not relative to due date'}
+                  Leave empty if this reminder is not relative to due date
                 </Text>
               </>
             )}
 
-          {/* Info for Every Day reminders */}
-          {config.timeframe === ReminderTimeframe.EVERY_DAY && (
-            <View style={styles.infoBox}>
-              <Ionicons name="information-circle-outline" size={20} color="#6366f1" style={{ marginBottom: 4 }} />
-              <Text style={styles.infoText}>
-                Daily reminders will notify you on the same day each week. For true daily reminders, consider creating the task in a DAILY list.
-              </Text>
-            </View>
-          )}
+
 
           {/* Time Input (24-hour format) */}
           <Text style={styles.label}>Time (24h, HH:mm):</Text>
@@ -329,7 +318,7 @@ export default function ReminderEditor({
             maxLength={5}
           />
           <Text style={styles.helperText}>
-            Enter time in 24-hour format (e.g. 09:00, 14:30, 17:41). Use 4 digits; colon is added automatically.
+            Enter time in 24-hour format (e.g. 09:00, 14:30)
           </Text>
 
           {/* Alarm Toggle */}
