@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { tasksService } from '../services/tasks.service';
-import FloatingActionButton from '../components/FloatingActionButton';
 import Skeleton from '../components/Skeleton';
 import ReminderDisplay from '../components/ReminderDisplay';
 import TaskEditForm from '../components/TaskEditForm';
@@ -49,6 +48,8 @@ export default function TaskDetailsPage() {
   const [editDescription, setEditDescription] = useState('');
   const [editDueDate, setEditDueDate] = useState('');
   const [editReminders, setEditReminders] = useState<ReminderConfig[]>([]);
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [selectedSteps, setSelectedSteps] = useState<Set<number>>(new Set());
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -502,12 +503,12 @@ export default function TaskDetailsPage() {
               </h1>
             )}
           </div>
-          {!isArchivedTask && !isFullEditMode && (
+          {!isArchivedTask && (
             <button
-              onClick={handleOpenEdit}
-              className="glass-button text-sm font-medium"
+              onClick={isFullEditMode ? handleCancelEdit : handleOpenEdit}
+              className={`glass-button text-sm font-medium transition-all ${isFullEditMode ? 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-900/20' : ''}`}
             >
-              {t('common.edit', { defaultValue: 'Edit' })}
+              {isFullEditMode ? t('common.cancel') : t('common.edit', { defaultValue: 'Edit' })}
             </button>
           )}
           {isArchivedTask && (
@@ -615,6 +616,31 @@ export default function TaskDetailsPage() {
             }}
             createStepMutation={stepManagement.createStepMutation}
             stepInputRef={stepInputRef}
+            isBulkMode={isBulkMode}
+            onToggleBulkMode={() => {
+              setIsBulkMode(!isBulkMode);
+              setSelectedSteps(new Set());
+            }}
+            selectedSteps={selectedSteps}
+            onToggleSelectStep={(stepId) => {
+              const newSelected = new Set(selectedSteps);
+              if (newSelected.has(stepId)) {
+                newSelected.delete(stepId);
+              } else {
+                newSelected.add(stepId);
+              }
+              setSelectedSteps(newSelected);
+            }}
+            onBulkDelete={() => {
+              const ok = window.confirm(t('tasks.deleteSelectedConfirm', { count: selectedSteps.size, plural: selectedSteps.size !== 1 ? 's' : '' }));
+              if (!ok) return;
+              selectedSteps.forEach(id => {
+                const step = task.steps?.find(s => s.id === id);
+                if (step) stepManagement.handleDeleteStep(step);
+              });
+              setSelectedSteps(new Set());
+              setIsBulkMode(false);
+            }}
           />
         )}
       </div>

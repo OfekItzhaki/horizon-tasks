@@ -63,12 +63,7 @@ export default function TaskEditForm({
       />
 
       <div className={`flex gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
-        <button
-          onClick={onCancel}
-          className="flex-1 glass-button"
-        >
-          {t('common.cancel')}
-        </button>
+
         <button
           onClick={onSave}
           disabled={isSaving || !editDescription.trim()}

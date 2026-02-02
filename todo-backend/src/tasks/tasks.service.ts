@@ -21,7 +21,7 @@ export class TasksService {
     private taskAccess: TaskAccessHelper,
     @Inject(forwardRef(() => TaskSchedulerService))
     private taskScheduler: TaskSchedulerService,
-  ) {}
+  ) { }
 
   async create(
     todoListId: number,
@@ -116,13 +116,13 @@ export class TasksService {
 
     // Reset completionCount if task has weekly reminder (specificDayOfWeek)
     // completionCount should only be tracked for daily tasks, not weekly ones
-    const finalSpecificDayOfWeek = updateTaskDto.specificDayOfWeek !== undefined 
-      ? updateTaskDto.specificDayOfWeek 
+    const finalSpecificDayOfWeek = updateTaskDto.specificDayOfWeek !== undefined
+      ? updateTaskDto.specificDayOfWeek
       : existingTask.specificDayOfWeek;
-    
-    const shouldResetCompletionCount = finalSpecificDayOfWeek !== null && 
-                                      finalSpecificDayOfWeek !== undefined &&
-                                      existingTask.completionCount > 0;
+
+    const shouldResetCompletionCount = finalSpecificDayOfWeek !== null &&
+      finalSpecificDayOfWeek !== undefined &&
+      existingTask.completionCount > 0;
 
     const updated = await this.prisma.task.update({
       where: { id },

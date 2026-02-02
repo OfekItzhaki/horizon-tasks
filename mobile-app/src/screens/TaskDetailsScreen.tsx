@@ -624,7 +624,7 @@ export default function TaskDetailsScreen() {
   // Sync editReminders with alarm states when they change (for edit mode sync)
   useEffect(() => {
     if (Object.keys(reminderAlarmStates).length > 0) {
-      setEditReminders(prev => 
+      setEditReminders(prev =>
         prev.map(r => ({
           ...r,
           hasAlarm: reminderAlarmStates[r.id] !== undefined ? reminderAlarmStates[r.id] : r.hasAlarm,
@@ -656,20 +656,14 @@ export default function TaskDetailsScreen() {
       const everyDayReminders = convertedReminders.filter(r => r.timeframe === ReminderTimeframe.EVERY_DAY);
       setDisplayEveryDayReminders(everyDayReminders);
 
-      const alarmStates = await ReminderAlarmsStorage.getAlarmsForTask(taskId);
-      setReminderAlarmStates(alarmStates || {});
-
-      const savedTimes = await ReminderTimesStorage.getTimesForTask(taskId);
-
-      if (alarmStates || savedTimes) {
-        convertedReminders = convertedReminders.map(r => ({
-          ...r,
-          hasAlarm: alarmStates?.[r.id] !== undefined ? alarmStates[r.id] : r.hasAlarm,
-          time: savedTimes?.[r.id] || r.time || '09:00',
-        }));
-      }
-
       setEditReminders(convertedReminders);
+
+      // Update local alarm states for UI toggling consistency
+      const alarmStates: Record<string, boolean> = {};
+      convertedReminders.forEach(r => {
+        alarmStates[r.id] = r.hasAlarm || false;
+      });
+      setReminderAlarmStates(alarmStates);
     } catch (error: any) {
       // Silently ignore auth errors - the navigation will handle redirect to login
       if (!isAuthError(error)) {
@@ -712,26 +706,28 @@ export default function TaskDetailsScreen() {
       // Use existing task due date for reminder conversion if no new due date is being set
       // This ensures reminders that reference due date are properly converted
       const dueDateForConversion = dueDateStr || (task?.dueDate || undefined);
-      
+
       // Convert reminders to backend format
       const reminderData = convertRemindersToBackend(editReminders, dueDateForConversion);
-      
+
       // Always set reminderDaysBefore based on conversion result
       // convertRemindersToBackend returns empty array if no valid reminders or no due date
       updateData.reminderDaysBefore = reminderData.reminderDaysBefore || [];
-      
+
       // Always set specificDayOfWeek (weekly reminders don't require due date)
       // Only set to null if we explicitly want to clear it (when undefined means "don't change")
       // But since we're always sending the full update, we should set it based on conversion result
       if (reminderData.specificDayOfWeek !== undefined) {
         updateData.specificDayOfWeek = reminderData.specificDayOfWeek;
       } else {
-        // If no weekly reminder in conversion result, set to null to clear any existing one
         updateData.specificDayOfWeek = null;
       }
 
+      // Always set reminderConfig to preserve alarm states, locations, etc.
+      updateData.reminderConfig = reminderData.reminderConfig || null;
+
       const updatedTask = await tasksService.update(taskId, updateData);
-      
+
       // Store reminder times for all reminders (backend doesn't store times)
       // Use normalized IDs that will match after reload from backend
       const reminderTimes: Record<string, string> = {};
@@ -750,15 +746,15 @@ export default function TaskDetailsScreen() {
           reminderTimes[normalizedId] = reminder.time;
         }
       });
-      
+
       if (Object.keys(reminderTimes).length > 0) {
         await ReminderTimesStorage.setTimesForTask(taskId, reminderTimes);
       } else {
         await ReminderTimesStorage.removeTimesForTask(taskId);
       }
-      
+
       setIsEditing(false);
-      
+
       // Update scheduled notifications (include all reminders)
       if (editReminders.length > 0) {
         await scheduleTaskReminders(
@@ -771,7 +767,7 @@ export default function TaskDetailsScreen() {
         // Cancel all notifications if no reminders
         await cancelAllTaskNotifications(taskId);
       }
-      
+
       loadTaskData();
       // Success feedback - UI update is visible, no alert needed
     } catch (error: any) {
@@ -801,7 +797,7 @@ export default function TaskDetailsScreen() {
 
     const currentCompleted = Boolean(task.completed);
     const newCompleted = !currentCompleted;
-    
+
     // Optimistic update - update UI immediately
     setTask(prev => prev ? { ...prev, completed: newCompleted } : prev);
 
@@ -834,10 +830,10 @@ export default function TaskDetailsScreen() {
   const handleToggleStep = async (step: Step) => {
     const currentCompleted = Boolean(step.completed);
     const newCompleted = !currentCompleted;
-    
+
     // Optimistic update - update UI immediately
-    setSteps(prevSteps => 
-      prevSteps.map(s => 
+    setSteps(prevSteps =>
+      prevSteps.map(s =>
         s.id === step.id ? { ...s, completed: newCompleted } : s
       )
     );
@@ -847,8 +843,8 @@ export default function TaskDetailsScreen() {
       // No need to reload - optimistic update already applied
     } catch (error: any) {
       // Revert on error
-      setSteps(prevSteps => 
-        prevSteps.map(s => 
+      setSteps(prevSteps =>
+        prevSteps.map(s =>
           s.id === step.id ? { ...s, completed: currentCompleted } : s
         )
       );
@@ -870,19 +866,21 @@ export default function TaskDetailsScreen() {
 
     try {
       // Get current alarm state from storage
-      const currentAlarmState = reminderAlarmStates[reminderId] !== undefined 
-        ? reminderAlarmStates[reminderId] 
+      const currentAlarmState = reminderAlarmStates[reminderId] !== undefined
+        ? reminderAlarmStates[reminderId]
         : false;
       const newAlarmState = !currentAlarmState;
-
-      // Save new alarm state to storage
-      await ReminderAlarmsStorage.setAlarmForReminder(taskId, reminderId, newAlarmState);
 
       // Update local state immediately for instant visual feedback
       setReminderAlarmStates(prev => ({
         ...prev,
         [reminderId]: newAlarmState,
       }));
+
+      // Update the editReminders list as well, so if user clicks "Save" it persists
+      setEditReminders(prev => prev.map(r =>
+        r.id === reminderId ? { ...r, hasAlarm: newAlarmState } : r
+      ));
 
       // Get all reminders to update notifications
       const backendReminders = convertBackendToReminders(
@@ -911,7 +909,23 @@ export default function TaskDetailsScreen() {
         updatedReminders,
         task.dueDate || null,
       );
-      
+
+      // PERSIST TO BACKEND
+      const reminderData = convertRemindersToBackend(updatedReminders, task.dueDate || undefined);
+      await tasksService.update(taskId, {
+        reminderConfig: reminderData.reminderConfig || null,
+        reminderDaysBefore: reminderData.reminderDaysBefore || [],
+        specificDayOfWeek: reminderData.specificDayOfWeek !== undefined ? reminderData.specificDayOfWeek : null,
+      });
+
+      // Update the main task state to keep everything in sync
+      setTask(prev => prev ? {
+        ...prev,
+        reminderConfig: reminderData.reminderConfig || null,
+        reminderDaysBefore: reminderData.reminderDaysBefore || [],
+        specificDayOfWeek: reminderData.specificDayOfWeek !== undefined ? reminderData.specificDayOfWeek : null
+      } : prev);
+
       // No need to reload - state is already updated for immediate visual feedback
     } catch (error: any) {
       handleApiError(error, 'Unable to update reminder alarm. Please try again.');
@@ -964,11 +978,11 @@ export default function TaskDetailsScreen() {
   }
 
   const isCompleted = Boolean(task.completed);
-  
+
   // Check if task has repeating reminders (based on task properties, not list type)
   // A task is repeating if it has weekly reminders (specificDayOfWeek) or daily reminders (client-side)
   const isRepeatingTask = checkIsRepeatingTask(task, displayEveryDayReminders);
-  
+
   // Prepare display reminders
   const displayReminders = !isEditing ? (() => {
     const raw = convertBackendToReminders(

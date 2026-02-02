@@ -126,7 +126,7 @@ const ReminderConfigComponent = memo(function ReminderConfigComponent({ reminder
           onClick={addReminder}
           className="glass-button text-sm font-medium"
         >
-          + {t('reminders.add', { defaultValue: 'Add' })}
+          + {t('reminders.addBtn', 'Add Reminder')}
         </button>
       </div>
 

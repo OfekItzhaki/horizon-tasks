@@ -13,26 +13,7 @@ export function convertBackendToReminders(
 ): ReminderConfig[] {
   const reminders: ReminderConfig[] = [];
 
-  if (reminderDaysBefore?.length && dueDate) {
-    reminderDaysBefore.forEach((days) => {
-      reminders.push({
-        id: `days-before-${days}`,
-        timeframe: ReminderTimeframe.SPECIFIC_DATE,
-        time: '09:00',
-        daysBefore: days,
-      });
-    });
-  }
-
-  if (specificDayOfWeek != null && specificDayOfWeek >= 0 && specificDayOfWeek <= 6) {
-    reminders.push({
-      id: `day-of-week-${specificDayOfWeek}`,
-      timeframe: ReminderTimeframe.EVERY_WEEK,
-      time: '09:00',
-      dayOfWeek: specificDayOfWeek,
-    });
-  }
-
+  // 1. Process reminderConfig first (it has the most data: hasAlarm, location, etc.)
   if (reminderConfig != null) {
     let parsed: unknown = reminderConfig;
     if (typeof reminderConfig === 'string') {
@@ -67,6 +48,37 @@ export function convertBackendToReminders(
     }
   }
 
+  // 2. Process legacy fields, but avoid duplicates if they were already in reminderConfig
+  if (reminderDaysBefore?.length && dueDate) {
+    reminderDaysBefore.forEach((days) => {
+      const exists = reminders.some(
+        (r) => r.timeframe === ReminderTimeframe.SPECIFIC_DATE && r.daysBefore === days
+      );
+      if (!exists) {
+        reminders.push({
+          id: `days-before-${days}`,
+          timeframe: ReminderTimeframe.SPECIFIC_DATE,
+          time: '09:00',
+          daysBefore: days,
+        });
+      }
+    });
+  }
+
+  if (specificDayOfWeek != null && specificDayOfWeek >= 0 && specificDayOfWeek <= 6) {
+    const exists = reminders.some(
+      (r) => r.timeframe === ReminderTimeframe.EVERY_WEEK && r.dayOfWeek === specificDayOfWeek
+    );
+    if (!exists) {
+      reminders.push({
+        id: `day-of-week-${specificDayOfWeek}`,
+        timeframe: ReminderTimeframe.EVERY_WEEK,
+        time: '09:00',
+        dayOfWeek: specificDayOfWeek,
+      });
+    }
+  }
+
   return reminders;
 }
 
@@ -76,28 +88,12 @@ export function convertRemindersToBackend(
 ): { reminderDaysBefore?: number[]; specificDayOfWeek?: number | null; reminderConfig?: ReminderConfig[] | null } {
   const daysBefore: number[] = [];
   let dayOfWeek: number | undefined;
-  const configs: ReminderConfig[] = [];
+
+  // All reminders now stay in config to preserve hasAlarm, location, etc.
+  const configs: ReminderConfig[] = reminders;
 
   reminders.forEach((r) => {
-    if (r.timeframe === ReminderTimeframe.EVERY_DAY) {
-      configs.push(r);
-      return;
-    }
-    if (r.timeframe === ReminderTimeframe.SPECIFIC_DATE && r.customDate) {
-      configs.push(r);
-      return;
-    }
-    if (r.timeframe === ReminderTimeframe.SPECIFIC_DATE && r.specificDate) {
-      configs.push(r);
-      return;
-    }
-    if (
-      r.timeframe === ReminderTimeframe.EVERY_MONTH ||
-      r.timeframe === ReminderTimeframe.EVERY_YEAR
-    ) {
-      configs.push(r);
-      return;
-    }
+    // Keep syncing to legacy fields for backend filtering visibility
     if (r.daysBefore != null && r.daysBefore > 0 && dueDate) {
       daysBefore.push(r.daysBefore);
     }
