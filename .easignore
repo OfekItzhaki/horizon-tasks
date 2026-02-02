@@ -1,5 +1,19 @@
+# Unrelated Projects
+todo-backend/
+web-app/
+instructions/
+
+# Version Control
+.git/
+
+# Dependencies and Build Artifacts
+**/node_modules/
+**/dist/
+**/build/
+**/web-build/
+**/.expo/
+.env
+
+# Mobile App Native Directories (generated on build server)
 mobile-app/android/
 mobile-app/ios/
-mobile-app/node_modules/
-**/node_modules/
-.git
