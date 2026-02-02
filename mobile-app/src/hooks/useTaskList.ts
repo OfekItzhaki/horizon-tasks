@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { tasksService } from '../services/tasks.service';
 import { Task } from '../types';
 import { handleApiError, isAuthError } from '../utils/errorHandler';
-import { normalizeTasks, filterTasksByQuery, sortTasks, SortOption } from '../utils/taskHelpers';
+import { normalizeTasks, filterTasksByQuery, sortTasks } from '../utils/taskHelpers';
+import type { SortOption } from '../utils/taskHelpers';
 
 export function useTaskList(listId: number) {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
