@@ -1,38 +1,41 @@
 # Render Blueprint - Infrastructure as Code
 # https://render.com/docs/blueprint-spec
-#
-# To use this file:
-# 1. Go to Render Dashboard > New > Blueprint
-# 2. Connect your GitHub repository
-# 3. Render will automatically configure the service
-#
-# OR manually create service and use these settings:
-# - Root Directory: todo-backend
-# - Build Command: npm ci && npx prisma generate && npm run build
-# - Start Command: npm run start:prod
 
 services:
+  # Backend API Service
   - type: web
     name: tasks-api
     runtime: node
-    region: oregon  # Change to your preferred region
-    plan: free  # free, starter, standard, etc.
+    region: oregon
+    plan: free
     rootDir: todo-backend
     buildCommand: NODE_ENV=development npm ci && npx prisma generate && npm run build
     startCommand: npm run start:prod
-    healthCheckPath: /api  # Swagger endpoint for health check
+    healthCheckPath: /api
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false  # ⚠️ Set manually in Render dashboard (contains secrets)
+        sync: false  # Set manually in Render dashboard
       - key: DIRECT_URL
-        sync: false  # ⚠️ Set manually in Render dashboard (for Prisma migrations)
+        sync: false  # Set manually in Render dashboard
       - key: JWT_SECRET
-        generateValue: true  # Auto-generate a secure value
+        generateValue: true
       - key: PORT
         value: 3000
 
-
-
-
+  # Frontend Web App Service
+  - type: web
+    name: tasks-web-app
+    runtime: static
+    region: oregon
+    plan: free
+    rootDir: web-app
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: tasks-api
+          type: web
+          property: url
