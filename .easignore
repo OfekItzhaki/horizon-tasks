@@ -1,0 +1,5 @@
+mobile-app/android/
+mobile-app/ios/
+mobile-app/node_modules/
+**/node_modules/
+.git
