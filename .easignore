@@ -1,0 +1,31 @@
+# Strict Exclusion for EAS Build
+# This prevents unrelated monorepo folders from crashing the tar extraction phase
+
+# Exclude unrelated project folders
+todo-backend/
+web-app/
+.github/
+.husky/
+.vscode/
+scripts/
+instructions/
+
+# Exclude build artifacts and dependencies (Global)
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+.expo/
+**/.expo/
+
+# Exclude native directories (Let EAS generate them)
+android/
+ios/
+mobile-app/android/
+mobile-app/ios/
+
+# Environment and logs
+.env*
+*.log
