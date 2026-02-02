@@ -93,215 +93,214 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { height: 'auto', paddingBottom: Platform.OS === 'ios' ? 44 : 28 }]}>
                         <View style={styles.dragHandle} />
-                        <View style={styles.modalHeader}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                                <View
+
+                        {/* Simplified Header with just close button */}
+                        <View style={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 12 }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 16 }}>
+                                <TouchableOpacity
+                                    onPress={() => setShowPicker(false)}
                                     style={{
                                         width: 32,
                                         height: 32,
-                                        borderRadius: 8,
-                                        backgroundColor: '#6366f1' + '15',
+                                        borderRadius: 16,
+                                        backgroundColor: '#f1f5f9',
                                         justifyContent: 'center',
                                         alignItems: 'center',
                                     }}
+                                    activeOpacity={0.7}
                                 >
-                                    <Ionicons name="time-outline" size={18} color="#6366f1" />
-                                </View>
-                                <Text style={styles.modalTitle}>Select Time</Text>
+                                    <Ionicons name="close" size={20} color="#64748b" />
+                                </TouchableOpacity>
                             </View>
-                            <TouchableOpacity
-                                style={styles.closeButton}
-                                onPress={() => setShowPicker(false)}
-                            >
-                                <Ionicons name="close" size={24} color="#64748b" />
-                            </TouchableOpacity>
-                        </View>
 
-                        <View style={{ padding: 24, paddingTop: 16 }}>
-                            {/* Current Time Display */}
-                            <View
-                                style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    marginBottom: 24,
-                                    padding: 20,
-                                    backgroundColor: '#f8fafc',
-                                    borderRadius: 16,
-                                    borderWidth: 2,
-                                    borderColor: '#e2e8f0',
-                                }}
-                            >
+                            {/* Hero Time Display */}
+                            <View style={{ alignItems: 'center', marginBottom: 20 }}>
                                 <Text
                                     style={{
-                                        fontSize: 48,
+                                        fontSize: 14,
+                                        fontWeight: '600',
+                                        color: '#94a3b8',
+                                        marginBottom: 8,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: 1.5,
+                                    }}
+                                >
+                                    Selected Time
+                                </Text>
+                                <Text
+                                    style={{
+                                        fontSize: 56,
                                         fontWeight: '800',
                                         color: '#6366f1',
                                         fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-                                        letterSpacing: 2,
+                                        letterSpacing: 4,
                                     }}
                                 >
                                     {hours}:{minutes}
                                 </Text>
                             </View>
+                        </View>
 
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-                                {/* Hours Picker */}
-                                <View style={{ flex: 1 }}>
-                                    <Text
-                                        style={{
-                                            fontSize: 12,
-                                            fontWeight: '800',
-                                            color: '#64748b',
-                                            marginBottom: 12,
-                                            textAlign: 'center',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: 1,
-                                        }}
-                                    >
-                                        Hour
-                                    </Text>
-                                    <View
-                                        style={{
-                                            height: 240,
-                                            borderWidth: 2,
-                                            borderColor: '#e2e8f0',
-                                            borderRadius: 16,
-                                            backgroundColor: '#fafafa',
-                                            overflow: 'hidden',
-                                        }}
-                                    >
-                                        <ScrollView
-                                            ref={hourScrollRef}
-                                            showsVerticalScrollIndicator={false}
-                                            contentContainerStyle={{ paddingVertical: 96 }}
-                                        >
-                                            {Array.from({ length: 24 }).map((_, i) => {
-                                                const hour = String(i).padStart(2, '0');
-                                                const isSelected = hours === hour;
-                                                return (
-                                                    <TouchableOpacity
-                                                        key={i}
-                                                        style={{
-                                                            height: 48,
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            backgroundColor: isSelected ? '#6366f1' : 'transparent',
-                                                            marginHorizontal: 8,
-                                                            marginVertical: 2,
-                                                            borderRadius: 12,
-                                                        }}
-                                                        onPress={() => handleHourChange(hour)}
-                                                        activeOpacity={0.7}
-                                                    >
-                                                        <Text
-                                                            style={{
-                                                                fontSize: 24,
-                                                                fontWeight: isSelected ? '800' : '600',
-                                                                color: isSelected ? '#fff' : '#64748b',
-                                                                fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-                                                            }}
-                                                        >
-                                                            {hour}
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                );
-                                            })}
-                                        </ScrollView>
-                                    </View>
-                                </View>
+                        <View style={{ padding: 24, paddingTop: 8 }}>
+                        </View>
 
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+                            {/* Hours Picker */}
+                            <View style={{ flex: 1 }}>
                                 <Text
                                     style={{
-                                        fontSize: 32,
-                                        fontWeight: '700',
-                                        color: '#cbd5e1',
-                                        paddingTop: 36,
+                                        fontSize: 12,
+                                        fontWeight: '800',
+                                        color: '#64748b',
+                                        marginBottom: 12,
+                                        textAlign: 'center',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: 1,
                                     }}
                                 >
-                                    :
+                                    Hour
                                 </Text>
-
-                                {/* Minutes Picker */}
-                                <View style={{ flex: 1 }}>
-                                    <Text
-                                        style={{
-                                            fontSize: 12,
-                                            fontWeight: '800',
-                                            color: '#64748b',
-                                            marginBottom: 12,
-                                            textAlign: 'center',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: 1,
-                                        }}
+                                <View
+                                    style={{
+                                        height: 240,
+                                        borderWidth: 2,
+                                        borderColor: '#e2e8f0',
+                                        borderRadius: 16,
+                                        backgroundColor: '#fafafa',
+                                        overflow: 'hidden',
+                                    }}
+                                >
+                                    <ScrollView
+                                        ref={hourScrollRef}
+                                        showsVerticalScrollIndicator={false}
+                                        contentContainerStyle={{ paddingVertical: 96 }}
                                     >
-                                        Minute
-                                    </Text>
-                                    <View
-                                        style={{
-                                            height: 240,
-                                            borderWidth: 2,
-                                            borderColor: '#e2e8f0',
-                                            borderRadius: 16,
-                                            backgroundColor: '#fafafa',
-                                            overflow: 'hidden',
-                                        }}
-                                    >
-                                        <ScrollView
-                                            ref={minuteScrollRef}
-                                            showsVerticalScrollIndicator={false}
-                                            contentContainerStyle={{ paddingVertical: 96 }}
-                                        >
-                                            {Array.from({ length: 60 }).map((_, i) => {
-                                                const minute = String(i).padStart(2, '0');
-                                                const isSelected = minutes === minute;
-                                                return (
-                                                    <TouchableOpacity
-                                                        key={i}
+                                        {Array.from({ length: 24 }).map((_, i) => {
+                                            const hour = String(i).padStart(2, '0');
+                                            const isSelected = hours === hour;
+                                            return (
+                                                <TouchableOpacity
+                                                    key={i}
+                                                    style={{
+                                                        height: 48,
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: isSelected ? '#6366f1' : 'transparent',
+                                                        marginHorizontal: 8,
+                                                        marginVertical: 2,
+                                                        borderRadius: 12,
+                                                    }}
+                                                    onPress={() => handleHourChange(hour)}
+                                                    activeOpacity={0.7}
+                                                >
+                                                    <Text
                                                         style={{
-                                                            height: 48,
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            backgroundColor: isSelected ? '#6366f1' : 'transparent',
-                                                            marginHorizontal: 8,
-                                                            marginVertical: 2,
-                                                            borderRadius: 12,
+                                                            fontSize: 24,
+                                                            fontWeight: isSelected ? '800' : '600',
+                                                            color: isSelected ? '#fff' : '#64748b',
+                                                            fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
                                                         }}
-                                                        onPress={() => handleMinuteChange(minute)}
-                                                        activeOpacity={0.7}
                                                     >
-                                                        <Text
-                                                            style={{
-                                                                fontSize: 24,
-                                                                fontWeight: isSelected ? '800' : '600',
-                                                                color: isSelected ? '#fff' : '#64748b',
-                                                                fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-                                                            }}
-                                                        >
-                                                            {minute}
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                );
-                                            })}
-                                        </ScrollView>
-                                    </View>
+                                                        {hour}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            );
+                                        })}
+                                    </ScrollView>
                                 </View>
                             </View>
 
-                            <TouchableOpacity
-                                style={[
-                                    styles.modalButton,
-                                    styles.saveButton,
-                                    { marginTop: 24 },
-                                ]}
-                                onPress={() => setShowPicker(false)}
+                            <Text
+                                style={{
+                                    fontSize: 32,
+                                    fontWeight: '700',
+                                    color: '#cbd5e1',
+                                    paddingTop: 36,
+                                }}
                             >
-                                <Text style={styles.saveButtonText}>Done</Text>
-                            </TouchableOpacity>
+                                :
+                            </Text>
+
+                            {/* Minutes Picker */}
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={{
+                                        fontSize: 12,
+                                        fontWeight: '800',
+                                        color: '#64748b',
+                                        marginBottom: 12,
+                                        textAlign: 'center',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: 1,
+                                    }}
+                                >
+                                    Minute
+                                </Text>
+                                <View
+                                    style={{
+                                        height: 240,
+                                        borderWidth: 2,
+                                        borderColor: '#e2e8f0',
+                                        borderRadius: 16,
+                                        backgroundColor: '#fafafa',
+                                        overflow: 'hidden',
+                                    }}
+                                >
+                                    <ScrollView
+                                        ref={minuteScrollRef}
+                                        showsVerticalScrollIndicator={false}
+                                        contentContainerStyle={{ paddingVertical: 96 }}
+                                    >
+                                        {Array.from({ length: 60 }).map((_, i) => {
+                                            const minute = String(i).padStart(2, '0');
+                                            const isSelected = minutes === minute;
+                                            return (
+                                                <TouchableOpacity
+                                                    key={i}
+                                                    style={{
+                                                        height: 48,
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: isSelected ? '#6366f1' : 'transparent',
+                                                        marginHorizontal: 8,
+                                                        marginVertical: 2,
+                                                        borderRadius: 12,
+                                                    }}
+                                                    onPress={() => handleMinuteChange(minute)}
+                                                    activeOpacity={0.7}
+                                                >
+                                                    <Text
+                                                        style={{
+                                                            fontSize: 24,
+                                                            fontWeight: isSelected ? '800' : '600',
+                                                            color: isSelected ? '#fff' : '#64748b',
+                                                            fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+                                                        }}
+                                                    >
+                                                        {minute}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            );
+                                        })}
+                                    </ScrollView>
+                                </View>
+                            </View>
                         </View>
+
+                        <TouchableOpacity
+                            style={[
+                                styles.modalButton,
+                                styles.saveButton,
+                                { marginTop: 24 },
+                            ]}
+                            onPress={() => setShowPicker(false)}
+                        >
+                            <Text style={styles.saveButtonText}>Done</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
-            </Modal>
         </View>
+            </Modal >
+        </View >
     );
 }
