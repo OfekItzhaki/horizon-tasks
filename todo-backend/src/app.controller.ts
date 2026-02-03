@@ -113,7 +113,7 @@ class AppController {
 
               <div class="links">
                   <a href="https://tasks.ofeklabs.dev">Go to Web App</a>
-                  <a href="/api">Documentation</a>
+                  ${process.env.NODE_ENV !== 'production' ? '<a href="/api">Documentation</a>' : ''}
               </div>
           </div>
           <div class="footer">
