@@ -11,7 +11,7 @@ services:
     rootDir: todo-backend
     buildCommand: NODE_ENV=development npm ci && npx prisma generate && npm run build
     startCommand: npm run start:prod
-    healthCheckPath: /api
+    healthCheckPath: /api/v1/healthz
     envVars:
       - key: NODE_ENV
         value: production
