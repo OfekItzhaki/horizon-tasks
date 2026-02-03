@@ -31,9 +31,8 @@ const getApiBaseUrl = (): string => {
     }
   }
 
-  // Ensure /api/v1 prefix is present if it's a prod/render/custom URL
-  const isProdUrl = url.includes('onrender.com') || url.includes('ofeklabs.dev');
-  if (isProdUrl && !url.includes('/api/v1')) {
+  // Ensure /api/v1 prefix is present for ALL environments, including localhost
+  if (!url.includes('/api/v1')) {
     return `${url.replace(/\/$/, '')}/api/v1`;
   }
 

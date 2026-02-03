@@ -1,10 +1,11 @@
 export default {
   nav: {
     lists: 'רשימות',
-    analysis: 'ניתוח',
+    analysis: 'אנליטיקה',
     profile: 'פרופיל',
     logout: 'התנתקות',
     language: 'שפה',
+    analytics: 'אנליטיקה',
     theme: {
       light: 'בהיר',
       dark: 'כהה',
@@ -36,6 +37,18 @@ export default {
     showPassword: 'הצג סיסמה',
     hidePassword: 'הסתר סיסמה',
     failed: 'ההתחברות נכשלה. נסה שוב.',
+    notVerified: 'האימייל שלך עדיין לא מאומת.',
+    resendVerification: 'שלח שוב קישור אימות',
+    verificationResent: 'אימייל אימות נשלח בהצלחה!',
+    verificationFailed: 'שליחת אימייל אימות נכשלה.',
+  },
+  auth: {
+    verifyEmail: {
+      title: 'מאמת אימייל',
+      success: 'האימייל אומת בהצלחה!',
+      failed: 'האימות נכשל. ייתכן שהקישור פג תוקף.',
+      backToLogin: 'חזרה להתחברות',
+    },
   },
   lists: {
     title: 'רשימות',
@@ -108,6 +121,14 @@ export default {
       descriptionLabel: 'תיאור',
       descriptionPlaceholder: 'לדוגמה: להתקשר לספק',
     },
+    reminders: {
+      title: 'תזכורות',
+      add: 'הוסף תזכורת',
+      none: 'אין תזכורות',
+      everyDay: 'בכל יום',
+      daysBefore: '{{days}} ימים לפני',
+      atTime: 'בשעה {{time}}',
+    },
   },
   profile: {
     title: 'פרופיל',
@@ -121,8 +142,13 @@ export default {
     about: 'אודות',
     version: 'גרסה',
     credits: 'קרדיטים',
-    creditsValue: 'צוות Horizon Tasks',
+    creditsValue: 'OfekLabs',
     sourceCode: 'קוד מקור',
     openRepo: 'פתח מאגר',
+    proAccount: 'חשבון Pro',
+    profilePicture: 'תמונת פרופיל',
+  },
+  footer: {
+    allRightsReserved: 'כל הזכויות שמורות.',
   },
 } as const;

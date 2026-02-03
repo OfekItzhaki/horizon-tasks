@@ -52,6 +52,30 @@ export class TasksService {
   }
 
   /**
+   * Reorder tasks (updates the order property)
+   */
+  async reorderTasks(tasks: { id: number; order: number }[]): Promise<void> {
+    // Sequentially update for simplicity and to avoid race conditions on order
+    for (const task of tasks) {
+      await this.update(task.id, { order: task.order });
+    }
+  }
+
+  /**
+   * Bulk update tasks
+   */
+  async bulkUpdate(ids: number[], data: UpdateTaskDto): Promise<void> {
+    await Promise.all(ids.map((id) => this.update(id, data)));
+  }
+
+  /**
+   * Bulk delete tasks
+   */
+  async bulkDelete(ids: number[]): Promise<void> {
+    await Promise.all(ids.map((id) => this.delete(id)));
+  }
+
+  /**
    * Get user's tasks (optionally filtered by list)
    */
   async getMyTasks(todoListId?: number): Promise<Task[]> {

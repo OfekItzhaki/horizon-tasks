@@ -1,10 +1,11 @@
 export default {
   nav: {
     lists: 'Lists',
-    analysis: 'Analysis',
+    analysis: 'Analytics',
     profile: 'Profile',
     logout: 'Logout',
     language: 'Language',
+    analytics: 'Analytics',
     theme: {
       light: 'Light',
       dark: 'Dark',
@@ -36,6 +37,18 @@ export default {
     showPassword: 'Show password',
     hidePassword: 'Hide password',
     failed: 'Login failed. Please try again.',
+    notVerified: 'Your email is not verified.',
+    resendVerification: 'Resend verification link',
+    verificationResent: 'Verification email sent!',
+    verificationFailed: 'Failed to send verification email.',
+  },
+  auth: {
+    verifyEmail: {
+      title: 'Verifying Email',
+      success: 'Email verified successfully!',
+      failed: 'Verification failed. The link may be expired.',
+      backToLogin: 'Back to Login',
+    },
   },
   lists: {
     title: 'Todo Lists',
@@ -108,6 +121,14 @@ export default {
       descriptionLabel: 'Description',
       descriptionPlaceholder: 'e.g. Call the supplier',
     },
+    reminders: {
+      title: 'Reminders',
+      add: 'Add Reminder',
+      none: 'No reminders set',
+      everyDay: 'Every day',
+      daysBefore: '{{days}} days before',
+      atTime: 'at {{time}}',
+    },
   },
   profile: {
     title: 'Profile',
@@ -121,9 +142,14 @@ export default {
     about: 'About',
     version: 'Version',
     credits: 'Credits',
-    creditsValue: 'Horizon Tasks team',
+    creditsValue: 'OfekLabs',
     sourceCode: 'Source code',
     openRepo: 'Open repo',
+    proAccount: 'Pro Account',
+    profilePicture: 'Profile Picture',
+  },
+  footer: {
+    allRightsReserved: 'All rights reserved.',
   },
 } as const;
 

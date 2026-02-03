@@ -25,6 +25,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (!user.emailVerified) {
+      this.logger.debug(
+        `Login failed: email not verified for userId=${user.id}`,
+      );
+      throw new UnauthorizedException('Email not verified');
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _passwordHash, ...safeUser } = user;
     return safeUser;

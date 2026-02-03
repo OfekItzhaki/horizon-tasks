@@ -17,7 +17,7 @@ class AppController {
       <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Horizon Tasks API | Horizon Labs</title>
+          <title>Horizon Tasks API | OfekLabs</title>
           <style>
               body {
                   margin: 0;
@@ -104,20 +104,20 @@ class AppController {
       <body>
           <div class="container">
               <h1>Horizon Tasks API</h1>
-              <p>The core engine powering your productivity. Premium task management services by Horizon Labs.</p>
+              <p>The core engine powering your productivity. Premium task management services by OfekLabs.</p>
               
               <div class="status">
                   <div class="pulse"></div>
                   Systems Operational
               </div>
-
+ 
               <div class="links">
                   <a href="https://tasks.ofeklabs.dev">Go to Web App</a>
                   ${process.env.NODE_ENV !== 'production' ? '<a href="/api">Documentation</a>' : ''}
               </div>
           </div>
           <div class="footer">
-              &copy; 2026 Horizon Labs. All rights reserved.
+              &copy; 2026 OfekLabs. All rights reserved.
           </div>
       </body>
       </html>

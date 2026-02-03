@@ -42,6 +42,18 @@ class TasksService {
   async permanentDeleteTask(id: number): Promise<Task> {
     return apiClient.delete<Task>(`/tasks/${id}/permanent`);
   }
+
+  async reorderTasks(tasks: { id: number; order: number }[]): Promise<void> {
+    return frontendTasksService.reorderTasks(tasks);
+  }
+
+  async bulkUpdate(ids: number[], data: UpdateTaskDto): Promise<void> {
+    return frontendTasksService.bulkUpdate(ids, data);
+  }
+
+  async bulkDelete(ids: number[]): Promise<void> {
+    return frontendTasksService.bulkDelete(ids);
+  }
 }
 
 export const tasksService = new TasksService();
