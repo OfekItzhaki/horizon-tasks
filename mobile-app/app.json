@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Tasks Management",
+    "name": "Horizon Tasks",
     "slug": "tasks-management",
     "scheme": "tasks-management",
     "version": "1.2.1",
-    "description": "Organize your life with Tasks Management - the intuitive to-do list app that helps you stay on top of your daily, weekly, monthly, and yearly tasks. Create custom lists, set reminders, track sub-tasks, and share lists with others. Available in English and Hebrew.",
+    "description": "Organize your life with Horizon Tasks by Horizon Labs - the intuitive to-do list app that helps you stay on top of your daily, weekly, monthly, and yearly tasks. Create custom lists, set reminders, track sub-tasks, and share lists with others. Available in English and Hebrew.",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

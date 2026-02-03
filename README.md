@@ -1,8 +1,8 @@
-# Tasks Management
+# Horizon Tasks
+> by **Horizon Labs** 🧪
 
-An application for creation and management of to-do-lists. To-do-lists out of the box: daily tasks, weekly tasks, monthly tasks, yearly tasks.
-
-## Features
+## Overview
+**Horizon Tasks** is a powerful, full-stack task management solution designed to help you organize your life with clarity and precision. Built with a modern tech stack, it seamlessly syncs across Web and Mobile.
 
 - **Lists & tasks** — Daily, weekly, monthly, yearly, and custom lists with tasks, steps, and due dates.
 - **Reminders** — Per-task reminders (specific date, every day/week/month/year, days before due). Optional **location** (e.g. address or place name) per reminder; shown in task view and in notification body on web and mobile.
