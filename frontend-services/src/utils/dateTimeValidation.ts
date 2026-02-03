@@ -95,7 +95,12 @@ export function validateDaysBefore(value: string): ValidationResult {
     const trimmed = value.trim();
     if (!trimmed) return { valid: true };
 
-    const n = parseInt(trimmed, 10);
+    // Check if it's a numeric string and an integer
+    if (!/^\d+$/.test(trimmed)) {
+        return { valid: false, error: 'Days before must be a non-negative integer.' };
+    }
+
+    const n = Number(trimmed);
     if (Number.isNaN(n) || !Number.isInteger(n) || n < 0) {
         return { valid: false, error: 'Days before must be a non-negative number (e.g. 0, 1, 7).' };
     }

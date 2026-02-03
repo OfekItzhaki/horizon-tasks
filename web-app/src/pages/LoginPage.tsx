@@ -44,7 +44,7 @@ export default function LoginPage() {
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
+            <div className="rounded-md bg-red-50 p-4" role="alert">
               <div className="text-sm text-red-800">{error}</div>
             </div>
           )}
@@ -86,7 +86,9 @@ export default function LoginPage() {
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
                   aria-label={
-                    showPassword ? t('login.hidePassword') : t('login.showPassword')
+                    showPassword
+                      ? t('login.hidePassword')
+                      : t('login.showPassword')
                   }
                 >
                   {showPassword ? (

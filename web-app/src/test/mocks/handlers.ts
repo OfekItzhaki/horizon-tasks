@@ -13,9 +13,21 @@ const mockUser = {
 
 export const handlers = [
   http.post(`${API_BASE}/auth/login`, async ({ request }) => {
-    const body = (await request.json()) as { email?: string; password?: string };
+    const body = (await request.json()) as {
+      email?: string;
+      password?: string;
+    };
+    if (body.email === 'invalid') {
+      return HttpResponse.json(
+        { message: 'Invalid email address', statusCode: 400 },
+        { status: 400 }
+      );
+    }
     if (body.email === 'fail@example.com') {
-      return HttpResponse.json({ message: 'Invalid credentials', statusCode: 401 }, { status: 401 });
+      return HttpResponse.json(
+        { message: 'Invalid credentials', statusCode: 401 },
+        { status: 401 }
+      );
     }
     return HttpResponse.json({
       accessToken: 'mock-jwt-token',
@@ -46,23 +58,26 @@ export const handlers = [
     });
   }),
 
-  http.post(`${API_BASE}/tasks/todo-list/:todoListId`, async ({ request, params }) => {
-    const body = (await request.json()) as { description?: string };
-    return HttpResponse.json({
-      id: 1,
-      description: body.description || 'New task',
-      todoListId: Number((params as { todoListId: string }).todoListId),
-      completed: false,
-      dueDate: null,
-      specificDayOfWeek: null,
-      reminderDaysBefore: [],
-      reminderConfig: null,
-      completedAt: null,
-      completionCount: 0,
-      originalListId: null,
-      deletedAt: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-  }),
+  http.post(
+    `${API_BASE}/tasks/todo-list/:todoListId`,
+    async ({ request, params }) => {
+      const body = (await request.json()) as { description?: string };
+      return HttpResponse.json({
+        id: 1,
+        description: body.description || 'New task',
+        todoListId: Number((params as { todoListId: string }).todoListId),
+        completed: false,
+        dueDate: null,
+        specificDayOfWeek: null,
+        reminderDaysBefore: [],
+        reminderConfig: null,
+        completedAt: null,
+        completionCount: 0,
+        originalListId: null,
+        deletedAt: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  ),
 ];

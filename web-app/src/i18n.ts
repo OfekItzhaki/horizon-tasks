@@ -7,7 +7,7 @@ import {
   supportedLanguages as sharedSupportedLanguages,
   isRtlLanguage,
   normalizeLanguage,
-} from '@tasks-management/frontend-services/i18n';
+} from '@tasks-management/frontend-services';
 
 export const supportedLanguages = sharedSupportedLanguages;
 
@@ -34,4 +34,3 @@ void i18n
 i18n.on('languageChanged', (lng) => applyDocumentDirection(lng));
 
 export default i18n;
-

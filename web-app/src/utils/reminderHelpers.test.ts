@@ -11,14 +11,24 @@ import {
 describe('reminderHelpers', () => {
   describe('convertBackendToReminders', () => {
     it('should return empty array when no reminder data provided', () => {
-      const result = convertBackendToReminders(undefined, null, null, undefined);
+      const result = convertBackendToReminders(
+        undefined,
+        null,
+        null,
+        undefined
+      );
       expect(result).toEqual([]);
     });
 
     it('should convert reminderDaysBefore array to ReminderConfig', () => {
       const dueDate = '2026-01-30T00:00:00.000Z';
-      const result = convertBackendToReminders([7, 1], null, dueDate, undefined);
-      
+      const result = convertBackendToReminders(
+        [7, 1],
+        null,
+        dueDate,
+        undefined
+      );
+
       expect(result).toHaveLength(2);
       expect(result[0]).toMatchObject({
         id: 'days-before-7',
@@ -41,7 +51,7 @@ describe('reminderHelpers', () => {
 
     it('should convert specificDayOfWeek to ReminderConfig', () => {
       const result = convertBackendToReminders(undefined, 1, null, undefined);
-      
+
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
         id: 'day-of-week-1',
@@ -67,8 +77,13 @@ describe('reminderHelpers', () => {
         },
       ];
 
-      const result = convertBackendToReminders(undefined, null, null, reminderConfig);
-      
+      const result = convertBackendToReminders(
+        undefined,
+        null,
+        null,
+        reminderConfig
+      );
+
       expect(result).toHaveLength(2);
       expect(result[0]).toMatchObject({
         id: 'test-1',
@@ -92,8 +107,13 @@ describe('reminderHelpers', () => {
         hasAlarm: false,
       };
 
-      const result = convertBackendToReminders(undefined, null, null, reminderConfig);
-      
+      const result = convertBackendToReminders(
+        undefined,
+        null,
+        null,
+        reminderConfig
+      );
+
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
         id: 'test-single',
@@ -112,8 +132,13 @@ describe('reminderHelpers', () => {
         },
       ]);
 
-      const result = convertBackendToReminders(undefined, null, null, reminderConfig);
-      
+      const result = convertBackendToReminders(
+        undefined,
+        null,
+        null,
+        reminderConfig
+      );
+
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
         id: 'test-json',
@@ -124,7 +149,12 @@ describe('reminderHelpers', () => {
 
     it('should handle invalid JSON string gracefully', () => {
       const invalidJson = '{ invalid json }';
-      const result = convertBackendToReminders(undefined, null, null, invalidJson);
+      const result = convertBackendToReminders(
+        undefined,
+        null,
+        null,
+        invalidJson
+      );
       expect(result).toEqual([]);
     });
 
@@ -136,8 +166,13 @@ describe('reminderHelpers', () => {
         },
       ];
 
-      const result = convertBackendToReminders(undefined, null, null, reminderConfig);
-      
+      const result = convertBackendToReminders(
+        undefined,
+        null,
+        null,
+        reminderConfig
+      );
+
       expect(result).toHaveLength(1);
       expect(result[0].id).toBeDefined();
       expect(result[0].id).toContain('reminder-');
@@ -154,18 +189,18 @@ describe('reminderHelpers', () => {
       ];
 
       const result = convertBackendToReminders([1], 1, dueDate, reminderConfig);
-      
+
       expect(result.length).toBeGreaterThanOrEqual(2);
-      expect(result.some(r => r.id === 'every-day')).toBe(true);
-      expect(result.some(r => r.id === 'days-before-1')).toBe(true);
-      expect(result.some(r => r.id === 'day-of-week-1')).toBe(true);
+      expect(result.some((r) => r.id === 'every-day')).toBe(true);
+      expect(result.some((r) => r.id === 'days-before-1')).toBe(true);
+      expect(result.some((r) => r.id === 'day-of-week-1')).toBe(true);
     });
   });
 
   describe('convertRemindersToBackend', () => {
     it('should return empty arrays and null when no reminders provided', () => {
       const result = convertRemindersToBackend([]);
-      
+
       expect(result).toEqual({
         reminderDaysBefore: [],
         specificDayOfWeek: null,
@@ -184,7 +219,7 @@ describe('reminderHelpers', () => {
       ];
 
       const result = convertRemindersToBackend(reminders);
-      
+
       expect(result.reminderConfig).toEqual(reminders);
       expect(result.reminderDaysBefore).toEqual([]);
       expect(result.specificDayOfWeek).toBeNull();
@@ -203,7 +238,7 @@ describe('reminderHelpers', () => {
       ];
 
       const result = convertRemindersToBackend(reminders);
-      
+
       expect(result.reminderConfig).toEqual(reminders);
       expect(result.reminderDaysBefore).toEqual([]);
       expect(result.specificDayOfWeek).toBeNull();
@@ -225,15 +260,15 @@ describe('reminderHelpers', () => {
       const backendFormat = convertRemindersToBackend(originalReminders);
       expect(backendFormat.reminderConfig).toBeDefined();
       expect(Array.isArray(backendFormat.reminderConfig)).toBe(true);
-      
+
       // Convert back from backend format
       const restored = convertBackendToReminders(
         undefined,
         null,
         null,
-        backendFormat.reminderConfig,
+        backendFormat.reminderConfig
       );
-      
+
       expect(restored).toHaveLength(1);
       expect(restored[0]).toMatchObject({
         timeframe: ReminderTimeframe.SPECIFIC_DATE,
@@ -255,7 +290,7 @@ describe('reminderHelpers', () => {
       ];
 
       const result = convertRemindersToBackend(reminders);
-      
+
       expect(result.reminderConfig).toEqual(reminders);
     });
 
@@ -269,7 +304,7 @@ describe('reminderHelpers', () => {
       ];
 
       const result = convertRemindersToBackend(reminders);
-      
+
       expect(result.reminderConfig).toEqual(reminders);
     });
 
@@ -283,7 +318,7 @@ describe('reminderHelpers', () => {
       ];
 
       const result = convertRemindersToBackend(reminders);
-      
+
       expect(result.reminderConfig).toEqual(reminders);
     });
 
@@ -305,9 +340,9 @@ describe('reminderHelpers', () => {
       ];
 
       const result = convertRemindersToBackend(reminders, dueDate);
-      
+
       expect(result.reminderDaysBefore).toEqual([7, 1]);
-      expect(result.reminderConfig).toBeNull();
+      expect(result.reminderConfig).toHaveLength(2);
     });
 
     it('should not include daysBefore reminders when dueDate is missing', () => {
@@ -321,7 +356,7 @@ describe('reminderHelpers', () => {
       ];
 
       const result = convertRemindersToBackend(reminders);
-      
+
       expect(result.reminderDaysBefore).toEqual([]);
     });
 
@@ -346,7 +381,7 @@ describe('reminderHelpers', () => {
       ];
 
       const result = convertRemindersToBackend(reminders, dueDate);
-      
+
       expect(result.reminderDaysBefore).toEqual([7, 1]);
     });
 
@@ -361,9 +396,9 @@ describe('reminderHelpers', () => {
       ];
 
       const result = convertRemindersToBackend(reminders);
-      
+
       expect(result.specificDayOfWeek).toBe(1);
-      expect(result.reminderConfig).toBeNull();
+      expect(result.reminderConfig).toHaveLength(1);
     });
 
     it('should handle multiple reminder types together', () => {
@@ -396,10 +431,14 @@ describe('reminderHelpers', () => {
       ];
 
       const result = convertRemindersToBackend(reminders, dueDate);
-      
-      expect(result.reminderConfig).toHaveLength(2);
-      expect(result.reminderConfig?.some(r => r.id === 'every-day')).toBe(true);
-      expect(result.reminderConfig?.some(r => r.id === 'custom-date')).toBe(true);
+
+      expect(result.reminderConfig).toHaveLength(4);
+      expect(result.reminderConfig?.some((r) => r.id === 'every-day')).toBe(
+        true
+      );
+      expect(result.reminderConfig?.some((r) => r.id === 'custom-date')).toBe(
+        true
+      );
       expect(result.reminderDaysBefore).toEqual([7]);
       expect(result.specificDayOfWeek).toBe(2);
     });
@@ -418,7 +457,12 @@ describe('reminderHelpers', () => {
       expect(back.reminderConfig).toBeDefined();
       expect(Array.isArray(back.reminderConfig)).toBe(true);
       expect(back.reminderConfig![0].location).toBe('Office');
-      const restored = convertBackendToReminders(undefined, null, null, back.reminderConfig);
+      const restored = convertBackendToReminders(
+        undefined,
+        null,
+        null,
+        back.reminderConfig
+      );
       expect(restored).toHaveLength(1);
       expect(restored[0].location).toBe('Office');
     });
@@ -549,7 +593,10 @@ describe('reminderHelpers', () => {
         time: '09:00',
       };
 
-      const t = (key: string, options?: { defaultValue?: string; count?: number }) => {
+      const t = (
+        key: string,
+        options?: { defaultValue?: string; count?: number }
+      ) => {
         if (key === 'reminders.everyDay') return 'Jeden Tag';
         if (key === 'reminders.at') return 'um';
         return options?.defaultValue || key;
