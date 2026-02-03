@@ -1,17 +1,21 @@
 // Get API base URL - works in both Node.js and browser environments
 const getApiBaseUrl = (): string => {
-  // We use process.env as the universal bridge. 
-  // - Node/Jest: works natively
-  // - Expo: works natively
-  // - Vite: we polyfill this in vite.config.ts
+  let url = 'http://localhost:3000';
+
   if (typeof process !== 'undefined' && process.env) {
     const env = process.env;
-    if (env.EXPO_PUBLIC_API_URL) return env.EXPO_PUBLIC_API_URL;
-    if (env.API_BASE_URL) return env.API_BASE_URL;
-    if ((env as any).VITE_API_URL) return (env as any).VITE_API_URL;
+    if (env.EXPO_PUBLIC_API_URL) url = env.EXPO_PUBLIC_API_URL;
+    else if (env.API_BASE_URL) url = env.API_BASE_URL;
+    else if ((env as any).VITE_API_URL) url = (env as any).VITE_API_URL;
   }
 
-  return 'http://localhost:3000';
+  // Ensure /api/v1 prefix is present if it's a prod/render URL
+  // Backend API always requires it, and many users forget to add it to env vars
+  if (url.includes('onrender.com') && !url.includes('/api/v1')) {
+    return `${url.replace(/\/$/, '')}/api/v1`;
+  }
+
+  return url;
 };
 
 export const API_CONFIG = {
