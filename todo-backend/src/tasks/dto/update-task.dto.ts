@@ -68,10 +68,11 @@ export class UpdateTaskDto {
     example: [{ timeframe: 'EVERY_DAY', time: '09:00', hasAlarm: true }],
   })
   @IsOptional()
+  @ValidateIf((o: UpdateTaskDto) => o.reminderConfig !== null)
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ReminderConfigItemDto)
-  reminderConfig?: ReminderConfigItemDto[];
+  reminderConfig?: ReminderConfigItemDto[] | null;
 
   @ApiPropertyOptional({
     description: 'Whether the task is completed',

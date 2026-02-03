@@ -98,9 +98,5 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
-  },
-  "overrides": {
-    "glob": "^10.4.6",
-    "nodemailer": "^7.0.12"
   }
 }

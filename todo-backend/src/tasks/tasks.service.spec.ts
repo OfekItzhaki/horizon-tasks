@@ -4,6 +4,7 @@ import { TasksService } from './tasks.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListType } from '@prisma/client';
 import { TaskSchedulerService } from '../task-scheduler/task-scheduler.service';
+import { TaskAccessHelper } from './helpers/task-access.helper';
 
 describe('TasksService', () => {
   let service: TasksService;
@@ -37,6 +38,7 @@ describe('TasksService', () => {
           provide: TaskSchedulerService,
           useValue: mockTaskSchedulerService,
         },
+        TaskAccessHelper,
       ],
     }).compile();
 
