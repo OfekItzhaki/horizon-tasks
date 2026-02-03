@@ -456,7 +456,7 @@ export default function TasksPage() {
           to="/lists"
           className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-black uppercase tracking-widest text-xs transition-transform hover:-translate-x-1"
         >
-          {t('tasks.backToLists')}
+          {isRtl ? '→' : '←'} {t('tasks.backToLists')}
         </Link>
       </div>
 

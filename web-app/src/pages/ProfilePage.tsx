@@ -31,7 +31,6 @@ export default function ProfilePage() {
       setUploading(false);
     }
   };
-
   const handleResendVerification = async () => {
     if (!user?.email) return;
     try {
