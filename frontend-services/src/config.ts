@@ -9,9 +9,10 @@ const getApiBaseUrl = (): string => {
     else if ((env as any).VITE_API_URL) url = (env as any).VITE_API_URL;
   }
 
-  // Ensure /api/v1 prefix is present if it's a prod/render URL
+  // Ensure /api/v1 prefix is present if it's a prod/render/custom URL
   // Backend API always requires it, and many users forget to add it to env vars
-  if (url.includes('onrender.com') && !url.includes('/api/v1')) {
+  const isProdUrl = url.includes('onrender.com') || url.includes('ofeklabs.dev');
+  if (isProdUrl && !url.includes('/api/v1')) {
     return `${url.replace(/\/$/, '')}/api/v1`;
   }
 
