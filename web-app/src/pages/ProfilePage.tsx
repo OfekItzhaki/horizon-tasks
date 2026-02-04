@@ -5,9 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { BUILD_INFO } from '../utils/buildInfo';
 import {
   usersService,
-  authService,
   getAssetUrl,
   isRtlLanguage,
+  NotificationFrequency,
 } from '@tasks-management/frontend-services';
 import Skeleton from '../components/Skeleton';
 
@@ -16,7 +16,6 @@ export default function ProfilePage() {
   const { t, i18n } = useTranslation();
   const isRtl = isRtlLanguage(i18n.language);
   const [uploading, setUploading] = useState(false);
-  const [resendingVerify, setResendingVerify] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,17 +33,17 @@ export default function ProfilePage() {
       setUploading(false);
     }
   };
-  const handleResendVerification = async () => {
-    if (!user?.email) return;
+
+  const handleFrequencyChange = async (frequency: string) => {
+    if (!user) return;
     try {
-      setResendingVerify(true);
-      await authService.resendVerification(user.email);
-      alert(t('login.verificationResent'));
-    } catch (err) {
-      console.error('Failed to resend verification:', err);
-      alert(t('login.verificationFailed'));
-    } finally {
-      setResendingVerify(false);
+      const updatedUser = await usersService.update(user.id, {
+        notificationFrequency: frequency as NotificationFrequency,
+      });
+      setUser(updatedUser);
+    } catch (error) {
+      console.error('Failed to update notification frequency:', error);
+      alert('Failed to update notification frequency');
     }
   };
 
@@ -210,31 +209,29 @@ export default function ProfilePage() {
                 <p className="text-primary font-medium">{user.name || '—'}</p>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <label className="text-xs font-semibold uppercase tracking-wider text-tertiary">
-                  {t('profile.emailVerified')}
+                  Task Updates Frequency
                 </label>
-                <div className="flex flex-col items-start gap-2">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`w-2 h-2 rounded-full ${user.emailVerified ? 'bg-accent-success' : 'bg-accent-warning animate-pulse'}`}
-                    ></span>
-                    <p className="text-primary font-medium">
-                      {user.emailVerified ? t('profile.yes') : t('profile.no')}
-                    </p>
-                  </div>
-                  {!user.emailVerified && (
+                <div className="flex gap-4">
+                  {(['NONE', 'DAILY', 'WEEKLY'] as const).map((freq) => (
                     <button
-                      onClick={handleResendVerification}
-                      disabled={resendingVerify}
-                      className="text-xs font-semibold text-accent hover:underline uppercase tracking-wide disabled:opacity-50"
+                      key={freq}
+                      onClick={() => handleFrequencyChange(freq)}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                        user?.notificationFrequency === freq
+                          ? 'bg-accent text-white shadow-lg'
+                          : 'bg-hover text-secondary hover:bg-hover/80'
+                      }`}
                     >
-                      {resendingVerify
-                        ? t('common.loading')
-                        : t('login.resendVerification')}
+                      {freq.charAt(0) + freq.slice(1).toLowerCase()}
                     </button>
-                  )}
+                  ))}
                 </div>
+                <p className="text-xs text-tertiary">
+                  Choose how often you want to receive email updates about your
+                  tasks.
+                </p>
               </div>
 
               <div className="space-y-2">

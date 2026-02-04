@@ -11,6 +11,7 @@ export interface User {
   name: string | null;
   profilePicture: string | null;
   emailVerified: boolean;
+  notificationFrequency: NotificationFrequency;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -83,7 +84,7 @@ export interface Task {
   dueDate: string | null;
   reminderDaysBefore: number[];
   specificDayOfWeek: number | null;
-  reminderConfig?: any; // JSON field for storing reminder configurations
+  reminderConfig?: unknown; // JSON field for storing reminder configurations
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -96,7 +97,7 @@ export interface CreateTaskDto {
   dueDate?: string;
   specificDayOfWeek?: number;
   reminderDaysBefore?: number[];
-  reminderConfig?: any;
+  reminderConfig?: unknown;
   completed?: boolean;
 }
 
@@ -105,7 +106,7 @@ export interface UpdateTaskDto {
   dueDate?: string | null;
   specificDayOfWeek?: number | null;
   reminderDaysBefore?: number[];
-  reminderConfig?: any; // JSON field for storing reminder configurations
+  reminderConfig?: unknown; // JSON field for storing reminder configurations
   completed?: boolean;
   order?: number;
 }
