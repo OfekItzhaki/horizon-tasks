@@ -560,7 +560,7 @@ export default function TaskDetailsPage() {
                     e.preventDefault();
                     if (newStepDescription.trim())
                       createStepMutation.mutate({
-                        task,
+                        task: task as Task,
                         data: { description: newStepDescription.trim() },
                       });
                   }}
@@ -600,7 +600,7 @@ export default function TaskDetailsPage() {
                         checked={step.completed}
                         onChange={() =>
                           updateStepMutation.mutate({
-                            task,
+                            task: task as Task,
                             stepId: step.id,
                             data: { completed: !step.completed },
                           })
@@ -620,7 +620,7 @@ export default function TaskDetailsPage() {
                               stepDescriptionDraft !== step.description
                             ) {
                               updateStepMutation.mutate({
-                                task,
+                                task: task as Task,
                                 stepId: step.id,
                                 data: {
                                   description: stepDescriptionDraft.trim(),
@@ -645,7 +645,10 @@ export default function TaskDetailsPage() {
                     </div>
                     <button
                       onClick={() =>
-                        deleteStepMutation.mutate({ task, id: step.id })
+                        deleteStepMutation.mutate({
+                          task: task as Task,
+                          id: step.id,
+                        })
                       }
                       className="opacity-0 group-hover:opacity-100 p-2 text-accent-danger hover:bg-accent-danger/10 rounded-lg transition-all"
                     >
