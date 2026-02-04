@@ -9,22 +9,30 @@ datasource db {
 }
 
 model User {
-  id                      Int         @id @default(autoincrement())
-  createdAt               DateTime    @default(now())
-  updatedAt               DateTime    @updatedAt
-  email                   String      @unique @db.VarChar(255)
-  name                    String?     @db.VarChar(100)
-  passwordHash            String?     @db.VarChar(255)
+  id                      Int                    @id @default(autoincrement())
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  email                   String                 @unique @db.VarChar(255)
+  name                    String?                @db.VarChar(100)
+  passwordHash            String?                @db.VarChar(255)
   deletedAt               DateTime?
-  profilePicture          String?     @db.VarChar(500)
-  emailVerified           Boolean     @default(false)
-  emailVerificationToken  String?     @db.VarChar(255)
+  profilePicture          String?                @db.VarChar(500)
+  emailVerified           Boolean                @default(false)
+  emailVerificationOtp    String?                @db.VarChar(6)
   emailVerificationSentAt DateTime?
+  emailVerificationExpiresAt DateTime?
+  emailVerificationAttempts Int          @default(0)
+  notificationFrequency   NotificationFrequency @default(NONE)
   shares                  ListShare[]
   lists                   ToDoList[]
 
   @@index([email])
-  @@index([emailVerificationToken])
+}
+
+enum NotificationFrequency {
+  NONE
+  DAILY
+  WEEKLY
 }
 
 model ToDoList {

@@ -10,7 +10,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { User, Prisma, ListType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import * as crypto from 'crypto';
 
 type UserWithRelations = Prisma.UserGetPayload<{
   include: {
@@ -31,7 +30,7 @@ type UserWithRelations = Prisma.UserGetPayload<{
   };
 }>;
 
-type SanitizedUser = Omit<User, 'passwordHash' | 'emailVerificationToken'>;
+type SanitizedUser = Omit<User, 'passwordHash' | 'emailVerificationOtp'>;
 
 @Injectable()
 class UsersService {
@@ -43,14 +42,14 @@ class UsersService {
   private sanitizeUser<
     T extends {
       passwordHash?: string | null;
-      emailVerificationToken?: string | null;
+      emailVerificationOtp?: string | null;
     },
-  >(user: T | null): Omit<T, 'passwordHash' | 'emailVerificationToken'> | null {
+  >(user: T | null): Omit<T, 'passwordHash' | 'emailVerificationOtp'> | null {
     if (!user) {
       return null;
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, emailVerificationToken, ...rest } = user;
+    const { passwordHash, emailVerificationOtp, ...rest } = user;
     return rest;
   }
 
@@ -71,9 +70,7 @@ class UsersService {
   async getUser(
     id: number,
     requestingUserId: number,
-  ): Promise<
-    Omit<UserWithRelations, 'passwordHash' | 'emailVerificationToken'>
-  > {
+  ): Promise<Omit<UserWithRelations, 'passwordHash' | 'emailVerificationOtp'>> {
     if (id !== requestingUserId) {
       throw new ForbiddenException('You can only access your own profile');
     }
@@ -163,9 +160,79 @@ class UsersService {
     });
   }
 
+  async initUser(email: string): Promise<User> {
+    console.log(`initUser: starting for ${email}`);
+    const existingUser = await this.findByEmail(email);
+    console.log(`initUser: existingUser check done, found: ${!!existingUser}`);
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10); // 10 minutes for registration
+
+    if (existingUser) {
+      if (existingUser.emailVerified) {
+        console.log(`initUser: email already verified`);
+        throw new BadRequestException(
+          'Email is already registered and verified',
+        );
+      }
+      console.log(`initUser: updating existing unverified user`);
+      // Update existing unverified user with new OTP
+      return this.prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          emailVerificationOtp: otp,
+          emailVerificationExpiresAt: expiresAt,
+          emailVerificationSentAt: new Date(),
+          emailVerificationAttempts: 0,
+        },
+      });
+    }
+
+    console.log(`initUser: creating new unverified user`);
+    const user = await this.prisma.user.create({
+      data: {
+        email,
+        emailVerificationOtp: otp,
+        emailVerificationExpiresAt: expiresAt,
+        emailVerificationSentAt: new Date(),
+        emailVerificationAttempts: 0,
+        name: email.split('@')[0],
+      },
+    });
+
+    console.log(
+      `initUser: user created, id=${user.id}. creating default lists...`,
+    );
+    // Create default lists for the new user
+    await this.createDefaultLists(user.id);
+    console.log(`initUser: default lists created`);
+
+    return user;
+  }
+
+  async sendOtp(email: string, otp: string, name?: string) {
+    console.log(`[DEV] OTP for ${email}: ${otp}`);
+    await this.emailService.sendVerificationEmail(email, otp, name);
+  }
+
+  async setPassword(userId: number, passwordHash: string): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash,
+        emailVerified: true,
+        emailVerificationOtp: null,
+        emailVerificationExpiresAt: null,
+      },
+    });
+  }
+
   async createUser(data: CreateUserDto): Promise<SanitizedUser> {
+    // Keep original method for compatibility if needed, but refactored
     const passwordHash = await bcrypt.hash(data.password, 10);
-    const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 5);
 
     const user = await this.prisma.user.create({
       data: {
@@ -173,43 +240,35 @@ class UsersService {
         name: data.name,
         profilePicture: data.profilePicture,
         passwordHash,
-        emailVerificationToken,
+        emailVerificationOtp: otp,
         emailVerificationSentAt: new Date(),
+        emailVerificationExpiresAt: expiresAt,
       } as Prisma.UserCreateInput,
     });
 
-    // Create default lists for the new user
     await this.createDefaultLists(user.id);
+    this.sendOtp(user.email, otp, user.name || undefined).catch(console.error);
 
-    // Send verification email (don't await to avoid blocking user creation)
-    this.emailService
-      .sendVerificationEmail(
-        user.email,
-        emailVerificationToken,
-        user.name || undefined,
-      )
-      .catch((error) => {
-        console.error('Failed to send verification email:', error);
-        // Don't throw - user creation should succeed even if email fails
-      });
-
-    const sanitized = this.sanitizeUser(user);
-    if (!sanitized) {
-      throw new Error('Failed to create user');
-    }
-    return sanitized;
+    return this.sanitizeUser(user)!;
   }
 
-  async verifyEmail(token: string): Promise<SanitizedUser> {
+  async verifyEmail(otp: string): Promise<SanitizedUser> {
     const user = await this.prisma.user.findFirst({
       where: {
-        emailVerificationToken: token,
+        emailVerificationOtp: otp,
         deletedAt: null,
       } as Prisma.UserWhereInput,
     });
 
     if (!user) {
-      throw new BadRequestException('Invalid or expired verification token');
+      throw new BadRequestException('Invalid or expired verification code');
+    }
+
+    if (
+      user.emailVerificationExpiresAt &&
+      user.emailVerificationExpiresAt < new Date()
+    ) {
+      throw new BadRequestException('Verification code has expired');
     }
 
     const userWithEmailVerified = user as User & { emailVerified: boolean };
@@ -221,7 +280,8 @@ class UsersService {
       where: { id: user.id },
       data: {
         emailVerified: true,
-        emailVerificationToken: null,
+        emailVerificationOtp: null,
+        emailVerificationExpiresAt: null,
       } as Prisma.UserUpdateInput,
     });
 
@@ -244,26 +304,50 @@ class UsersService {
       throw new BadRequestException('Email is already verified');
     }
 
-    const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+    // Rate Limit: 5 seconds
+    if (user.emailVerificationSentAt) {
+      const diff =
+        new Date().getTime() - new Date(user.emailVerificationSentAt).getTime();
+      if (diff < 5000) {
+        throw new BadRequestException('Please wait 5 seconds before resending');
+      }
+    }
+
+    // Max Attempts: 5
+    if (user.emailVerificationAttempts >= 5) {
+      throw new BadRequestException(
+        'Too many attempts. Please try again later.',
+      );
+    }
+
+    const emailVerificationOtp = Math.floor(
+      100000 + Math.random() * 900000,
+    ).toString();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 5);
 
     const updatedUser = await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        emailVerificationToken,
+        emailVerificationOtp,
         emailVerificationSentAt: new Date(),
+        emailVerificationExpiresAt: expiresAt,
+        emailVerificationAttempts: { increment: 1 },
       } as Prisma.UserUpdateInput,
     });
+
+    // Log for Dev
+    console.log(`[DEV] Resent OTP for ${email}: ${emailVerificationOtp}`);
 
     // Send verification email (don't await to avoid blocking response)
     this.emailService
       .sendVerificationEmail(
         updatedUser.email,
-        emailVerificationToken,
+        emailVerificationOtp,
         updatedUser.name || undefined,
       )
       .catch((error) => {
         console.error('Failed to send verification email:', error);
-        // Don't throw - token generation should succeed even if email fails
       });
 
     const sanitized = this.sanitizeUser(updatedUser);
@@ -287,6 +371,9 @@ class UsersService {
       updateData.profilePicture = data.profilePicture;
     if (data.password !== undefined) {
       updateData.passwordHash = await bcrypt.hash(data.password, 10);
+    }
+    if (data.notificationFrequency !== undefined) {
+      updateData.notificationFrequency = data.notificationFrequency;
     }
 
     const user = await this.prisma.user.update({

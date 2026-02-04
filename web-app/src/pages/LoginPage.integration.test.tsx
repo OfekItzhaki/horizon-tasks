@@ -12,9 +12,7 @@ describe('LoginPage (integration)', () => {
     render(<LoginPage />);
     const emailInput = screen.getByPlaceholderText(/name@example.com/i);
     const passwordInput = screen.getByPlaceholderText(/••••••••/i);
-    const form = screen
-      .getByRole('button', { name: /sign in|login/i })
-      .closest('form');
+    const form = screen.getByLabelText(/sign in/i).closest('form');
     await user.type(emailInput, 'invalid');
     await user.type(passwordInput, 'x');
     if (form) fireEvent.submit(form);
@@ -27,7 +25,7 @@ describe('LoginPage (integration)', () => {
     render(<LoginPage />);
     const emailInput = screen.getByPlaceholderText(/name@example.com/i);
     const passwordInput = screen.getByPlaceholderText(/••••••••/i);
-    const submit = screen.getByRole('button', { name: /sign in|login/i });
+    const submit = screen.getByLabelText(/sign in/i);
     await user.type(emailInput, 'test@example.com');
     await user.type(passwordInput, 'password123');
     await user.click(submit);
@@ -52,7 +50,7 @@ describe('LoginPage (integration)', () => {
     render(<LoginPage />);
     const emailInput = screen.getByPlaceholderText(/name@example.com/i);
     const passwordInput = screen.getByPlaceholderText(/••••••••/i);
-    const submit = screen.getByRole('button', { name: /sign in|login/i });
+    const submit = screen.getByLabelText(/sign in/i);
 
     await user.type(emailInput, 'fail@example.com');
     await user.type(passwordInput, 'password123');

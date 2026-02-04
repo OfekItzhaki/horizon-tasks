@@ -4,8 +4,10 @@ import {
   IsString,
   IsUrl,
   MinLength,
+  IsEnum,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { NotificationFrequency } from '@prisma/client';
 
 export class UpdateUserDto {
   @ApiPropertyOptional({
@@ -42,4 +44,13 @@ export class UpdateUserDto {
   @IsString()
   @MinLength(8)
   password?: string;
+
+  @ApiPropertyOptional({
+    description: 'User preference for task update notifications',
+    enum: ['NONE', 'DAILY', 'WEEKLY'],
+    example: 'DAILY',
+  })
+  @IsOptional()
+  @IsEnum(NotificationFrequency)
+  notificationFrequency?: NotificationFrequency;
 }

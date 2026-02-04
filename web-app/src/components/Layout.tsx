@@ -6,7 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { getAssetUrl } from '@tasks-management/frontend-services';
 
 export default function Layout() {
-  const { user, logout } = useAuth();
+  const { user, logout, isUploadingAvatar } = useAuth();
   const { t, i18n } = useTranslation();
   const { themeMode, setThemeMode } = useTheme();
   const location = useLocation();
@@ -26,7 +26,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col bg-app font-inter">
       {/* Navigation Bar - Solid, Clean */}
-      <nav className="sticky top-0 z-50 bg-surface border-b border-border-subtle shadow-sm">
+      <nav dir="ltr" className="sticky top-0 z-50 bg-surface border-b border-border-subtle shadow-sm">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center h-16">
             {/* Logo & Links */}
@@ -42,11 +42,10 @@ export default function Layout() {
                   <Link
                     key={link.to}
                     to={link.to}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      location.pathname.startsWith(link.to)
-                        ? 'bg-accent text-white shadow-sm'
-                        : 'text-secondary hover:text-primary hover:bg-hover'
-                    }`}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${location.pathname.startsWith(link.to)
+                      ? 'bg-accent text-white shadow-sm'
+                      : 'text-secondary hover:text-primary hover:bg-hover'
+                      }`}
                   >
                     {link.label}
                   </Link>
@@ -62,11 +61,10 @@ export default function Layout() {
                   <button
                     key={mode}
                     onClick={() => setThemeMode(mode)}
-                    className={`p-1.5 rounded-md transition-all ${
-                      themeMode === mode
-                        ? 'bg-surface text-accent shadow-sm'
-                        : 'text-tertiary hover:text-secondary'
-                    }`}
+                    className={`p-1.5 rounded-md transition-all ${themeMode === mode
+                      ? 'bg-surface text-accent shadow-sm'
+                      : 'text-tertiary hover:text-secondary'
+                      }`}
                     title={t(`theme.${mode}`, {
                       defaultValue:
                         mode.charAt(0).toUpperCase() + mode.slice(1),
@@ -140,7 +138,7 @@ export default function Layout() {
               {/* Profile */}
               <div className="flex items-center gap-3 pl-3 border-l border-border-subtle">
                 <Link to="/profile" className="flex items-center gap-2 group">
-                  <div className="w-8 h-8 rounded-full bg-accent/10 border-2 border-accent/20 group-hover:border-accent transition-all flex items-center justify-center overflow-hidden">
+                  <div className="w-8 h-8 rounded-full bg-accent/10 border-2 border-accent/20 group-hover:border-accent transition-all flex items-center justify-center overflow-hidden relative">
                     {user?.profilePicture ? (
                       <img
                         key={user.profilePicture}
@@ -158,6 +156,12 @@ export default function Layout() {
                         {user?.name?.[0]?.toUpperCase() ||
                           user?.email[0]?.toUpperCase()}
                       </span>
+                    )}
+
+                    {isUploadingAvatar && (
+                      <div className="absolute inset-0 bg-surface/80 flex items-center justify-center">
+                        <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
+                      </div>
                     )}
                   </div>
 

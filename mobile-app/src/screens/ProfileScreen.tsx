@@ -23,7 +23,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useThemedStyles } from '../utils/useThemedStyles';
 import { usersService } from '../services/users.service';
 import { authService } from '../services/auth.service';
-import { isRtlLanguage } from '@tasks-management/frontend-services';
+import { isRtlLanguage, NotificationFrequency } from '@tasks-management/frontend-services';
 import { handleApiError, isAuthError } from '../utils/errorHandler';
 import { getApiUrl, getAssetUrl } from '../config/api';
 import { SmartImage } from '../components/common/SmartImage';
@@ -374,11 +374,24 @@ export default function ProfileScreen() {
     try {
       await authService.resendVerification(user.email);
       Alert.alert(
-        t('profile.verificationEmailSent'),
-        t('profile.verificationEmailSentMessage', { defaultValue: 'Verification email sent. Please check your inbox.' }),
+        'Success',
+        'Verification code sent. Please check your inbox.',
       );
     } catch (error: any) {
       handleApiError(error, t('profile.failedToResendVerification', { defaultValue: 'Failed to resend verification email. Please try again.' }));
+    }
+  };
+
+  const handleFrequencyChange = async (frequency: NotificationFrequency) => {
+    if (!user) return;
+    try {
+      setRefreshing(true);
+      await usersService.update(user.id, { notificationFrequency: frequency });
+      await refreshUser();
+    } catch (error) {
+      handleApiError(error, 'Failed to update notification frequency');
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -531,19 +544,36 @@ export default function ProfileScreen() {
             </View>
           )}
 
-          {/* Email Verification */}
+          {/* Notification Frequency */}
           <View style={styles.profileSection}>
-            <Text style={styles.profileLabel}>{t('profile.emailVerified')}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-              <Text style={[styles.profileValue, { fontWeight: 'bold', textAlign: isRtl ? 'right' : 'left' }]}>
-                {user.emailVerified ? t('profile.yes') : t('profile.no')}
-              </Text>
-              {!user.emailVerified && (
-                <TouchableOpacity onPress={handleResendVerification}>
-                  <Text style={[styles.resendButtonText, { textAlign: isRtl ? 'right' : 'left' }]}>{t('profile.resendVerification')}</Text>
+            <Text style={styles.profileLabel}>Task Updates Frequency</Text>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+              {([NotificationFrequency.NONE, NotificationFrequency.DAILY, NotificationFrequency.WEEKLY]).map((freq) => (
+                <TouchableOpacity
+                  key={freq}
+                  onPress={() => handleFrequencyChange(freq)}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 8,
+                    backgroundColor: user.notificationFrequency === freq ? colors.primary : colors.surface,
+                    borderWidth: 1,
+                    borderColor: user.notificationFrequency === freq ? colors.primary : colors.border,
+                  }}
+                >
+                  <Text style={{
+                    color: user.notificationFrequency === freq ? '#fff' : colors.text,
+                    fontWeight: 'bold',
+                    fontSize: 12,
+                  }}>
+                    {freq.charAt(0) + freq.slice(1).toLowerCase()}
+                  </Text>
                 </TouchableOpacity>
-              )}
+              ))}
             </View>
+            <Text style={[styles.profileValue, { fontSize: 12, marginTop: 8, color: colors.textSecondary }]}>
+              Choose how often you want to receive email updates about your tasks.
+            </Text>
           </View>
 
           {/* Member Since */}

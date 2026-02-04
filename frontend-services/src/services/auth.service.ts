@@ -51,6 +51,42 @@ export class AuthService {
   async resendVerification(email: string): Promise<User> {
     return apiClient.post<User>('/auth/resend-verification', { email });
   }
+
+  /**
+   * Start registration (send OTP)
+   */
+  async registerStart(email: string): Promise<{ message: string }> {
+    return apiClient.post<{ message: string }>('/auth/register/start', { email });
+  }
+
+  /**
+   * Verify OTP for registration
+   */
+  async registerVerify(
+    email: string,
+    otp: string,
+  ): Promise<{ registrationToken: string }> {
+    return apiClient.post<{ registrationToken: string }>('/auth/register/verify', {
+      email,
+      otp,
+    });
+  }
+
+  /**
+   * Complete registration with password
+   */
+  async registerFinish(data: {
+    registrationToken: string;
+    password: string;
+    passwordConfirm: string;
+  }): Promise<LoginResponse> {
+    const response = await apiClient.post<LoginResponse>(
+      '/auth/register/finish',
+      data,
+    );
+    TokenStorage.setToken(response.accessToken);
+    return response;
+  }
 }
 
 export const authService = new AuthService();

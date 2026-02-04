@@ -2,35 +2,39 @@
 const getApiBaseUrl = (): string => {
   let url = 'http://localhost:3000';
 
-  if (typeof process !== 'undefined') {
-    // Use bracket notation to avoid aggressive Babel transformations (like babel-preset-expo)
-    // that try to replace process.env with virtual module imports.
-    const p = process as any;
-    const env = p['env'] || {};
-
+  // In Vite/Browser, we check both process.env (if polyfilled) and import.meta.env
+  if (typeof process !== 'undefined' && (process as any).env) {
+    const env = (process as any).env;
     const vUrl = env['VITE_API_URL'];
     const aUrl = env['API_BASE_URL'];
     const eUrl = env['EXPO_PUBLIC_API_URL'];
 
-    if (vUrl) url = vUrl;
-    else if (aUrl) url = aUrl;
-    else if (eUrl) url = eUrl;
+    if (vUrl && vUrl.trim().length > 0) url = vUrl;
+    else if (aUrl && aUrl.trim().length > 0) url = aUrl;
+    else if (eUrl && eUrl.trim().length > 0) url = eUrl;
   }
 
-  // Final Safety Check: If we are on a production domain but still have localhost URL
+  // Final Safety Check for Production Domains
   if (typeof window !== 'undefined' && window.location) {
+    const hostname = window.location.hostname;
     const isProdDomain =
-      window.location.hostname.includes('ofeklabs.dev') ||
-      window.location.hostname.includes('onrender.com');
+      hostname.includes('ofeklabs.dev') ||
+      hostname.includes('onrender.com');
+
     if (isProdDomain && url.includes('localhost')) {
-      // Force correct production API even if environment variables failed to bake in
       url = 'https://tasks-api.ofeklabs.dev';
     }
   }
 
-  // Ensure /api/v1 prefix is present for ALL environments, including localhost
-  if (!url.includes('/api/v1')) {
-    return `${url.replace(/\/$/, '')}/api/v1`;
+  // Cleanup: Remove trailing slash
+  url = url.replace(/\/$/, '');
+
+  // CRITICAL: Ensure /api/v1 prefix is present for ALL environments.
+  // We check for /api/v1, /api/v1/, etc.
+  const hasPrefix = url.toLowerCase().includes('/api/v1');
+
+  if (!hasPrefix) {
+    return `${url}/api/v1`;
   }
 
   return url;

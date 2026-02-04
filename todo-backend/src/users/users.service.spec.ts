@@ -64,7 +64,9 @@ describe('UsersService', () => {
         email: 'test@example.com',
         name: 'Test User',
         passwordHash: 'hashed',
-        emailVerificationToken: 'token',
+        emailVerificationOtp: '123456',
+        emailVerificationExpiresAt: new Date(Date.now() + 600000),
+        emailVerificationAttempts: 0,
         emailVerificationSentAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -114,7 +116,7 @@ describe('UsersService', () => {
         ]),
       });
       expect(result).not.toHaveProperty('passwordHash');
-      expect(result).not.toHaveProperty('emailVerificationToken');
+      expect(result).not.toHaveProperty('emailVerificationOtp');
     });
 
     it('should hash password before storing', async () => {
@@ -122,7 +124,9 @@ describe('UsersService', () => {
         id: 1,
         email: 'test@example.com',
         passwordHash: 'hashed',
-        emailVerificationToken: 'token',
+        emailVerificationOtp: '123456',
+        emailVerificationExpiresAt: new Date(Date.now() + 600000),
+        emailVerificationAttempts: 0,
         emailVerificationSentAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -154,7 +158,9 @@ describe('UsersService', () => {
         email: 'test@example.com',
         name: 'Test User',
         passwordHash: 'hashed',
-        emailVerificationToken: 'token',
+        emailVerificationOtp: '123456',
+        emailVerificationExpiresAt: new Date(Date.now() + 600000),
+        emailVerificationAttempts: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
@@ -168,7 +174,7 @@ describe('UsersService', () => {
       const result = await service.getUser(userId, requestingUserId);
 
       expect(result).not.toHaveProperty('passwordHash');
-      expect(result).not.toHaveProperty('emailVerificationToken');
+      expect(result).not.toHaveProperty('emailVerificationOtp');
     });
 
     it('should throw ForbiddenException if accessing another user', async () => {
@@ -269,7 +275,7 @@ describe('UsersService', () => {
         id: 1,
         email: 'test@example.com',
         emailVerified: false,
-        emailVerificationToken: 'valid-token',
+        emailVerificationOtp: 'valid-token',
         passwordHash: 'hashed',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -281,7 +287,8 @@ describe('UsersService', () => {
       mockPrismaService.user.update.mockResolvedValue({
         ...mockUser,
         emailVerified: true,
-        emailVerificationToken: null,
+        emailVerificationOtp: null,
+        emailVerificationExpiresAt: null,
       });
 
       const result = await service.verifyEmail('valid-token');
@@ -290,11 +297,12 @@ describe('UsersService', () => {
         expect.objectContaining({
           data: {
             emailVerified: true,
-            emailVerificationToken: null,
+            emailVerificationOtp: null,
+            emailVerificationExpiresAt: null,
           },
         }),
       );
-      expect(result).not.toHaveProperty('emailVerificationToken');
+      expect(result).not.toHaveProperty('emailVerificationOtp');
     });
 
     it('should throw BadRequestException for invalid token', async () => {
@@ -304,7 +312,7 @@ describe('UsersService', () => {
         BadRequestException,
       );
       await expect(service.verifyEmail('invalid-token')).rejects.toThrow(
-        'Invalid or expired verification token',
+        'Invalid or expired verification code',
       );
     });
 
@@ -313,7 +321,9 @@ describe('UsersService', () => {
         id: 1,
         email: 'test@example.com',
         emailVerified: true,
-        emailVerificationToken: 'token',
+        emailVerificationOtp: '123456',
+        emailVerificationExpiresAt: new Date(Date.now() + 600000),
+        emailVerificationAttempts: 0,
         passwordHash: 'hashed',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -323,10 +333,10 @@ describe('UsersService', () => {
 
       mockPrismaService.user.findFirst.mockResolvedValue(mockUser);
 
-      await expect(service.verifyEmail('token')).rejects.toThrow(
+      await expect(service.verifyEmail('123456')).rejects.toThrow(
         BadRequestException,
       );
-      await expect(service.verifyEmail('token')).rejects.toThrow(
+      await expect(service.verifyEmail('123456')).rejects.toThrow(
         'Email is already verified',
       );
     });

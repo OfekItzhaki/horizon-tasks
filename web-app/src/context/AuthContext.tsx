@@ -16,6 +16,8 @@ interface AuthContextType {
   setUser: (user: User | null) => void;
   refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
+  isUploadingAvatar: boolean;
+  setIsUploadingAvatar: (loading: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,13 +25,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const checkAuth = async () => {
+    if (!authService.getToken()) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
     } catch {
-      // User is not authenticated
+      // User is not authenticated or token invalid
+      authService.logout(); // Ensure token is cleared if invalid
       setUser(null);
     } finally {
       setLoading(false);
@@ -64,6 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser,
         refreshUser,
         isAuthenticated: !!user,
+        isUploadingAvatar,
+        setIsUploadingAvatar,
       }}
     >
       {children}

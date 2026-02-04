@@ -2,6 +2,12 @@
  * TypeScript types matching the backend API
  */
 
+export enum NotificationFrequency {
+  NONE = 'NONE',
+  DAILY = 'DAILY',
+  WEEKLY = 'WEEKLY',
+}
+
 export enum ListType {
   DAILY = 'DAILY',
   WEEKLY = 'WEEKLY',
@@ -17,6 +23,7 @@ export interface User {
   name: string | null;
   profilePicture: string | null;
   emailVerified: boolean;
+  notificationFrequency: NotificationFrequency;
   createdAt: string;
   updatedAt: string;
 }
@@ -96,6 +103,7 @@ export interface UpdateUserDto {
   name?: string;
   profilePicture?: string;
   password?: string;
+  notificationFrequency?: NotificationFrequency;
 }
 
 export interface CreateTodoListDto {

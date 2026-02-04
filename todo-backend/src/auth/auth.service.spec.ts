@@ -12,10 +12,14 @@ describe('AuthService', () => {
 
   const mockUsersService = {
     findByEmail: jest.fn(),
+    initUser: jest.fn(),
+    sendOtp: jest.fn(),
+    setPassword: jest.fn(),
   };
 
   const mockJwtService = {
     sign: jest.fn(),
+    verify: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -106,22 +110,6 @@ describe('AuthService', () => {
         service.validateUser('test@example.com', 'wrongpassword'),
       ).rejects.toThrow('Invalid credentials');
     });
-
-    it('should throw UnauthorizedException if email is not verified', async () => {
-      const mockUser = {
-        id: 1,
-        email: 'test@example.com',
-        passwordHash: 'hashed-password',
-        emailVerified: false,
-      };
-
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-
-      await expect(
-        service.validateUser('test@example.com', 'password123'),
-      ).rejects.toThrow('Email not verified');
-    });
   });
 
   describe('login', () => {
@@ -157,6 +145,71 @@ describe('AuthService', () => {
       await expect(
         service.login('test@example.com', 'wrongpassword'),
       ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('registration flow', () => {
+    it('registerStart should initiate registration', async () => {
+      mockUsersService.initUser = jest.fn().mockResolvedValue({
+        id: 1,
+        email: 'test@example.com',
+        emailVerificationOtp: '123456',
+      });
+      mockUsersService.sendOtp = jest.fn().mockResolvedValue(undefined);
+
+      const result = await service.registerStart('test@example.com');
+
+      expect(result).toEqual({ message: 'OTP sent' });
+      expect(mockUsersService.initUser).toHaveBeenCalledWith(
+        'test@example.com',
+      );
+      expect(mockUsersService.sendOtp).toHaveBeenCalled();
+    });
+
+    it('registerVerify should return token for valid OTP', async () => {
+      const mockUser = {
+        id: 1,
+        email: 'test@example.com',
+        emailVerificationOtp: '123456',
+        emailVerificationExpiresAt: new Date(Date.now() + 10000),
+      };
+      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockJwtService.sign.mockReturnValue('reg-token');
+
+      const result = await service.registerVerify('test@example.com', '123456');
+
+      expect(result).toEqual({ registrationToken: 'reg-token' });
+      expect(mockJwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining({ purpose: 'registration' }),
+        expect.any(Object),
+      );
+    });
+
+    it('registerFinish should complete registration and login', async () => {
+      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockToken = 'reg-token';
+      const mockPayload = {
+        sub: 1,
+        purpose: 'registration',
+        email: 'test@example.com',
+      };
+
+      mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+      mockUsersService.setPassword = jest.fn().mockResolvedValue(mockUser);
+
+      // Mock login internal call
+      mockUsersService.findByEmail.mockResolvedValue({
+        ...mockUser,
+        passwordHash: 'hashed-password',
+      });
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockJwtService.sign.mockReturnValue('final-jwt');
+
+      const result = await service.registerFinish(mockToken, 'newpassword');
+
+      expect(result).toHaveProperty('accessToken', 'final-jwt');
+      expect(mockUsersService.setPassword).toHaveBeenCalled();
     });
   });
 });
