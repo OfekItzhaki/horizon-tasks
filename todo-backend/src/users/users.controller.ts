@@ -133,14 +133,13 @@ class UsersController {
       throw new BadRequestException('No file uploaded');
     }
 
-    // Generate relative path for the uploaded file
-    // Storing relative paths is better for multi-platform (web/mobile) and environments (dev/prod)
-    const fileUrl = `/uploads/${file.filename}`;
+    // Store only the filename. The frontend getAssetUrl will handle prepending /uploads/
+    const fileName = file.filename;
 
-    // Update user profile with new picture relative path
+    // Update user profile with new picture filename
     return this.userService.updateUser(
       id,
-      { profilePicture: fileUrl },
+      { profilePicture: fileName },
       user.userId,
     );
   }

@@ -62,7 +62,28 @@ export const getApiUrl = (path: string): string => {
  * Helper to get the root URL (without /api/v1) for static assets like uploads
  */
 export const getAssetUrl = (path: string): string => {
-  const root = API_CONFIG.baseURL.split('/api/v1')[0];
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  if (!path) return '';
+
+  // If already an absolute URL, return as is
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
+  const root = API_CONFIG.baseURL.split('/api/v1')[0].replace(/\/$/, '');
+
+  // Normalize current path: ensure it starts with /uploads/ if it's just a filename
+  let cleanPath = path.replace(/\\/g, '/'); // Normalize backslashes just in case
+
+  if (!cleanPath.startsWith('/') && !cleanPath.includes('/uploads/')) {
+    cleanPath = `/uploads/${cleanPath}`;
+  } else if (!cleanPath.startsWith('/')) {
+    cleanPath = `/${cleanPath}`;
+  }
+
+  // Ensure path starts with /uploads/ if it doesn't already
+  if (!cleanPath.startsWith('/uploads/')) {
+    cleanPath = `/uploads${cleanPath.startsWith('/') ? '' : '/'}${cleanPath.replace(/^\//, '')}`;
+  }
+
   return `${root}${cleanPath}`;
 };
