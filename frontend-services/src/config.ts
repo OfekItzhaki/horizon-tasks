@@ -3,19 +3,17 @@ const getApiBaseUrl = (): string => {
   let url = 'http://localhost:3000';
 
   if (typeof process !== 'undefined') {
-    // 1. Direct access for Vite's static replacement (define in vite.config.ts)
-    // We use bracket notation to handle Hermes/Expo without crashing, 
-    // but Vite needs clear strings to replace.
-    const pEnv = process.env as any;
-    const vUrl = pEnv['VITE_API_URL'];
-    const aUrl = pEnv['API_BASE_URL'];
-    const eUrl = pEnv['EXPO_PUBLIC_API_URL'];
+    // Vite/Node/Babel will replace these direct references
+    const vUrl = process.env.VITE_API_URL;
+    const aUrl = process.env.API_BASE_URL;
+    const eUrl = process.env.EXPO_PUBLIC_API_URL;
 
     if (vUrl) url = vUrl;
     else if (aUrl) url = aUrl;
     else if (eUrl) url = eUrl;
-    // 2. Fallback for Node/Jest where process.env is a real object
+    // Fallback for cases where process.env is a dynamic object (like Jest)
     else {
+      const pEnv = process.env as any;
       if (pEnv['VITE_API_URL']) url = pEnv['VITE_API_URL'];
       else if (pEnv['API_BASE_URL']) url = pEnv['API_BASE_URL'];
       else if (pEnv['EXPO_PUBLIC_API_URL']) url = pEnv['EXPO_PUBLIC_API_URL'];
@@ -31,15 +29,6 @@ const getApiBaseUrl = (): string => {
       // Force correct production API even if environment variables failed to bake in
       url = 'https://tasks-api.ofeklabs.dev';
     }
-  }
-
-  // Vite environment (browser) override check
-  if (
-    typeof import.meta !== 'undefined' &&
-    (import.meta as any)['env'] &&
-    (import.meta as any)['env']['VITE_API_URL']
-  ) {
-    url = (import.meta as any)['env']['VITE_API_URL'];
   }
 
   // Ensure /api/v1 prefix is present for ALL environments, including localhost
