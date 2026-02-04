@@ -13,6 +13,7 @@ interface AuthContextType {
   loading: boolean;
   login: (credentials: LoginDto) => Promise<void>;
   logout: () => Promise<void>;
+  setUser: (user: User | null) => void;
   refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -60,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         login,
         logout,
+        setUser,
         refreshUser,
         isAuthenticated: !!user,
       }}

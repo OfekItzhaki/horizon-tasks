@@ -143,6 +143,7 @@ export default function Layout() {
                   <div className="w-8 h-8 rounded-full bg-accent/10 border-2 border-accent/20 group-hover:border-accent transition-all flex items-center justify-center overflow-hidden">
                     {user?.profilePicture ? (
                       <img
+                        key={user.profilePicture}
                         src={getAssetUrl(user.profilePicture)}
                         alt={user.name || user.email}
                         className="w-full h-full object-cover"

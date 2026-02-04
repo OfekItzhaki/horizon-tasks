@@ -12,7 +12,7 @@ import {
 import Skeleton from '../components/Skeleton';
 
 export default function ProfilePage() {
-  const { user, loading, refreshUser } = useAuth();
+  const { user, loading, setUser } = useAuth();
   const { t, i18n } = useTranslation();
   const isRtl = isRtlLanguage(i18n.language);
   const [uploading, setUploading] = useState(false);
@@ -24,9 +24,9 @@ export default function ProfilePage() {
     if (!file || !user) return;
 
     try {
-      setUploading(true);
-      await usersService.uploadAvatar(user.id, file);
-      await refreshUser();
+      const updatedUser = await usersService.uploadAvatar(user.id, file);
+      setUser(updatedUser);
+      // No need to call refreshUser anymore as we updated state locally
     } catch (error) {
       console.error('Failed to upload avatar:', error);
       alert('Failed to upload profile picture');
@@ -110,6 +110,7 @@ export default function ProfilePage() {
               <div className="w-32 h-32 rounded-2xl overflow-hidden bg-accent/10 border-2 border-accent/20 shadow-lg relative transition-all duration-300 group-hover:scale-105 group-hover:border-accent">
                 {user.profilePicture ? (
                   <img
+                    key={user.profilePicture}
                     src={getAssetUrl(user.profilePicture)}
                     alt={user.name || ''}
                     className="w-full h-full object-cover"

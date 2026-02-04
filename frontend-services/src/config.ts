@@ -58,7 +58,10 @@ export const getApiUrl = (path: string): string => {
 /**
  * Helper to get the root URL (without /api/v1) for static assets like uploads
  */
-export const getAssetUrl = (path: string): string => {
+export const getAssetUrl = (
+  path: string,
+  includeCacheBuster = true,
+): string => {
   if (!path) return '';
 
   // If already an absolute URL, return as is
@@ -73,5 +76,14 @@ export const getAssetUrl = (path: string): string => {
   cleanPath = cleanPath.replace(/^(\/)?uploads\//, '');
   cleanPath = cleanPath.replace(/^\//, '');
 
-  return `${root}/uploads/${cleanPath}`;
+  const url = `${root}/uploads/${cleanPath}`;
+
+  if (includeCacheBuster) {
+    // Add a timestamp or hash based on the filename if possible, 
+    // but a simple ?t= is most reliable for immediate updates
+    const buster = Date.now();
+    return `${url}?t=${buster}`;
+  }
+
+  return url;
 };
