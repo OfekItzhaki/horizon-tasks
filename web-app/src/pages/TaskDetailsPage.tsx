@@ -326,7 +326,7 @@ export default function TaskDetailsPage() {
                   {!isArchivedTask && (
                     <button
                       onClick={() => setIsEditingTask(true)}
-                      className="p-2 text-tertiary hover:text-accent hover:bg-accent/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                      className="p-2.5 text-secondary hover:text-accent bg-hover hover:bg-accent/10 rounded-xl transition-all border border-border-subtle hover:border-accent/30 shadow-sm"
                       title={t('common.edit')}
                     >
                       <svg
@@ -371,7 +371,21 @@ export default function TaskDetailsPage() {
           <div className="premium-card p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-primary uppercase tracking-wider flex items-center gap-3">
-                <span className="text-2xl">🔔</span>
+                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                    />
+                  </svg>
+                </div>
                 {t('taskDetails.remindersTitle', { defaultValue: 'Reminders' })}
               </h2>
             </div>
@@ -408,15 +422,27 @@ export default function TaskDetailsPage() {
               {reminders.map((reminder) => (
                 <div
                   key={reminder.id}
-                  className="group bg-surface hover:bg-hover border border-border-subtle hover:border-accent/30 rounded-xl p-4 flex items-center justify-between transition-all cursor-pointer"
+                  className="group vibrant-hover-card p-4 flex items-center justify-between transition-all cursor-pointer"
                   onClick={() => {
                     setEditingReminder(reminder);
                     setShowReminderEditor(true);
                   }}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent">
-                      ⏰
+                    <div className="w-10 h-10 rounded-full bg-accent/5 border border-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-all">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
                     </div>
                     <div>
                       <p className="font-semibold text-primary">
@@ -424,7 +450,26 @@ export default function TaskDetailsPage() {
                       </p>
                       {reminder.location && (
                         <p className="text-xs text-secondary flex items-center gap-1 mt-0.5">
-                          📍 {reminder.location}
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                          {reminder.location}
                         </p>
                       )}
                     </div>
@@ -461,7 +506,21 @@ export default function TaskDetailsPage() {
           <div className="premium-card p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-primary uppercase tracking-wider flex items-center gap-3">
-                <span className="text-2xl">📋</span>
+                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                    />
+                  </svg>
+                </div>
                 {t('taskDetails.stepsTitle')}
               </h2>
             </div>
@@ -501,7 +560,7 @@ export default function TaskDetailsPage() {
                     e.preventDefault();
                     if (newStepDescription.trim())
                       createStepMutation.mutate({
-                        task,
+                        task: task as Task,
                         data: { description: newStepDescription.trim() },
                       });
                   }}
@@ -533,7 +592,7 @@ export default function TaskDetailsPage() {
                 .map((step) => (
                   <div
                     key={step.id}
-                    className="group bg-surface hover:bg-hover border border-border-subtle rounded-xl p-4 flex items-center justify-between transition-all animate-fade-in"
+                    className="group vibrant-hover-card p-4 flex items-center justify-between transition-all animate-fade-in"
                   >
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       <input
@@ -541,7 +600,7 @@ export default function TaskDetailsPage() {
                         checked={step.completed}
                         onChange={() =>
                           updateStepMutation.mutate({
-                            task,
+                            task: task as Task,
                             stepId: step.id,
                             data: { completed: !step.completed },
                           })
@@ -561,7 +620,7 @@ export default function TaskDetailsPage() {
                               stepDescriptionDraft !== step.description
                             ) {
                               updateStepMutation.mutate({
-                                task,
+                                task: task as Task,
                                 stepId: step.id,
                                 data: {
                                   description: stepDescriptionDraft.trim(),
@@ -586,7 +645,10 @@ export default function TaskDetailsPage() {
                     </div>
                     <button
                       onClick={() =>
-                        deleteStepMutation.mutate({ task, id: step.id })
+                        deleteStepMutation.mutate({
+                          task: task as Task,
+                          id: step.id,
+                        })
                       }
                       className="opacity-0 group-hover:opacity-100 p-2 text-accent-danger hover:bg-accent-danger/10 rounded-lg transition-all"
                     >

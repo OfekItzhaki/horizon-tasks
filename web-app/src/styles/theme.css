@@ -155,12 +155,47 @@
   background-color: rgb(var(--bg-surface));
   border: 1px solid rgb(var(--border-subtle));
   border-radius: 1rem;
-  box-shadow: var(--shadow-md);
-  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .premium-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: rgb(var(--border-strong));
+}
+
+/* Vibrant Hover Card - Blue border + Purple bottom accent */
+.vibrant-hover-card {
+  @apply premium-card;
+  border-width: 1.5px;
+}
+
+.vibrant-hover-card:hover {
+  border-color: rgb(var(--accent-primary) / 0.5);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+}
+
+.vibrant-hover-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    rgb(var(--accent-primary)),
+    rgb(var(--accent-secondary))
+  );
+  transform: translateY(100%);
+  transition: transform 0.2s ease;
+}
+
+.vibrant-hover-card:hover::after {
+  transform: translateY(0);
 }
 
 /* Premium Input */
