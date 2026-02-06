@@ -3,26 +3,46 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { EmailService } from '../src/email/email.service';
 
 describe('Tasks and Steps (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let authToken: string;
-  let userId: number;
-  let listId: number;
-  let taskId: number;
-  let stepId: number;
+  let userId: string;
+  let listId: string;
+  let taskId: string;
+  let stepId: string;
+  const mockEmailService = {
+    sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+  };
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue(mockEmailService)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
 
     prisma = moduleFixture.get<PrismaService>(PrismaService);
+
+    // Aggressive cleanup before tests
+    const userEmails = ['tasktest@example.com'];
+    for (const email of userEmails) {
+      const user = await prisma.user.findFirst({ where: { email } });
+      if (user) {
+        await (prisma.step as any).deleteMany({ where: { task: { todoList: { ownerId: user.id } } } });
+        await (prisma.task as any).deleteMany({ where: { todoList: { ownerId: user.id } } });
+        await (prisma.listShare as any).deleteMany({ where: { OR: [{ sharedWithId: user.id }, { toDoList: { ownerId: user.id } }] } });
+        await (prisma.toDoList as any).deleteMany({ where: { ownerId: user.id } });
+        await prisma.user.delete({ where: { id: user.id } });
+      }
+    }
 
     // Create test user and login
     const userResponse = await request(app.getHttpServer())
@@ -55,9 +75,19 @@ describe('Tasks and Steps (e2e)', () => {
 
   afterAll(async () => {
     if (userId) {
-      await prisma.user.deleteMany({
-        where: { email: { contains: 'tasktest@example.com' } },
+      const userEmails = ['tasktest@example.com'];
+      const users = await prisma.user.findMany({
+        where: { email: { in: userEmails } },
       });
+      const userIds = users.map(u => u.id);
+
+      if (userIds.length > 0) {
+        await (prisma.step as any).deleteMany({ where: { task: { todoList: { ownerId: { in: userIds } } } } });
+        await (prisma.task as any).deleteMany({ where: { todoList: { ownerId: { in: userIds } } } });
+        await (prisma.listShare as any).deleteMany({ where: { OR: [{ sharedWithId: { in: userIds } }, { toDoList: { ownerId: { in: userIds } } }] } });
+        await (prisma.toDoList as any).deleteMany({ where: { ownerId: { in: userIds } } });
+        await prisma.user.deleteMany({ where: { id: { in: userIds } } });
+      }
     }
     await app.close();
   });
