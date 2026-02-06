@@ -9,7 +9,7 @@ datasource db {
 }
 
 model User {
-  id                      Int                    @id @default(autoincrement())
+  id                      String                 @id @default(uuid())
   createdAt               DateTime               @default(now())
   updatedAt               DateTime               @updatedAt
   email                   String                 @unique @db.VarChar(255)
@@ -25,6 +25,7 @@ model User {
   notificationFrequency   NotificationFrequency @default(NONE)
   shares                  ListShare[]
   lists                   ToDoList[]
+  refreshTokens           RefreshToken[]
 
   @@index([email])
 }
@@ -36,11 +37,11 @@ enum NotificationFrequency {
 }
 
 model ToDoList {
-  id        Int         @id @default(autoincrement())
+  id        String      @id @default(uuid())
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   name      String      @db.VarChar(255)
-  ownerId   Int
+  ownerId   String
   order     Int         @default(autoincrement())
   deletedAt DateTime?
   type      ListType    @default(CUSTOM)
@@ -51,25 +52,31 @@ model ToDoList {
 }
 
 model ListShare {
-  id           Int      @id @default(autoincrement())
-  sharedWithId Int
-  toDoListId   Int
-  sharedWith   User     @relation(fields: [sharedWithId], references: [id])
-  toDoList     ToDoList @relation(fields: [toDoListId], references: [id])
+  id           String    @id @default(uuid())
+  sharedWithId String
+  toDoListId   String
+  role         ShareRole @default(EDITOR)
+  sharedWith   User      @relation(fields: [sharedWithId], references: [id])
+  toDoList     ToDoList  @relation(fields: [toDoListId], references: [id])
 
   @@unique([sharedWithId, toDoListId])
 }
 
+enum ShareRole {
+  VIEWER
+  EDITOR
+}
+
 model Task {
-  id                 Int       @id @default(autoincrement())
+  id                 String    @id @default(uuid())
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   description        String    @db.VarChar(255)
   completed          Boolean   @default(false)
   completedAt        DateTime? // When the task was marked complete (for auto-archive timing)
   completionCount    Int       @default(0) // How many times this repeating task has been completed
-  todoListId         Int
-  originalListId     Int?      // Remember original list when archived (for restore)
+  todoListId         String
+  originalListId     String?   // Remember original list when archived (for restore)
   order              Int       @default(autoincrement())
   deletedAt          DateTime?
   dueDate            DateTime?
@@ -81,12 +88,12 @@ model Task {
 }
 
 model Step {
-  id          Int       @id @default(autoincrement())
+  id          String    @id @default(uuid())
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   description String
   completed   Boolean   @default(false)
-  taskId      Int
+  taskId      String
   order       Int       @default(autoincrement())
   deletedAt   DateTime?
   task        Task      @relation(fields: [taskId], references: [id])
@@ -99,4 +106,14 @@ enum ListType {
   YEARLY
   CUSTOM
   FINISHED // System list for archived completed tasks
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
 }
