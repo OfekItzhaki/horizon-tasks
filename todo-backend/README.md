@@ -24,6 +24,7 @@
 ## Description
 
 To-Do List API built with NestJS, Prisma, and PostgreSQL. Features include:
+
 - Multiple list types (Daily, Weekly, Monthly, Yearly, Custom)
 - Task scheduling with reminders
 - User management with profile pictures
@@ -39,12 +40,14 @@ To-Do List API built with NestJS, Prisma, and PostgreSQL. Features include:
 ## Project setup
 
 1. **Install dependencies:**
+
 ```bash
 $ pnpm install
 ```
 
 2. **Set up environment variables:**
-Create a `.env` file in the `todo-backend` directory:
+   Create a `.env` file in the `todo-backend` directory:
+
 ```env
 DATABASE_URL="postgresql://username:password@localhost:5432/todo_db?schema=public"
 PORT=3000
@@ -52,6 +55,7 @@ JWT_SECRET="change-me"
 ```
 
 3. **Run database migrations:**
+
 ```bash
 # Generate Prisma client and run migrations
 $ npx prisma migrate dev
@@ -61,6 +65,7 @@ $ npx prisma migrate dev --name your_migration_name
 ```
 
 4. **Generate Prisma Client:**
+
 ```bash
 $ npx prisma generate
 ```
@@ -83,6 +88,7 @@ The API will be available at `http://localhost:3000` (or the port specified in y
 ## API Endpoints
 
 ### Auth
+
 - `POST /auth/login` - Exchange email/password for a JWT access token
 - `POST /auth/verify-email/:token` - Verify email address with token
 - `POST /auth/resend-verification` - Resend email verification email
@@ -90,6 +96,7 @@ The API will be available at `http://localhost:3000` (or the port specified in y
 All other endpoints (except `POST /users`) require an `Authorization: Bearer <token>` header. Create a user first, then log in to obtain a token.
 
 ### Users
+
 - `GET /users` - Get the authenticated user (array with a single entry)
 - `GET /users/:id` - Get the authenticated user by ID
 - `POST /users` - Create a new user (registration - default lists are auto-created)
@@ -97,6 +104,7 @@ All other endpoints (except `POST /users`) require an `Authorization: Bearer <to
 - `DELETE /users/:id` - Soft delete authenticated user
 
 ### To-Do Lists
+
 - `GET /todo-lists` - Get all lists for authenticated user
 - `GET /todo-lists/:id` - Get list by ID
 - `POST /todo-lists` - Create a new list
@@ -106,6 +114,7 @@ All other endpoints (except `POST /users`) require an `Authorization: Bearer <to
 **Note**: Default lists (Daily, Weekly, Monthly, Yearly) are automatically created when a user registers.
 
 ### Tasks
+
 - `GET /tasks` - Get all tasks (optional: `?todoListId=1`)
 - `GET /tasks/by-date` - Get all tasks for a specific date (optional: `?date=YYYY-MM-DD`)
 - `GET /tasks/:id` - Get task by ID
@@ -116,6 +125,7 @@ All other endpoints (except `POST /users`) require an `Authorization: Bearer <to
 **Task Reminders**: Use `reminderDaysBefore` as an array to set multiple reminders (e.g., `[7, 1]` for 7 days and 1 day before).
 
 ### Steps (sub-tasks)
+
 - `GET /tasks/:taskId/steps` - Get steps for a task (ordered)
 - `POST /tasks/:taskId/steps` - Create a new step (appends to the end)
 - `PATCH /steps/:id` - Update step description/completion
@@ -123,6 +133,7 @@ All other endpoints (except `POST /users`) require an `Authorization: Bearer <to
 - `PATCH /tasks/:taskId/steps/reorder` - Reorder steps for drag-and-drop (body: `{ "stepIds": [/* desired order */] }`)
 
 ### Reminders
+
 - `GET /reminders/today` - Get reminder notifications for today
 - `GET /reminders/date?date=YYYY-MM-DD` - Get reminder notifications for a specific date
 - `GET /reminders/range?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD` - Get reminder notifications for a date range
@@ -130,10 +141,12 @@ All other endpoints (except `POST /users`) require an `Authorization: Bearer <to
 Returns formatted notification data (title, message) that front-end can use for push notifications. See `REMINDERS_FEATURE.md` for details.
 
 ### Me (User-scoped endpoints)
+
 - `GET /me/lists` - Get all lists for the current authenticated user (alias for `GET /todo-lists`)
 - `GET /me/tasks?todoListId=1` - Get all tasks for the current authenticated user (optional filter by list)
 
 ### List Sharing
+
 - `POST /list-shares/todo-list/:todoListId` - Share a list with a user
 - `GET /list-shares/user/:userId` - Get all lists shared with a user
 - `GET /list-shares/todo-list/:todoListId` - Get all users a list is shared with

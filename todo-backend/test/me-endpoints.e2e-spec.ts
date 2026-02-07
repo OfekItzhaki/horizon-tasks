@@ -48,7 +48,10 @@ describe('Me Endpoints (e2e)', () => {
       });
       await (prisma.listShare as any).deleteMany({
         where: {
-          OR: [{ sharedWithId: { in: userIds } }, { toDoList: { ownerId: { in: userIds } } }],
+          OR: [
+            { sharedWithId: { in: userIds } },
+            { toDoList: { ownerId: { in: userIds } } },
+          ],
         },
       });
       await (prisma.toDoList as any).deleteMany({

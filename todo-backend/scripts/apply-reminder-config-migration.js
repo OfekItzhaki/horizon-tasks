@@ -7,10 +7,10 @@ const { PrismaClient } = require('@prisma/client');
 
 async function applyMigration() {
   const prisma = new PrismaClient();
-  
+
   try {
     console.log('Checking if reminderConfig column exists...');
-    
+
     // Check if column exists
     const result = await prisma.$queryRaw`
       SELECT column_name 
@@ -18,11 +18,11 @@ async function applyMigration() {
       WHERE table_name = 'Task' 
       AND column_name = 'reminderConfig'
     `;
-    
+
     if (result && result.length > 0) {
       console.log('✅ Column "reminderConfig" already exists!');
       console.log('Marking migration as applied...');
-      
+
       // Mark migration as applied
       try {
         await prisma.$executeRaw`
@@ -40,7 +40,10 @@ async function applyMigration() {
         `;
         console.log('✅ Migration marked as applied!');
       } catch (error) {
-        if (error.message.includes('already exists') || error.message.includes('duplicate')) {
+        if (
+          error.message.includes('already exists') ||
+          error.message.includes('duplicate')
+        ) {
           console.log('✅ Migration already marked as applied!');
         } else {
           throw error;
@@ -48,14 +51,14 @@ async function applyMigration() {
       }
     } else {
       console.log('Column does not exist. Adding reminderConfig column...');
-      
+
       // Add the column
       await prisma.$executeRaw`
         ALTER TABLE "Task" ADD COLUMN "reminderConfig" JSONB
       `;
-      
+
       console.log('✅ Column "reminderConfig" added successfully!');
-      
+
       // Mark migration as applied
       await prisma.$executeRaw`
         INSERT INTO "_prisma_migrations" (id, checksum, finished_at, migration_name, logs, started_at, applied_steps_count)
@@ -70,13 +73,12 @@ async function applyMigration() {
         )
         ON CONFLICT (id) DO NOTHING
       `;
-      
+
       console.log('✅ Migration marked as applied!');
     }
-    
+
     console.log('\n✅ Migration completed successfully!');
     console.log('You can now run: npx prisma generate');
-    
   } catch (error) {
     console.error('❌ Error applying migration:', error.message);
     console.error('\nFull error:', error);

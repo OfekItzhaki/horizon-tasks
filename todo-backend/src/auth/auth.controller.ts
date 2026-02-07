@@ -35,7 +35,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
-  ) { }
+  ) {}
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -181,7 +181,10 @@ export class AuthController {
   @Post('reset-password/verify')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify reset OTP and return reset token' })
-  @ApiResponse({ status: 200, description: 'OTP verified, returns reset token' })
+  @ApiResponse({
+    status: 200,
+    description: 'OTP verified, returns reset token',
+  })
   async verifyReset(@Body() dto: VerifyResetOtpDto) {
     return this.authService.verifyResetOtp(dto.email, dto.otp);
   }
