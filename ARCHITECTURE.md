@@ -63,9 +63,9 @@ This document defines the "Golden Rules" and the architectural standards. It is 
 ## 🚀 DevOps Workflow Patterns
 
 ### Northern Workflow (Build & Test)
-- **Goal**: Code quality and logical correctness.
-- **Tools**: VS Code, PowerShell (`setup-dev.ps1`), GitHub Actions.
-- **Rule**: Never merge if `dotnet test` or `npm run build` fails.
+- **Goal**: Code quality, formatting, and logical correctness.
+- **Tools**: VS Code, PowerShell (`setup-dev.ps1`), GitHub Actions, **Prettier**, **ESLint**.
+- **Rule**: Never merge if `npm run format:check`, `npm run lint`, or `npm test` fails.
 
 ### Southern Workflow (Docker & Deploy)
 - **Goal**: Environment parity and deployment reliability.
@@ -276,9 +276,10 @@ Implement these HTTP response headers to protect users from common web attacks:
 ## ✅ Gold Standard Verification
 The project achieves "Gold Standard" via:
 1. **Zero-Error Frontend**: No unused vars, no `any` types, Vite build success.
-2. **Stable Infrastructure**: Health checks for all services.
-3. **Resilient API**: Transient fault handling for DB/Cache.
-4. **Comprehensive Docs**: ARCHITECTURE.md and HORIZON_GUARDIAN.md blueprints.
+2. **Standardized Formatting**: `npm run format` (Prettier) and `npm run lint:fix` (ESLint) passed project-wide with zero rule violations.
+3. **Stable Infrastructure**: Health checks for all services.
+4. **Resilient API**: Transient fault handling for DB/Cache.
+5. **Comprehensive Docs**: ARCHITECTURE.md and HORIZON_GUARDIAN.md blueprints.
 
 ## 🤖 Future Agent Instructions
 1. **Read the Blueprint**: Always check this file before implementing new features.
