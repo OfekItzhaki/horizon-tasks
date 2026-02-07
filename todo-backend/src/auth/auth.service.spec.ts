@@ -163,7 +163,9 @@ describe('AuthService', () => {
       const result = await service.registerStart('test@example.com');
 
       expect(result).toEqual({ message: 'OTP sent' });
-      expect(mockUsersService.initUser).toHaveBeenCalledWith('test@example.com');
+      expect(mockUsersService.initUser).toHaveBeenCalledWith(
+        'test@example.com',
+      );
     });
 
     it('registerVerify should return token for valid OTP', async () => {
@@ -188,10 +190,14 @@ describe('AuthService', () => {
 
   describe('forgot password flow', () => {
     it('forgotPassword should call usersService', async () => {
-      mockUsersService.generatePasswordResetOtp.mockResolvedValue({ message: 'OTP sent' });
+      mockUsersService.generatePasswordResetOtp.mockResolvedValue({
+        message: 'OTP sent',
+      });
       const result = await service.forgotPassword('test@example.com');
       expect(result).toEqual({ message: 'OTP sent' });
-      expect(mockUsersService.generatePasswordResetOtp).toHaveBeenCalledWith('test@example.com');
+      expect(mockUsersService.generatePasswordResetOtp).toHaveBeenCalledWith(
+        'test@example.com',
+      );
     });
 
     it('verifyResetOtp should return reset token for valid OTP', async () => {
@@ -203,19 +209,31 @@ describe('AuthService', () => {
 
       expect(result).toEqual({ resetToken: 'reset-token' });
       expect(mockJwtService.sign).toHaveBeenCalledWith(
-        expect.objectContaining({ purpose: 'password_reset', email: 'test@example.com' }),
+        expect.objectContaining({
+          sub: '1',
+          purpose: 'password_reset',
+          email: 'test@example.com',
+        }),
         expect.objectContaining({ expiresIn: '15m' }),
       );
     });
 
     it('resetPassword should update password for valid token', async () => {
-      const mockPayload = { sub: '1', purpose: 'password_reset', email: 'test@example.com' };
+      const mockPayload = {
+        sub: '1',
+        purpose: 'password_reset',
+        email: 'test@example.com',
+      };
       mockJwtService.verify.mockReturnValue(mockPayload);
       (bcrypt.hash as jest.Mock).mockResolvedValue('new-hash');
 
       mockPrismaService.user.update.mockResolvedValue({ id: '1' });
 
-      const result = await service.resetPassword('test@example.com', 'valid-token', 'new-password');
+      const result = await service.resetPassword(
+        'test@example.com',
+        'valid-token',
+        'new-password',
+      );
 
       expect(result).toEqual({ message: 'Password reset successful' });
       expect(mockPrismaService.user.update).toHaveBeenCalledWith({
@@ -228,11 +246,19 @@ describe('AuthService', () => {
     });
 
     it('resetPassword should throw if token is for different email', async () => {
-      const mockPayload = { sub: '1', purpose: 'password_reset', email: 'wrong@example.com' };
+      const mockPayload = {
+        sub: '1',
+        purpose: 'password_reset',
+        email: 'wrong@example.com',
+      };
       mockJwtService.verify.mockReturnValue(mockPayload);
 
       await expect(
-        service.resetPassword('test@example.com', 'valid-token', 'new-password'),
+        service.resetPassword(
+          'test@example.com',
+          'valid-token',
+          'new-password',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });

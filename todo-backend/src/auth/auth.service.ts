@@ -10,6 +10,13 @@ import UsersService from '../users/users.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { v4 as uuidv4 } from 'uuid';
 
+interface JwtPayload {
+  sub: string;
+  email: string;
+  purpose?: string;
+  jti?: string;
+}
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -18,7 +25,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
-  ) { }
+  ) {}
 
   async validateUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
@@ -63,7 +70,7 @@ export class AuthService {
   }
 
   async generateRefreshToken(userId: string): Promise<string> {
-    const token = uuidv4();
+    const token = uuidv4() as string;
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
 
@@ -87,9 +94,13 @@ export class AuthService {
 
   async refreshAccessToken(token: string) {
     try {
-      const payload = this.jwtService.verify(token, {
+      const payload = this.jwtService.verify<JwtPayload>(token, {
         secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret',
       });
+
+      if (!payload.sub || !payload.jti) {
+        throw new UnauthorizedException('Invalid payload structure');
+      }
 
       const refreshTokenRecord = await this.prisma.refreshToken.findFirst({
         where: {
@@ -124,8 +135,9 @@ export class AuthService {
       }
 
       return this.createAuthSession(user);
-    } catch (e) {
-      this.logger.error('Refresh token failed:', e);
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e : new Error(String(e));
+      this.logger.error('Refresh token failed:', error.stack);
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
@@ -159,9 +171,9 @@ export class AuthService {
 
       this.logger.log(`Registration started: email=${email}`);
       return { message: 'OTP sent' };
-    } catch (error) {
-      const stack = error instanceof Error ? error.stack : undefined;
-      this.logger.error(`registerStart failed for email=${email}:`, stack);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      this.logger.error(`registerStart failed for email=${email}:`, err.stack);
       throw error;
     }
   }
@@ -207,8 +219,10 @@ export class AuthService {
       );
 
       return this.login(user.email, password);
-    } catch (e) {
+    } catch (e: unknown) {
       if (e instanceof BadRequestException) throw e;
+      const err = e instanceof Error ? e : new Error(String(e));
+      this.logger.error('Registration finish failed:', err.stack);
       throw new BadRequestException('Invalid or expired registration token');
     }
   }
@@ -254,8 +268,10 @@ export class AuthService {
       });
 
       return { message: 'Password reset successful' };
-    } catch (e) {
+    } catch (e: unknown) {
       if (e instanceof BadRequestException) throw e;
+      const err = e instanceof Error ? e : new Error(String(e));
+      this.logger.error('Password reset failed:', err.stack);
       throw new BadRequestException('Invalid or expired reset token');
     }
   }
