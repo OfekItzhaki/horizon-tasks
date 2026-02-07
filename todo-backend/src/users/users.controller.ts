@@ -28,6 +28,16 @@ import {
   CurrentUser,
   CurrentUserPayload,
 } from '../auth/current-user.decorator';
+
+interface CloudinaryResponse {
+  secure_url: string;
+  [key: string]: any;
+}
+
+interface CloudinaryError {
+  message: string;
+}
+import { UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
 import { CloudinaryService } from '../common/cloudinary/cloudinary.service';
 import { FileUploadInterceptor } from './interceptors/file-upload.interceptor';
 
@@ -37,7 +47,7 @@ class UsersController {
   constructor(
     private userService: UsersService,
     private cloudinaryService: CloudinaryService,
-  ) {}
+  ) { }
 
   @Post()
   @ApiOperation({ summary: 'Register a new user' })
@@ -133,12 +143,22 @@ class UsersController {
     }
 
     // Upload to Cloudinary
-    const result = await this.cloudinaryService.uploadFile(file);
+    const result = (await this.cloudinaryService.uploadFile(file)) as unknown;
+
+    if (!result || typeof result !== 'object' || !('secure_url' in result)) {
+      const errorResponse = result as CloudinaryError;
+      throw new BadRequestException(
+        `Cloudinary upload failed: ${errorResponse?.message || 'Unknown error'}`,
+      );
+    }
+
+    const uploadResponse = result as Record<string, unknown>;
+    const secureUrl = uploadResponse.secure_url as string;
 
     // Update user profile with the Cloudinary secure URL
     return this.userService.updateUser(
       id,
-      { profilePicture: result.secure_url },
+      { profilePicture: secureUrl },
       user.userId,
     );
   }

@@ -25,7 +25,7 @@ export class TasksService {
     private taskAccess: TaskAccessHelper,
     @Inject(forwardRef(() => TaskSchedulerService))
     private taskScheduler: TaskSchedulerService,
-  ) { }
+  ) {}
 
   async create(
     todoListId: string,
@@ -46,8 +46,8 @@ export class TasksService {
         reminderDaysBefore: createTaskDto.reminderDaysBefore ?? [],
         reminderConfig: createTaskDto.reminderConfig
           ? (JSON.parse(
-            JSON.stringify(createTaskDto.reminderConfig),
-          ) as Prisma.InputJsonValue)
+              JSON.stringify(createTaskDto.reminderConfig),
+            ) as Prisma.InputJsonValue)
           : Prisma.JsonNull,
         completed: createTaskDto.completed ?? false,
         todoListId,
@@ -150,8 +150,8 @@ export class TasksService {
         reminderConfig:
           updateTaskDto.reminderConfig !== undefined
             ? (JSON.parse(
-              JSON.stringify(updateTaskDto.reminderConfig),
-            ) as Prisma.InputJsonValue)
+                JSON.stringify(updateTaskDto.reminderConfig),
+              ) as Prisma.InputJsonValue)
             : undefined,
         completed: updateTaskDto.completed,
         ...(completedAt !== undefined && { completedAt }),
@@ -163,11 +163,7 @@ export class TasksService {
   }
 
   async remove(id: string, userId: string) {
-    await this.taskAccess.findTaskForUser(
-      id,
-      userId,
-      ShareRole.EDITOR,
-    );
+    await this.taskAccess.findTaskForUser(id, userId, ShareRole.EDITOR);
 
     const result = await this.prisma.task.update({
       where: { id },

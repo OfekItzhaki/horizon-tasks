@@ -13,7 +13,7 @@ export class TodoListsService {
   constructor(
     private prisma: PrismaService,
     private taskAccess: TaskAccessHelper,
-  ) { }
+  ) {}
 
   async create(createToDoListDto: CreateToDoListDto, ownerId: string) {
     const list = await this.prisma.toDoList.create({

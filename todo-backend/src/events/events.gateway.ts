@@ -22,14 +22,13 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private userSockets = new Map<string, string[]>(); // userId -> socketIds
   private userPresence = new Map<string, string>(); // socketId -> listId
 
-  constructor(private readonly jwtService: JwtService) { }
+  constructor(private readonly jwtService: JwtService) {}
 
   handleConnection(client: Socket) {
     try {
       const auth = client.handshake.auth as { token?: string };
       const headers = client.handshake.headers as { authorization?: string };
-      const token =
-        auth.token || headers.authorization?.split(' ')[1];
+      const token = auth.token || headers.authorization?.split(' ')[1];
       if (!token) {
         client.disconnect();
         return;

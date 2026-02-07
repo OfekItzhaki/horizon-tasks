@@ -12,19 +12,6 @@ type ListWithShares = Prisma.ToDoListGetPayload<{
   };
 }>;
 
-// Type for task with list and shares
-type TaskWithList = Prisma.TaskGetPayload<{
-  include: {
-    todoList: {
-      include: {
-        shares: {
-          select: { sharedWithId: true };
-        };
-      };
-    };
-  };
-}>;
-
 @Injectable()
 export class EventsService {
   private readonly logger = new Logger(EventsService.name);

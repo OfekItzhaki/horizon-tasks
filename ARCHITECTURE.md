@@ -212,6 +212,17 @@ This document defines the "Golden Rules" and the architectural standards. It is 
   - IDE-specific files (`.vscode/`, `.idea/`)
   - Large binary files (use Git LFS if needed)
 - **Commit History**: Never rewrite public history (no `git rebase -i` on pushed commits)
+- **Deployment Markers**: Use tags or commit messages to track major stability milestones (e.g., "final parity achieved").
+
+## 🛠️ Onboarding & Multi-Step Patterns
+- **Standard**: Complex interactions like Registration should be broken into discrete, verifiable steps (e.g., Email Entry -> OTP Verification -> Password Selection).
+- **Benefit**: Reduces cognitive load and prevents orphaned database records by verifying identity before resource allocation.
+- **Security**: Identity verification (OTP) MUST be the gatekeeper for sensitive credential creation.
+
+## 📁 Production Asset Persistence
+- **Rule**: Never rely on local filesystem storage (`/uploads`) for production environments. Use Cloud Storage (S3, Cloudinary).
+- **Sync**: Implement a fallback or guidance for users moving from localhost to production to ensure assets (avatars) persist.
+- **Motto**: "If it's in a container, it's ephemeral."
 
 ## 🛡️ Security & Performance
 

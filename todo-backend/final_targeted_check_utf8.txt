@@ -1,0 +1,29 @@
+﻿
+C:\Users\ofeki\OneDrive\Desktop\Horizon\Tasks Management\todo-backend\src\events\ws-jwt.guard.ts
+   9:10  error  'Socket' is defined but never used                    @typescript-eslint/no-unused-vars
+  19:13  error  Unsafe assignment of an `any` value                   @typescript-eslint/no-unsafe-assignment
+  20:27  error  Unsafe member access .handshake on an `any` value     @typescript-eslint/no-unsafe-member-access
+  21:13  error  Unsafe assignment of an `any` value                   @typescript-eslint/no-unsafe-assignment
+  21:36  error  Unsafe member access .handshake on an `any` value     @typescript-eslint/no-unsafe-member-access
+  30:15  error  Unsafe construction of a(n) `error` type typed value  @typescript-eslint/no-unsafe-call
+  33:13  error  Unsafe assignment of an `any` value                   @typescript-eslint/no-unsafe-assignment
+  34:7   error  Unsafe assignment of an `any` value                   @typescript-eslint/no-unsafe-assignment
+  34:14  error  Unsafe member access .data on an `any` value          @typescript-eslint/no-unsafe-member-access
+  40:13  error  Unsafe construction of a(n) `error` type typed value  @typescript-eslint/no-unsafe-call
+
+C:\Users\ofeki\OneDrive\Desktop\Horizon\Tasks Management\todo-backend\src\me\commands\handlers\update-profile-picture.handler.ts
+  31:11  error  Unsafe assignment of an error typed value                   @typescript-eslint/no-unsafe-assignment
+  43:11  error  Unsafe assignment of an error typed value                   @typescript-eslint/no-unsafe-assignment
+  49:9   error  Unsafe assignment of an error typed value                   @typescript-eslint/no-unsafe-assignment
+  49:38  error  Unsafe member access .secure_url on an `error` typed value  @typescript-eslint/no-unsafe-member-access
+
+C:\Users\ofeki\OneDrive\Desktop\Horizon\Tasks Management\todo-backend\src\users\users.controller.ts
+  137:11  error  Unsafe assignment of an error typed value                   @typescript-eslint/no-unsafe-assignment
+  140:13  error  Unsafe assignment of an error typed value                   @typescript-eslint/no-unsafe-assignment
+  142:52  error  Unsafe member access .message on an `error` typed value     @typescript-eslint/no-unsafe-member-access
+  146:11  error  Unsafe assignment of an error typed value                   @typescript-eslint/no-unsafe-assignment
+  151:9   error  Unsafe assignment of an error typed value                   @typescript-eslint/no-unsafe-assignment
+  151:40  error  Unsafe member access .secure_url on an `error` typed value  @typescript-eslint/no-unsafe-member-access
+
+Γ£û 20 problems (20 errors, 0 warnings)
+

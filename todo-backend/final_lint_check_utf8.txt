@@ -1,0 +1,38 @@
+﻿
+C:\Users\ofeki\OneDrive\Desktop\Horizon\Tasks Management\todo-backend\src\events\events.service.ts
+  15:1  error  Delete `ΓÅÄ`  prettier/prettier
+  23:6  error  Delete `┬╖`  prettier/prettier
+
+C:\Users\ofeki\OneDrive\Desktop\Horizon\Tasks Management\todo-backend\src\events\ws-jwt.guard.ts
+  15:57  error    Delete `┬╖`                                                                         prettier/prettier
+  17:3   error    Async method 'canActivate' has no 'await' expression                               @typescript-eslint/require-await
+  19:13  error    Unsafe assignment of an error typed value                                          @typescript-eslint/no-unsafe-assignment
+  20:13  error    Unsafe assignment of an error typed value                                          @typescript-eslint/no-unsafe-assignment
+  21:16  error    Unsafe member access .handshake on an `error` typed value                          @typescript-eslint/no-unsafe-member-access
+  22:9   error    Unsafe call of a(n) `error` type typed value                                       @typescript-eslint/no-unsafe-call
+  22:16  error    Unsafe member access .handshake on an `error` typed value                          @typescript-eslint/no-unsafe-member-access
+  22:60  error    Unsafe member access [1] on an `error` typed value                                 @typescript-eslint/no-unsafe-member-access
+  25:15  error    Unsafe construction of a(n) `error` type typed value                               @typescript-eslint/no-unsafe-call
+  28:23  error    This assertion is unnecessary since it does not change the type of the expression  @typescript-eslint/no-unnecessary-type-assertion
+  28:46  warning  Unsafe argument of type error typed assigned to a parameter of type `string`       @typescript-eslint/no-unsafe-argument
+  32:14  error    Unsafe member access .data on an `error` typed value                               @typescript-eslint/no-unsafe-member-access
+  36:27  error    Delete `ΓÅÄ┬╖┬╖┬╖┬╖┬╖┬╖┬╖`                                                                  prettier/prettier
+  39:13  error    Unsafe construction of a(n) `error` type typed value                               @typescript-eslint/no-unsafe-call
+
+C:\Users\ofeki\OneDrive\Desktop\Horizon\Tasks Management\todo-backend\src\health\health.controller.ts
+  8:47  error  Delete `┬╖`  prettier/prettier
+
+C:\Users\ofeki\OneDrive\Desktop\Horizon\Tasks Management\todo-backend\src\me\commands\handlers\update-profile-picture.handler.ts
+  31:11  error  Unsafe assignment of an error typed value                   @typescript-eslint/no-unsafe-assignment
+  40:9   error  Unsafe assignment of an error typed value                   @typescript-eslint/no-unsafe-assignment
+  40:38  error  Unsafe member access .secure_url on an `error` typed value  @typescript-eslint/no-unsafe-member-access
+
+C:\Users\ofeki\OneDrive\Desktop\Horizon\Tasks Management\todo-backend\src\users\users.controller.ts
+  136:11  error  Unsafe assignment of an error typed value                   @typescript-eslint/no-unsafe-assignment
+  140:45  error  Unsafe member access .message on an `error` typed value     @typescript-eslint/no-unsafe-member-access
+  147:9   error  Unsafe assignment of an error typed value                   @typescript-eslint/no-unsafe-assignment
+  147:32  error  Unsafe member access .secure_url on an `error` typed value  @typescript-eslint/no-unsafe-member-access
+
+Γ£û 24 problems (23 errors, 1 warning)
+  6 errors and 0 warnings potentially fixable with the `--fix` option.
+

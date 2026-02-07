@@ -53,7 +53,7 @@ class UsersService {
     return rest;
   }
 
-  async findByEmail(email: string) {
+  async findByEmail(email: string): Promise<User | null> {
     return this.prisma.user.findFirst({
       where: {
         email,
@@ -62,7 +62,7 @@ class UsersService {
     });
   }
 
-  async findById(id: string) {
+  async findById(id: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: {
         id,
@@ -129,12 +129,14 @@ class UsersService {
         .filter((share) => share.toDoList && share.toDoList.deletedAt === null)
         .map((share) => ({
           ...share,
-          toDoList: {
-            ...share.toDoList,
-            tasks: share.toDoList.tasks.filter(
-              (task) => task.deletedAt === null,
-            ),
-          },
+          toDoList: share.toDoList
+            ? {
+                ...share.toDoList,
+                tasks: share.toDoList.tasks.filter(
+                  (task) => task.deletedAt === null,
+                ),
+              }
+            : null,
         })),
     };
 
