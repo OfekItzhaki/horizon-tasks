@@ -18,20 +18,28 @@
 | `web-app`          | React + Vite SPA                                |
 | `mobile-app`       | React Native + Expo                             |
 
-## Local Development (Getting Started)
+### Local Development (Getting Started)
 
 To get the project running locally for demoing or testing:
 
 1. **Prerequisites**: Ensure you have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed.
-2. **Setup Infrastructure**: Run the following command in the root directory to spin up the Database and Redis:
+2. **Setup Infrastructure**: Spin up Postgres and Redis via Docker on the root directory:
    ```bash
    docker-compose up -d
    ```
+   > [!NOTE]
+   > Postgres is configured to run on port **5433** locally to avoid conflicts with system-wide Postgres instances.
 3. **Configure Backend**:
    - `cd todo-backend`
-   - `cp .env.example .env`
-   - Fill in your `CLOUDINARY` credentials (see `.env.example`).
-   - Run `npm install` and `npx prisma migrate dev`.
+   - `cp .env.example .env` (Default credentials: `postgres:postgres` on `localhost:5433`)
+   - Fill in your `CLOUDINARY` credentials.
+   - Run `npm install` and `npx prisma db push`.
 4. **Run Services**:
    - Start backend: `npm run dev`
    - Start web-app: `cd ../web-app && npm run dev`
+
+### 🔑 Key Features
+- **100% Test Stability**: Industrial-grade test coverage (96+ tests) across all core services.
+- **Forgot Password**: Full-stack recovery flow with OTP verification and secure reset tokens.
+- **Industrial Standards**: Security headers (`helmet`), Rate Limiting (`throttler`), and Health Monitoring (`/health`).
+- **Real-Time Presence**: Socket.IO integration for collaborative list management.
