@@ -55,7 +55,7 @@ export function useTaskDetails(taskId: number) {
                 alarmStates[r.id] = r.hasAlarm || false;
             });
             setReminderAlarmStates(alarmStates);
-        } catch (error: any) {
+        } catch (error: unknown) {
             if (!isAuthError(error)) {
                 handleApiError(error, 'Unable to load task. Please try again.');
             }
@@ -76,7 +76,7 @@ export function useTaskDetails(taskId: number) {
         setTask(prev => prev ? { ...prev, completed: newCompleted } : prev);
         try {
             await tasksService.update(taskId, { completed: newCompleted });
-        } catch (error: any) {
+        } catch (error: unknown) {
             setTask(prev => prev ? { ...prev, completed: currentCompleted } : prev);
             handleApiError(error, 'Unable to toggle task completion.');
         }
@@ -140,7 +140,7 @@ export function useTaskDetails(taskId: number) {
 
             setIsEditing(false);
             loadTaskData();
-        } catch (error: any) {
+        } catch (error: unknown) {
             handleApiError(error, 'Unable to update task.');
         } finally {
             setIsSubmitting(false);
@@ -153,7 +153,7 @@ export function useTaskDetails(taskId: number) {
         setSteps(prev => prev.map(s => s.id === step.id ? { ...s, completed: newCompleted } : s));
         try {
             await stepsService.update(step.id, { completed: newCompleted });
-        } catch (error: any) {
+        } catch (error: unknown) {
             setSteps(prev => prev.map(s => s.id === step.id ? { ...s, completed: currentCompleted } : s));
             handleApiError(error, 'Unable to update step.');
         }
@@ -164,7 +164,7 @@ export function useTaskDetails(taskId: number) {
             await stepsService.create(taskId, { description: description.trim() });
             loadTaskData();
             return true;
-        } catch (error: any) {
+        } catch (error: unknown) {
             handleApiError(error, 'Unable to add step.');
             return false;
         }
@@ -174,7 +174,7 @@ export function useTaskDetails(taskId: number) {
         try {
             await stepsService.delete(stepId);
             loadTaskData();
-        } catch (error: any) {
+        } catch (error: unknown) {
             handleApiError(error, 'Unable to delete step.');
         }
     };
@@ -184,7 +184,7 @@ export function useTaskDetails(taskId: number) {
             await stepsService.update(stepId, { description: description.trim() });
             loadTaskData();
             return true;
-        } catch (error: any) {
+        } catch (error: unknown) {
             handleApiError(error, 'Unable to update step.');
             return false;
         }
@@ -254,7 +254,7 @@ export function useTaskDetails(taskId: number) {
                 });
 
                 setTask(prev => prev ? { ...prev, ...reminderData } : prev);
-            } catch (error: any) {
+            } catch (error: unknown) {
                 handleApiError(error, 'Unable to update alarm.');
                 loadTaskData();
             }

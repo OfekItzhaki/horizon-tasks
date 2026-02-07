@@ -1,6 +1,29 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EventsGateway } from './events.gateway';
+import { Prisma } from '@prisma/client';
+
+// Type for list with shares included
+type ListWithShares = Prisma.ToDoListGetPayload<{
+    include: {
+        shares: {
+            select: { sharedWithId: true }
+        }
+    }
+}>;
+
+// Type for task with list and shares
+type TaskWithList = Prisma.TaskGetPayload<{
+    include: {
+        todoList: {
+            include: {
+                shares: {
+                    select: { sharedWithId: true }
+                }
+            }
+        }
+    }
+}>;
 
 @Injectable()
 export class EventsService {
@@ -11,10 +34,10 @@ export class EventsService {
         private readonly eventsGateway: EventsGateway,
     ) { }
 
-    async broadcastTaskEvent(taskId: string, event: string, data: any) {
+    async broadcastTaskEvent(taskId: string, event: string, data: unknown) {
         try {
             // Find the task and its list to identify all associated users
-            const task = await (this.prisma.task as any).findUnique({
+            const task = await this.prisma.task.findUnique({
                 where: { id: taskId },
                 include: {
                     todoList: {
@@ -31,13 +54,13 @@ export class EventsService {
 
             this.notifyListUsers(task.todoList, event, data);
         } catch (error) {
-            this.logger.error(`Failed to broadcast task event: ${error.message}`);
+            this.logger.error(`Failed to broadcast task event: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
-    async broadcastListEvent(listId: string, event: string, data: any) {
+    async broadcastListEvent(listId: string, event: string, data: unknown) {
         try {
-            const list = await (this.prisma.toDoList as any).findUnique({
+            const list = await this.prisma.toDoList.findUnique({
                 where: { id: listId },
                 include: {
                     shares: {
@@ -50,16 +73,16 @@ export class EventsService {
 
             this.notifyListUsers(list, event, data);
         } catch (error) {
-            this.logger.error(`Failed to broadcast list event: ${error.message}`);
+            this.logger.error(`Failed to broadcast list event: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
-    async broadcastStepEvent(taskId: string, event: string, data: any) {
+    async broadcastStepEvent(taskId: string, event: string, data: unknown) {
         // For steps, we still need to find the task's users
         return this.broadcastTaskEvent(taskId, event, data);
     }
 
-    private notifyListUsers(list: any, event: string, data: any) {
+    private notifyListUsers(list: ListWithShares, event: string, data: unknown) {
         const userIds = new Set<string>();
 
         // Add owner
@@ -67,7 +90,7 @@ export class EventsService {
 
         // Add shared users
         if (list.shares) {
-            list.shares.forEach((share: any) => userIds.add(share.sharedWithId));
+            list.shares.forEach((share) => userIds.add(share.sharedWithId));
         }
 
         // Send to all

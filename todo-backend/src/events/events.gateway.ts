@@ -94,7 +94,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     // Helper to send message to specific user
-    sendToUser(userId: string, event: string, data: any) {
+    sendToUser(userId: string, event: string, data: unknown) {
         const socketIds = this.userSockets.get(userId);
         if (socketIds) {
             socketIds.forEach(socketId => {

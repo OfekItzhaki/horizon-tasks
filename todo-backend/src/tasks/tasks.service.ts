@@ -67,7 +67,7 @@ export class TasksService {
       }
     }
 
-    const where: any = {
+    const where: Prisma.TaskWhereInput = {
       deletedAt: null,
       todoList: {
         deletedAt: null,

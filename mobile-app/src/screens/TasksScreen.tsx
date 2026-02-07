@@ -244,7 +244,7 @@ export default function TasksScreen() {
               await tasksService.restore(task.id);
               showErrorAlert('Success', null, 'Task restored to original list');
               loadTasks();
-            } catch (error: any) {
+            } catch (error: unknown) {
               handleApiError(error, 'Unable to restore task. Please try again.');
             }
           },
@@ -270,7 +270,7 @@ export default function TasksScreen() {
                       await ReminderAlarmsStorage.removeAlarmsForTask(task.id);
                       await tasksService.permanentDelete(task.id);
                       loadTasks();
-                    } catch (error: any) {
+                    } catch (error: unknown) {
                       handleApiError(error, 'Unable to delete task. Please try again.');
                     }
                   },

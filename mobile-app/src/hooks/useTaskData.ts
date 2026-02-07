@@ -20,7 +20,7 @@ export function useTaskData(taskId: number) {
 
       setTask(normalizeTask(taskData));
       setSteps(stepsData);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Silently ignore auth errors - the navigation will handle redirect to login
       if (!isAuthError(error)) {
         handleApiError(error, 'Unable to load task. Please try again.');

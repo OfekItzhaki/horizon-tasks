@@ -231,7 +231,7 @@ export default function AnalysisScreen() {
       const tasksPromises = loadedLists.map((list) => tasksService.getAll(list.id));
       const tasksArrays = await Promise.all(tasksPromises);
       setAllTasks(tasksArrays.flat());
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Silently ignore auth errors - the navigation will handle redirect to login
       if (!isAuthError(error)) {
         handleApiError(error, 'Unable to load analysis data. Please try again.');

@@ -43,7 +43,7 @@ export class AuthService {
     return this.createAuthSession(user);
   }
 
-  private async createAuthSession(user: any) {
+  private async createAuthSession(user: Omit<NonNullable<Awaited<ReturnType<typeof this.usersService.findByEmail>>>, 'passwordHash'>) {
     const payload = { sub: user.id, email: user.email };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' }); // Short-lived
     const refreshToken = await this.generateRefreshToken(user.id);

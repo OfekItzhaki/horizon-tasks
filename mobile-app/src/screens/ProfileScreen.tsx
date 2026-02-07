@@ -360,7 +360,7 @@ export default function ProfileScreen() {
       setImageError(false); // Reset error state when new image is uploaded
       await refreshUser();
       Alert.alert(t('profile.pictureUpdated'), t('profile.pictureUpdatedMessage', { defaultValue: 'Profile picture updated successfully' }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading image:', error);
       handleApiError(error, t('profile.pictureUpdateFailed', { defaultValue: 'Failed to update profile picture. Please try again.' }));
     } finally {
@@ -377,7 +377,7 @@ export default function ProfileScreen() {
         'Success',
         'Verification code sent. Please check your inbox.',
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleApiError(error, t('profile.failedToResendVerification', { defaultValue: 'Failed to resend verification email. Please try again.' }));
     }
   };
@@ -414,7 +414,7 @@ export default function ProfileScreen() {
     setRefreshing(true);
     try {
       await refreshUser();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error refreshing user:', error);
       // Silently ignore auth errors - the navigation will handle redirect to login
       try {

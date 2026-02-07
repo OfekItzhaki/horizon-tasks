@@ -141,7 +141,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login(email, password);
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleApiError(error, 'Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
@@ -160,7 +160,7 @@ export default function LoginScreen() {
       Alert.alert('Success', 'Account created! Please log in.');
       setIsLogin(true);
       setPassword('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleApiError(error, 'Could not create account. Please try again.');
     } finally {
       setLoading(false);

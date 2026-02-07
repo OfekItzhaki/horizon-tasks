@@ -10,21 +10,21 @@ import {
  * Extract error message from various error formats
  * Always returns user-friendly messages, never technical errors
  */
-export function extractErrorMessage(error: any, defaultMessage: string): string {
+export function extractErrorMessage(error: unknown, defaultMessage: string): string {
   return sharedExtractErrorMessage(error, defaultMessage);
 }
 
 /**
  * Check if error is an authentication error (401)
  */
-export function isAuthError(error: any): boolean {
+export function isAuthError(error: unknown): boolean {
   return sharedIsAuthError(error);
 }
 
 /**
  * Check if error is a timeout error
  */
-export function isTimeoutError(error: any): boolean {
+export function isTimeoutError(error: unknown): boolean {
   return sharedIsTimeoutError(error);
 }
 
@@ -33,7 +33,7 @@ export function isTimeoutError(error: any): boolean {
  */
 export function showErrorAlert(
   title: string,
-  error: any,
+  error: unknown,
   defaultMessage?: string,
 ): void {
   const message = extractErrorMessage(error, defaultMessage || 'An error occurred. Please try again.');
@@ -44,7 +44,7 @@ export function showErrorAlert(
  * Handle API errors with automatic auth error detection
  */
 export function handleApiError(
-  error: any,
+  error: unknown,
   defaultMessage: string,
   onAuthError?: () => void,
 ): void {
@@ -81,7 +81,7 @@ export function handleApiError(
 /**
  * Get user-friendly error message for common scenarios
  */
-export function getFriendlyErrorMessage(error: any, operation: string): string {
+export function getFriendlyErrorMessage(error: unknown, operation: string): string {
   if (isTimeoutError(error)) {
     return `${operation} is taking too long. Please try again later.`;
   }

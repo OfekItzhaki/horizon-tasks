@@ -18,7 +18,7 @@ export function useTaskList(listId: number) {
       const data = await tasksService.getAll(listId);
       const normalizedTasks = normalizeTasks(data);
       setAllTasks(normalizedTasks);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Silently ignore auth errors - the navigation will handle redirect to login
       if (!isAuthError(error)) {
         handleApiError(error, 'Unable to load tasks. Please try again later.');

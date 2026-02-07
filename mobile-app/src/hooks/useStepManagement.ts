@@ -20,7 +20,7 @@ export function useStepManagement(taskId: number, onStepChange: () => void) {
       setShowAddStepModal(false);
       onStepChange();
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleApiError(error, 'Unable to add step. Please try again.');
       return { success: false };
     }
@@ -45,7 +45,7 @@ export function useStepManagement(taskId: number, onStepChange: () => void) {
       await stepsService.update(step.id, { completed: newCompleted });
       // No need to reload - optimistic update already applied
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Revert on error
       setSteps(prevSteps => 
         prevSteps.map(s => 
@@ -74,7 +74,7 @@ export function useStepManagement(taskId: number, onStepChange: () => void) {
       setEditingStepDescription('');
       onStepChange();
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleApiError(error, 'Unable to update step. Please try again.');
       return { success: false };
     }
@@ -90,7 +90,7 @@ export function useStepManagement(taskId: number, onStepChange: () => void) {
       await stepsService.delete(step.id);
       onStepChange();
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleApiError(error, 'Unable to delete step. Please try again.');
       return { success: false };
     }
