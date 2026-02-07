@@ -36,10 +36,23 @@ describe('Tasks and Steps (e2e)', () => {
     for (const email of userEmails) {
       const user = await prisma.user.findFirst({ where: { email } });
       if (user) {
-        await (prisma.step as any).deleteMany({ where: { task: { todoList: { ownerId: user.id } } } });
-        await (prisma.task as any).deleteMany({ where: { todoList: { ownerId: user.id } } });
-        await (prisma.listShare as any).deleteMany({ where: { OR: [{ sharedWithId: user.id }, { toDoList: { ownerId: user.id } }] } });
-        await (prisma.toDoList as any).deleteMany({ where: { ownerId: user.id } });
+        await (prisma.step as any).deleteMany({
+          where: { task: { todoList: { ownerId: user.id } } },
+        });
+        await (prisma.task as any).deleteMany({
+          where: { todoList: { ownerId: user.id } },
+        });
+        await (prisma.listShare as any).deleteMany({
+          where: {
+            OR: [{ sharedWithId: user.id }, { toDoList: { ownerId: user.id } }],
+          },
+        });
+        await (prisma.toDoList as any).deleteMany({
+          where: { ownerId: user.id },
+        });
+        await (prisma as any).refreshToken.deleteMany({
+          where: { userId: user.id },
+        });
         await prisma.user.delete({ where: { id: user.id } });
       }
     }
@@ -79,13 +92,29 @@ describe('Tasks and Steps (e2e)', () => {
       const users = await prisma.user.findMany({
         where: { email: { in: userEmails } },
       });
-      const userIds = users.map(u => u.id);
+      const userIds = users.map((u) => u.id);
 
       if (userIds.length > 0) {
-        await (prisma.step as any).deleteMany({ where: { task: { todoList: { ownerId: { in: userIds } } } } });
-        await (prisma.task as any).deleteMany({ where: { todoList: { ownerId: { in: userIds } } } });
-        await (prisma.listShare as any).deleteMany({ where: { OR: [{ sharedWithId: { in: userIds } }, { toDoList: { ownerId: { in: userIds } } }] } });
-        await (prisma.toDoList as any).deleteMany({ where: { ownerId: { in: userIds } } });
+        await (prisma.step as any).deleteMany({
+          where: { task: { todoList: { ownerId: { in: userIds } } } },
+        });
+        await (prisma.task as any).deleteMany({
+          where: { todoList: { ownerId: { in: userIds } } },
+        });
+        await (prisma.listShare as any).deleteMany({
+          where: {
+            OR: [
+              { sharedWithId: { in: userIds } },
+              { toDoList: { ownerId: { in: userIds } } },
+            ],
+          },
+        });
+        await (prisma.toDoList as any).deleteMany({
+          where: { ownerId: { in: userIds } },
+        });
+        await (prisma as any).refreshToken.deleteMany({
+          where: { userId: { in: userIds } },
+        });
         await prisma.user.deleteMany({ where: { id: { in: userIds } } });
       }
     }

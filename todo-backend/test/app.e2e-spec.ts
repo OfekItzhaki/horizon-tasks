@@ -15,7 +15,9 @@ describe('AppController (e2e)', () => {
       imports: [AppModule],
     })
       .overrideProvider(EmailService)
-      .useValue({ sendVerificationEmail: jest.fn().mockResolvedValue(undefined) })
+      .useValue({
+        sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+      })
       .overrideProvider(MailerService)
       .useValue({ sendMail: jest.fn().mockResolvedValue(true) })
       .compile();
