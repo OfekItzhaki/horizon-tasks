@@ -130,7 +130,7 @@ export class TasksService {
     const shouldResetCompletionCount =
       finalSpecificDayOfWeek !== null &&
       finalSpecificDayOfWeek !== undefined &&
-      (task as any).completionCount > 0;
+      task.completionCount > 0;
 
     const updated = await this.prisma.task.update({
       where: { id },
@@ -186,9 +186,9 @@ export class TasksService {
       },
     });
 
-    return allTasks.filter((task: any) =>
+    return allTasks.filter((task) =>
       TaskOccurrenceHelper.shouldAppearOnDate(
-        task as any,
+        task,
         date,
       ),
     );
@@ -213,9 +213,9 @@ export class TasksService {
       },
     });
 
-    return allTasks.filter((task: any) =>
+    return allTasks.filter((task) =>
       TaskOccurrenceHelper.shouldRemindOnDate(
-        task as any,
+        task,
         date,
       ),
     );
@@ -226,7 +226,7 @@ export class TasksService {
    */
   async restore(id: string, ownerId: string) {
     // Look for task (including deleted ones)
-    const task = await (this.prisma.task as any).findFirst({
+    const task = await this.prisma.task.findFirst({
       where: {
         id,
         todoList: {
@@ -258,14 +258,14 @@ export class TasksService {
     }
 
     // Case 2: Task was archived (completed in a system list)
-    if ((task as any).todoList.type === ListType.FINISHED) {
-      if (!(task as any).originalListId) {
+    if (task.todoList.type === ListType.FINISHED) {
+      if (!task.originalListId) {
         throw new BadRequestException('Original list information not available');
       }
 
       const originalList = await this.prisma.toDoList.findFirst({
         where: {
-          id: (task as any).originalListId,
+          id: task.originalListId,
           ownerId,
           deletedAt: null,
         },
@@ -278,7 +278,7 @@ export class TasksService {
       const restored = await this.prisma.task.update({
         where: { id },
         data: {
-          todoListId: (task as any).originalListId,
+          todoListId: task.originalListId,
           originalListId: null,
           completed: false,
           completedAt: null,
@@ -296,7 +296,7 @@ export class TasksService {
   }
 
   async permanentDelete(id: string, ownerId: string) {
-    const task = await (this.prisma.task as any).findFirst({
+    const task = await this.prisma.task.findFirst({
       where: {
         id,
         todoList: {
@@ -313,7 +313,7 @@ export class TasksService {
       throw new NotFoundException(`Task with ID ${id} not found`);
     }
 
-    if (!task.deletedAt && (task as any).todoList.type !== ListType.FINISHED) {
+    if (!task.deletedAt && task.todoList.type !== ListType.FINISHED) {
       throw new BadRequestException(
         'Only deleted or archived tasks can be permanently deleted.',
       );
