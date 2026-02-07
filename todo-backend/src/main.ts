@@ -43,9 +43,9 @@ async function bootstrap() {
   const origin =
     isProduction && allowedOriginsEnv
       ? allowedOriginsEnv
-        .split(',')
-        .map((o) => o.trim())
-        .filter(Boolean)
+          .split(',')
+          .map((o) => o.trim())
+          .filter(Boolean)
       : true;
 
   app.enableCors({
